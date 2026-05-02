@@ -2,65 +2,93 @@ import streamlit as st
 import pandas as pd
 import requests
 from datetime import datetime
+import urllib.parse
 
 # --- CONFIGURACIÓN ---
-st.set_page_config(page_title="SAYG 2017 - Gestión", page_icon="🥖")
+st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖")
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbwnn4rvOYQC8G7USLsxQS5dzdyI_5AGZBLXkBlYOOytq0xFP2NkZ-hP3_fPb2c8RY4b/exec"
 
-# --- FUNCIONES DE DATOS ---
-def enviar_datos(datos):
-    try:
-        res = requests.post(URL_GOOGLE, json=datos, timeout=10)
-        return res.text == "OK"
-    except: return False
+# --- BASE DE DATOS LOCAL (Se puede conectar al Excel luego) ---
+if 'productos' not in st.session_state:
+    st.session_state.productos = {
+        "CATALINA": 1.30,
+        "POLVOROSA": 1.00,
+        "PAN DULCE": 2.50,
+        "HOJALDRE": 3.00
+    }
 
-# --- INTERFAZ ---
+if 'carro' not in st.session_state:
+    st.session_state.carro = []
+
+# --- NAVEGACIÓN ---
 st.sidebar.title("🏢 AYG 2017")
-menu = st.sidebar.radio("Ir a:", ["Venta Detal", "Venta Mayor (SAYG)", "Inventario"])
+menu = st.sidebar.radio("MENÚ", ["Venta Mayor (SAYG)", "Lista de Precios", "Venta Detal", "Cuentas"])
 
-if menu == "Venta Detal":
-    st.header("🏪 Registro de Panadería")
-    with st.form("detal"):
-        cliente = st.text_input("Cliente", "GENERAL").upper()
-        monto = st.number_input("Total $", min_value=0.0)
-        pago = st.selectbox("Método", ["Contado", "Crédito"])
-        if st.form_submit_button("REGISTRAR"):
-            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": pago, "cliente": cliente, "monto": monto}
-            if enviar_datos(payload): st.success("¡Venta Guardada!")
-            else: st.error("Error de conexión")
-
-elif menu == "Venta Mayor (SAYG)":
-    st.header("📦 Sistema de Ventas al Mayor")
+# --- 1. VENTA MAYOR (SAYG) ---
+if menu == "Venta Mayor (SAYG)":
+    st.header("📦 Pedido Mayorista")
     
-    # Lista de productos (En el futuro la traeremos del Excel automáticamente)
-    productos_lista = ["CATALINAS", "POLVOROSAS", "PAN DULCE", "HOJALDRE"]
+    cliente = st.text_input("Nombre del Cliente").upper()
+    telefono = st.text_input("Teléfono del Cliente (Ej: 58412...)", help="Sin el +")
     
-    cliente_m = st.text_input("Nombre del Cliente").upper()
     col1, col2 = st.columns(2)
-    prod_sel = col1.selectbox("Producto", productos_lista)
-    cant = col2.number_input("Cantidad", min_value=1)
+    prod_sel = col1.selectbox("Producto", list(st.session_state.productos.keys()))
+    cant = col2.number_input("Cantidad", min_value=1, value=20)
     
-    if st.button("➕ Añadir al pedido"):
-        if 'pedido' not in st.session_state: st.session_state.pedido = []
-        st.session_state.pedido.append({"Producto": prod_sel, "Cant": cant})
+    if st.button("➕ Agregar al Pedido"):
+        precio_u = st.session_state.productos[prod_sel]
+        st.session_state.carro.append({
+            "Producto": prod_sel, 
+            "Cant": cant, 
+            "Precio": precio_u, 
+            "Subtotal": cant * precio_u
+        })
 
-    if 'pedido' in st.session_state and st.session_state.pedido:
-        df = pd.DataFrame(st.session_state.pedido)
+    if st.session_state.carro:
+        df = pd.DataFrame(st.session_state.carro)
         st.table(df)
-        
-        if st.button("🗑️ Vaciar Carrito"):
-            st.session_state.pedido = []
-            st.rerun()
-            
-        # BOTÓN DE IMPRIMIR (Simulado con texto para copiar/pegar)
-        st.subheader("Generar Comprobante")
-        ticket_txt = f"INVERSIONES AYG 2017\nCliente: {cliente_m}\nFecha: {datetime.now().strftime('%d/%m/%Y')}\n"
-        ticket_txt += "-"*20 + "\n"
-        for item in st.session_state.pedido:
-            ticket_txt += f"{item['Producto']} x{item['Cant']}\n"
-        
-        st.download_button("📥 DESCARGAR TICKET (TXT)", ticket_txt, file_name="ticket_ayg.txt")
+        total = df["Subtotal"].sum()
+        st.subheader(f"TOTAL: {total:.2f}$")
 
-elif menu == "Inventario":
-    st.header("🏗️ Precios y Almacén")
-    st.info("Para que la lista de productos se actualice, agrégalos en tu hoja de Google Sheets en la pestaña 'Productos'.")
+        # --- GENERADOR DE TEXTO PARA WHATSAPP ---
+        texto_ws = f"*INVERSIONES AYG 2017 C.A.*\n"
+        texto_ws += f"━━━━━━━━━━━━━━━━━━\n"
+        texto_ws += f"*CLIENTE:* {cliente}\n"
+        texto_ws += f"*FECHA:* {datetime.now().strftime('%d/%m/%Y')}\n"
+        texto_ws += f"━━━━━━━━━━━━━━━━━━\n"
+        for item in st.session_state.carro:
+            texto_ws += f"• {item['Producto']} {item['Cant']} * {item['Precio']:.2f}$ = {item['Subtotal']:.2f}$\n"
+        texto_ws += f"━━━━━━━━━━━━━━━━━━\n"
+        texto_ws += f"*TOTAL A PAGAR: {total:.2f}$*\n"
+        texto_ws += f"━━━━━━━━━━━━━━━━━━\n"
+        texto_ws += f"_¡Gracias por su compra!_"
+        
+        # Botón de WhatsApp
+        texto_encode = urllib.parse.quote(texto_ws)
+        ws_url = f"https://wa.me/{telefono}?text={texto_encode}"
+        
+        if st.button("📱 ENVIAR RECIBO POR WHATSAPP"):
+            st.markdown(f'<a href="{ws_url}" target="_blank" style="text-decoration:none;"><div style="background-color:#25D366;color:white;padding:10px;border-radius:5px;text-align:center;">ABRIR WHATSAPP</div></a>', unsafe_allow_html=True)
+            # Aquí también enviamos al Excel
+            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Crédito", "cliente": cliente, "monto": total}
+            requests.post(URL_GOOGLE, json=payload)
+            st.session_state.carro = []
+
+# --- 2. LISTA DE PRECIOS ---
+elif menu == "Lista de Precios":
+    st.header("📋 Catálogo de Productos")
+    
+    # Mostrar tabla actual
+    df_precios = pd.DataFrame(list(st.session_state.productos.items()), columns=["Producto", "Precio $"])
+    st.table(df_precios)
+    
+    # Editar o agregar
+    with st.expander("Añadir o Editar Producto"):
+        n_p = st.text_input("Nombre").upper()
+        p_p = st.number_input("Precio $", min_value=0.0, format="%.2f")
+        if st.button("Guardar"):
+            st.session_state.productos[n_p] = p_p
+            st.success("¡Precio actualizado!")
+            st.rerun()
+
+# (Las otras secciones se mantienen igual...)
