@@ -17,7 +17,7 @@ def check_password():
         st.session_state.password_correct = False
 
     if not st.session_state.password_correct:
-        st.image("1000323326.png", width=200) # Tu logo circular
+        st.image("1000323326.png.png", width=200) # Tu logo circular
         st.title("🔐 Acceso Privado - AYG 2017")
         password = st.text_input("Introduce la clave del sistema", type="password")
         if st.button("ENTRAR"):
@@ -76,7 +76,7 @@ def crear_pdf(cliente, pedido, total):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- DISEÑO DE LA APP ---
-st.image("1000317144.jpg", use_container_width=True) # Tu logo rectangular
+st.image("1000317144.jpg.png", use_container_width=True) # Tu logo rectangular
 st.sidebar.title("🏢 MENÚ AYG")
 menu = st.sidebar.radio("Ir a:", ["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario"])
 
