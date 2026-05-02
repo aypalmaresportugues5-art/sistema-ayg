@@ -6,21 +6,47 @@ from fpdf import FPDF
 import base64
 
 # --- CONFIGURACIÓN DE PÁGINA ---
-st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="wide")
+st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
 
-# URL de tu Google Apps Script (la que ya tienes conectada a tu Excel)
+# --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbwnn4rvOYQC8G7USLsxQS5dzdyI_5AGZBLXkBlYOOytq0xFP2NkZ-hP3_fPb2c8RY4b/exec"
 
-# --- INICIALIZACIÓN DE DATOS ---
-if 'productos' not in st.session_state:
-    st.session_state.productos = {"CATALINA": 1.30, "POLVOROSA": 1.00, "PAN DULCE": 2.50, "HOJALDRE": 3.00}
-if 'clientes' not in st.session_state:
-    st.session_state.clientes = ["GENERAL", "ABASTO EL SOL", "CLIENTE EJEMPLO"]
-if 'carro' not in st.session_state:
-    st.session_state.carro = []
+# --- SISTEMA DE SEGURIDAD ---
+def check_password():
+    if "password_correct" not in st.session_state:
+        st.session_state.password_correct = False
 
-# --- FUNCIÓN GENERADORA DE PDF ---
-def crear_pdf_factura(cliente, pedido, total):
+    if not st.session_state.password_correct:
+        st.image("1000323326.png", width=200) # Tu logo circular
+        st.title("🔐 Acceso Privado - AYG 2017")
+        password = st.text_input("Introduce la clave del sistema", type="password")
+        if st.button("ENTRAR"):
+            if password == "AYG2026": # <--- Tu clave de acceso
+                st.session_state.password_correct = True
+                st.rerun()
+            else:
+                st.error("❌ Clave incorrecta")
+        return False
+    return True
+
+if not check_password():
+    st.stop()
+
+# --- CARGA DE DATOS DESDE EL EXCEL ---
+@st.cache_data(ttl=60) # Actualiza los datos cada minuto
+def cargar_datos_vivos():
+    try:
+        r = requests.get(URL_GOOGLE)
+        return r.json()
+    except:
+        return {"clientes": ["GENERAL"], "productos": {"CATALINA": {"precio": 1.30, "stock": 0}}}
+
+datos = cargar_datos_vivos()
+clientes_lista = datos['clientes']
+productos_dict = datos['productos']
+
+# --- FUNCIÓN GENERADORA DE PDF SEGURO ---
+def crear_pdf(cliente, pedido, total):
     pdf = FPDF()
     pdf.add_page()
     pdf.set_font("Arial", 'B', 16)
@@ -49,79 +75,67 @@ def crear_pdf_factura(cliente, pedido, total):
     pdf.cell(40, 10, f"{total:.2f}$", 1, 1, 'C')
     return pdf.output(dest='S').encode('latin-1')
 
-# --- MENÚ LATERAL ---
-st.sidebar.title("🏢 Sistema AYG 2017")
-menu = st.sidebar.selectbox("Ir a:", ["Venta Detal", "Venta Mayor (SAYG)", "Cuentas por Cobrar", "Lista de Precios", "Clientes e Inventario"])
+# --- DISEÑO DE LA APP ---
+st.image("1000317144.jpg", use_container_width=True) # Tu logo rectangular
+st.sidebar.title("🏢 MENÚ AYG")
+menu = st.sidebar.radio("Ir a:", ["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario"])
 
-# --- 1. VENTA DETAL ---
+# 1. VENTA DETAL
 if menu == "Venta Detal":
-    st.header("🏪 Registro de Panadería (Detal)")
-    with st.form("form_detal"):
-        cli = st.selectbox("Cliente", st.session_state.clientes)
-        monto = st.number_input("Total Venta $", min_value=0.0, format="%.2f")
-        metodo = st.selectbox("Condición", ["Contado", "Crédito"])
-        if st.form_submit_button("REGISTRAR"):
-            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": metodo, "cliente": cli, "monto": monto}
+    st.header("🏪 Venta Rápida (Detal)")
+    with st.form("detal"):
+        c = st.selectbox("Cliente", clientes_lista)
+        m = st.number_input("Monto Total $", min_value=0.0)
+        cond = st.selectbox("Condición", ["Contado", "Crédito"])
+        if st.form_submit_button("REGISTRAR VENTA"):
+            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": cond, "cliente": c, "monto": m}
             requests.post(URL_GOOGLE, json=payload)
-            st.success(f"Venta de {cli} guardada en Excel")
+            st.success("✅ Venta guardada")
 
-# --- 2. VENTA MAYOR (SAYG) CON PDF ---
+# 2. VENTA MAYOR (SAYG)
 elif menu == "Venta Mayor (SAYG)":
-    st.header("📦 Sistema de Ventas al Mayor")
-    c_m = st.selectbox("Cliente Mayorista", st.session_state.clientes)
-    col1, col2 = st.columns(2)
-    p_sel = col1.selectbox("Producto", list(st.session_state.productos.keys()))
-    cant = col2.number_input("Cantidad", min_value=1, value=20)
+    st.header("📦 Pedido al Mayor")
+    cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
     
-    if st.button("➕ Añadir al Pedido"):
-        p_u = st.session_state.productos[p_sel]
-        st.session_state.carro.append({"Producto": p_sel, "Cant": cant, "Precio": p_u, "Subtotal": cant * p_u})
+    col1, col2 = st.columns(2)
+    prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
+    stock_actual = productos_dict[prod_nom]['stock']
+    precio_u = productos_dict[prod_nom]['precio']
+    
+    st.info(f"💰 Precio: {precio_u}$ | 📦 Stock: {stock_actual}")
+    cant = col2.number_input("Cantidad", min_value=1, max_value=int(stock_actual) if stock_actual > 0 else 1)
+    
+    if st.button("➕ Agregar al Carrito"):
+        if 'carro' not in st.session_state: st.session_state.carro = []
+        st.session_state.carro.append({"Producto": prod_nom, "Cant": cant, "Precio": precio_u, "Subtotal": cant * precio_u})
 
-    if st.session_state.carro:
-        df_c = pd.DataFrame(st.session_state.carro)
-        st.table(df_c)
-        total_m = df_c["Subtotal"].sum()
-        st.subheader(f"Total: {total_m:.2f}$")
+    if 'carro' in st.session_state and st.session_state.carro:
+        st.table(pd.DataFrame(st.session_state.carro))
+        t_final = sum(i['Subtotal'] for i in st.session_state.carro)
+        st.subheader(f"Total: {t_final:.2f}$")
         
-        if st.button("🔒 GENERAR FACTURA PDF Y GUARDAR"):
-            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Crédito", "cliente": c_m, "monto": total_m}
+        if st.button("🔒 FINALIZAR Y CREAR PDF"):
+            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Crédito", "cliente": cli_m, "monto": t_final}
             requests.post(URL_GOOGLE, json=payload)
-            pdf_bytes = crear_pdf_factura(c_m, st.session_state.carro, total_m)
-            b64 = base64.b64encode(pdf_bytes).decode()
-            href = f'<a href="data:application/octet-stream;base64,{b64}" download="Factura_{c_m}.pdf" style="padding:10px;background-color:#FF4B4B;color:white;text-decoration:none;border-radius:5px;">📥 DESCARGAR PDF</a>'
+            pdf_b = crear_pdf(cli_m, st.session_state.carro, t_final)
+            b64 = base64.b64encode(pdf_b).decode()
+            href = f'<a href="data:application/octet-stream;base64,{b64}" download="Factura_{cli_m}.pdf" style="padding:10px;background-color:#FF4B4B;color:white;text-decoration:none;border-radius:5px;">📥 DESCARGAR FACTURA PDF</a>'
             st.markdown(href, unsafe_allow_html=True)
             st.session_state.carro = []
 
-# --- 3. CUENTAS POR COBRAR Y ABONOS ---
-elif menu == "Cuentas por Cobrar":
-    st.header("💰 Control de Deudas y Abonos")
-    cli_deuda = st.selectbox("Consultar Cliente", st.session_state.clientes)
-    # [span_0](start_span)Aquí puedes conectar la lógica para sumar créditos del Excel[span_0](end_span)
-    st.info("Sincronizado con: Ventas Inversiones AYG 2017 - Reporte Filtrable")
-    
-    with st.expander("Registrar Abono"):
-        m_abono = st.number_input("Monto del Abono $", min_value=0.0)
-        if st.button("Guardar Abono"):
-            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "ABONO", "cliente": cli_deuda, "monto": -m_abono}
-            requests.post(URL_GOOGLE, json=payload)
-            st.success(f"Abono de {m_abono}$ registrado exitosamente")
+# 3. CUENTAS Y ABONOS
+elif menu == "Cuentas y Abonos":
+    st.header("💰 Registro de Abonos")
+    cli_a = st.selectbox("Cliente", clientes_lista)
+    monto_a = st.number_input("Monto del Abono $", min_value=0.0)
+    if st.button("REGISTRAR ABONO"):
+        payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "ABONO", "cliente": cli_a, "monto": -monto_a}
+        requests.post(URL_GOOGLE, json=payload)
+        st.success(f"✅ Abono de {monto_a}$ registrado")
 
-# --- 4. LISTA DE PRECIOS ---
-elif menu == "Lista de Precios":
-    st.header("📋 Precios Vigentes")
-    df_p = pd.DataFrame(list(st.session_state.productos.items()), columns=["Producto", "Precio $"])
-    st.table(df_p)
-    with st.expander("Actualizar Precio"):
-        prod_u = st.selectbox("Producto a editar", list(st.session_state.productos.keys()))
-        nuevo_p = st.number_input("Nuevo Precio $", value=st.session_state.productos[prod_u])
-        if st.button("Actualizar"):
-            st.session_state.productos[prod_u] = nuevo_p
-            st.rerun()
-
-# --- 5. CLIENTES E INVENTARIO ---
-elif menu == "Clientes e Inventario":
-    st.header("👥 Gestión de Base de Datos")
-    new_c = st.text_input("Nuevo Cliente").upper()
-    if st.button("Añadir Cliente"):
-        st.session_state.clientes.append(new_c)
-        st.success(f"Cliente {new_c} añadido")
+# 4. INVENTARIO
+elif menu == "Inventario":
+    st.header("📦 Estado del Almacén")
+    df_inv = pd.DataFrame([{"Producto": k, "Precio": v['precio'], "Stock": v['stock']} for k,v in productos_dict.items()])
+    st.table(df_inv)
+    st.write("🟢 Las cantidades se actualizan según las Entradas/Salidas de tu Excel.")
