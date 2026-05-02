@@ -9,7 +9,7 @@ import base64
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
 
 # --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
-URL_GOOGLE = "https://script.google.com/macros/s/AKfycbwnn4rvOYQC8G7USLsxQS5dzdyI_5AGZBLXkBlYOOytq0xFP2NkZ-hP3_fPb2c8RY4b/exec"
+URL_GOOGLE = "https://script.google.com/macros/library/d/1YzoN5SPSuYyAeGILT_8RDZSv-MBchfKctpddkkFp-6lhKMTVd3TQO4Ih/4"
 
 # --- SISTEMA DE SEGURIDAD ---
 def check_password():
