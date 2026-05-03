@@ -139,3 +139,36 @@ elif menu == "Inventario":
     df_inv = pd.DataFrame([{"Producto": k, "Precio": v['precio'], "Stock": v['stock']} for k,v in productos_dict.items()])
     st.table(df_inv)
     st.write("🟢 Las cantidades se actualizan según las Entradas/Salidas de tu Excel.")
+# --- 5. CUENTAS POR COBRAR ---
+elif menu == "Cuentas por Cobrar":
+    st.header("📊 Resumen de Deudas")
+    
+    if clientes:
+        cliente_sel = st.selectbox("Ver estado de:", clientes)
+        
+        # Leemos todas las ventas para calcular
+        resp = requests.get(f"{URL_SCRIPT}?tipo=todo")
+        datos = resp.json()
+        df_v = pd.DataFrame(datos.get("ventas", []))
+        
+        if not df_v.empty:
+            # Filtramos por cliente
+            df_cli = df_v[df_v['Cliente'] == cliente_sel]
+            
+            # Calculamos Deuda (Ventas a Crédito) y Pagado (Abonos)
+            total_deuda = df_cli[df_cli['Metodo'] == 'Crédito']['Total'].sum()
+            total_abonos = df_cli[df_cli['Metodo'] == 'Abono']['Total'].sum()
+            saldo = total_deuda - total_abonos
+            
+            # Mostramos los cuadritos con los montos
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Total Fiado", f"${total_deuda:.2f}")
+            c2.metric("Total Pagado", f"${total_abonos:.2f}")
+            c3.metric("SALDO PENDIENTE", f"${saldo:.2f}", delta_color="inverse")
+            
+            if saldo > 0:
+                st.error(f"🔴 Este cliente debe ${saldo:.2f}")
+            else:
+                st.success("🟢 Este cliente está al día.")
+        else:
+            st.info("No hay registros de ventas para calcular.")
