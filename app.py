@@ -147,9 +147,9 @@ elif menu == "Cuentas por Cobrar":
         cliente_sel = st.selectbox("Ver estado de:", clientes_lista)
         
         # Leemos todas las ventas para calcular
-        resp = requests.get(f"{URL_GOOGLE}?tipo=todo")
+        resp = requests.get(f"{URL_GOOGLE}?tipo=ventas")
         datos = resp.json()
-        df_v = pd.DataFrame(datos.get("ventas", []))
+        df_v = pd.DataFrame(datos)
         
         if not df_v.empty:
             # Filtramos por cliente
