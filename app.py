@@ -129,7 +129,7 @@ elif menu == "Cuentas y Abonos":
     cli_a = st.selectbox("Cliente", clientes_lista)
     monto_a = st.number_input("Monto del Abono $", min_value=0.0)
     if st.button("REGISTRAR ABONO"):
-        payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "ABONO", "cliente": cli_a, "monto": -monto_a}
+        payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Abono", "cliente": cli_a, "monto": -monto_a}
         requests.post(URL_GOOGLE, json=payload)
         st.success(f"✅ Abono de {monto_a}$ registrado")
 
