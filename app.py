@@ -149,7 +149,8 @@ elif menu == "Cuentas por Cobrar":
         # Leemos todas las ventas para calcular
         resp = requests.get(f"{URL_GOOGLE}?tipo=ventas")
         datos = resp.json()
-        df_v = pd.DataFrame(lista_ventas)      
+        lista_ventas = datos.get("ventas", datos) if isinstance(datos, dict) else datos
+        df_v = pd.DataFrame(lista_ventas)     
         if not df_v.empty:
             # Filtramos por cliente
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel]
