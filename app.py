@@ -154,7 +154,8 @@ elif menu == "Cuentas por Cobrar":
         elif isinstance(datos, list):
             lista_final = datos
         else:
-            lista_final = []   
+            lista_final = []
+        df_v=pd.DataFrame(lista_final)
         if not df_v.empty:
             # Filtramos por cliente
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel]
