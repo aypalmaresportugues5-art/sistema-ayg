@@ -78,7 +78,7 @@ def crear_pdf(cliente, pedido, total):
 # --- DISEÑO DE LA APP ---
 st.image("1000317144.jpg.png", use_container_width=True) # Tu logo rectangular
 st.sidebar.title("🏢 MENÚ AYG")
-menu = st.sidebar.radio("Ir a:", ["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario"])
+menu = st.sidebar.radio("Ir a:", ["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario", "Cuentas por Cobrar"])
 
 # 1. VENTA DETAL
 if menu == "Venta Detal":
