@@ -144,7 +144,7 @@ elif menu == "Cuentas por Cobrar":
     st.header("📊 Resumen de Deudas")
     
     if clientes:
-        cliente_sel = st.selectbox("Ver estado de:", clientes)
+        cliente_sel = st.selectbox("Ver estado de:", clientes_lista)
         
         # Leemos todas las ventas para calcular
         resp = requests.get(f"{URL_SCRIPT}?tipo=todo")
