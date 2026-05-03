@@ -143,21 +143,21 @@ elif menu == "Inventario":
 elif menu == "Cuentas por Cobrar":
     st.header("📊 Resumen de Deudas")
     
-    if clientes:
+    if clientes_lista:
         cliente_sel = st.selectbox("Ver estado de:", clientes_lista)
         
         # Leemos todas las ventas para calcular
-        resp = requests.get(f"{URL_SCRIPT}?tipo=todo")
+        resp = requests.get(f"{URL_GOOGLE}?tipo=todo")
         datos = resp.json()
         df_v = pd.DataFrame(datos.get("ventas", []))
         
         if not df_v.empty:
             # Filtramos por cliente
-            df_cli = df_v[df_v['Cliente'] == cliente_sel]
+            df_cli = df_v[df_v['CLIENTE'] == cliente_sel]
             
             # Calculamos Deuda (Ventas a Crédito) y Pagado (Abonos)
-            total_deuda = df_cli[df_cli['Metodo'] == 'Crédito']['Total'].sum()
-            total_abonos = df_cli[df_cli['Metodo'] == 'Abono']['Total'].sum()
+            total_deuda = df_cli[df_cli['TIPO'] == 'Crédito']['MONTO($)'].sum()
+            total_abonos = df_cli[df_cli['TIPO'] == 'Abono']['MONTO($)'].sum()
             saldo = total_deuda - total_abonos
             
             # Mostramos los cuadritos con los montos
