@@ -147,10 +147,10 @@ elif menu == "Cuentas por Cobrar":
         cliente_sel = st.selectbox("Ver estado de:", clientes_lista)
         
         # Leemos todas las ventas para calcular
-        resp = requests.get(f"{URL_GOOGLE}?tipo=ventas")
+        resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
         datos = resp.json()
-        if isinstance(datos, dict) and "ventas" in datos:
-            lista_final = datos["ventas"]
+        if isinstance(datos, dict) and "Ventas" in datos:
+            lista_final = datos["Ventas"]
         elif isinstance(datos, list):
             lista_final = datos
         else:
