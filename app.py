@@ -113,7 +113,10 @@ elif menu == "Venta Mayor (SAYG)":
         st.table(pd.DataFrame(st.session_state.carro))
         t_final = sum(i['Subtotal'] for i in st.session_state.carro)
         st.subheader(f"Total: {t_final:.2f}$")
-        
+    # Botón para borrar todo y empezar de nuevo si hay un error
+    if st.button("🗑️ Vaciar Carrito"):
+            st.session_state.carro = []
+            st.rerun()
         if st.button("🔒 FINALIZAR Y CREAR PDF"):
             payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Crédito", "cliente": cli_m, "monto": t_final}
             requests.post(URL_GOOGLE, json=payload)
@@ -163,7 +166,7 @@ elif menu == "Cuentas por Cobrar":
             # Calculamos Deuda (Ventas a Crédito) y Pagado (Abonos)
             total_deuda = df_cli[df_cli['TIPO'] == 'Crédito']['MONTO($)'].sum()
             total_abonos = df_cli[df_cli['TIPO'] == 'Abono']['MONTO($)'].sum()
-            saldo = total_deuda - total_abonos
+            saldo = total_deuda + total_abonos
             
             # Mostramos los cuadritos con los montos
             c1, c2, c3 = st.columns(3)
