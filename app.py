@@ -114,7 +114,7 @@ elif menu == "Venta Mayor (SAYG)":
         t_final = sum(i['Subtotal'] for i in st.session_state.carro)
         st.subheader(f"Total: {t_final:.2f}$")
     # Botón para borrar todo y empezar de nuevo si hay un error
-    if st.button("🗑️ Vaciar Carrito"):
+        if st.button("🗑️ Vaciar Carrito"):
             st.session_state.carro = []
             st.rerun()
         if st.button("🔒 FINALIZAR Y CREAR PDF"):
