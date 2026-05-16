@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_option_menu import option_menu
 import pandas as pd
 import requests
 from datetime import datetime
@@ -77,8 +78,24 @@ def crear_pdf(cliente, pedido, total):
 
 # --- DISEÑO DE LA APP ---
 st.image("1000317144.jpg.png", use_container_width=True) # Tu logo rectangular
-st.sidebar.title("🏢 MENÚ AYG")
-menu = st.sidebar.radio("Ir a:", ["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario", "Cuentas por Cobrar"])
+    # --- AQUÍ EMPIEZA EL NUEVO MENÚ PREMIUM ---
+    st.write("---") # Línea divisoria elegante en la barra lateral
+    
+    # Creamos el menú moderno con sus íconos
+    menu = option_menu(
+        menu_title="MENÚ AYG 2017",
+        options=["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario", "Cuentas por Cobrar"],
+        icons=["shop", "truck", "wallet2", "box-seam", "cash-stack"], 
+        menu_icon="building-gear", 
+        default_index=0, 
+        styles={
+            "container": {"padding": "5px", "background-color": "#f8f9fa", "border-radius": "10px"},
+            "icon": {"color": "#FF4B4B", "font-size": "18px"}, 
+            "nav-link": {"font-size": "15px", "text-align": "left", "margin":"5px", "border-radius": "8px"},
+            "nav-link-selected": {"background-color": "#FF4B4B", "color": "white", "font-weight": "bold"},
+        }
+    )
+    # --- AQUÍ TERMINA EL MENÚ ---
 
 # 1. VENTA DETAL
 if menu == "Venta Detal":
