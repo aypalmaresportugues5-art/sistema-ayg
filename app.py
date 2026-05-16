@@ -92,7 +92,7 @@ with st.sidebar:
         styles={
             "container": {"padding": "5px", "background-color": "#f8f9fa", "border-radius": "10px"},
             "icon": {"color": "#FF4B4B", "font-size": "18px"}, 
-            "nav-link": {"font-size": "15px", "text-align": "left", "margin":"5px", "border-radius": "8px"},
+            "nav-link": {"font-size": "15px", "text-align": "left", "margin":"5px", "border-radius": "8px","color": "#1e1e1e"},
             "nav-link-selected": {"background-color": "#FF4B4B", "color": "white", "font-weight": "bold"},
         }
     )
