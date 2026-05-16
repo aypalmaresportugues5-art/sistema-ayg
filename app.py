@@ -77,9 +77,10 @@ def crear_pdf(cliente, pedido, total):
     return pdf.output(dest='S').encode('latin-1')
 
 # --- DISEÑO DE LA APP ---
-st.image("1000317144.jpg.png", use_container_width=True) # Tu logo rectangular
-    # --- AQUÍ EMPIEZA EL NUEVO MENÚ PREMIUM ---
-    st.write("---") # Línea divisoria elegante en la barra lateral
+st.image("1000317144.jpg.png", use_container_width=True)
+
+with st.sidebar:
+    st.write("---") # Línea divisoria elegante
     
     # Creamos el menú moderno con sus íconos
     menu = option_menu(
@@ -95,7 +96,6 @@ st.image("1000317144.jpg.png", use_container_width=True) # Tu logo rectangular
             "nav-link-selected": {"background-color": "#FF4B4B", "color": "white", "font-weight": "bold"},
         }
     )
-    # --- AQUÍ TERMINA EL MENÚ ---
 
 # 1. VENTA DETAL
 if menu == "Venta Detal":
