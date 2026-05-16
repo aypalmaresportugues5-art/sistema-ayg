@@ -146,29 +146,37 @@ elif menu == "Inventario":
 elif menu == "Cuentas por Cobrar":
     st.header("📊 Resumen de Deudas")
     
-    if clientes_lista:
-        cliente_sel = st.selectbox("Ver estado de:", clientes_lista)
+    # 1. Pedimos los datos a Google
+    resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
+    datos_recibidos = resp.json()
+    
+    if isinstance(datos_recibidos, list):
+        df_v = pd.DataFrame(datos_recibidos)
+    else:
+        df_v = pd.DataFrame()
+
+    if not df_v.empty:
+        # --- SECCIÓN NUEVA: TOTAL GLOBAL (DINERO EN LA CALLE) ---
+        # Sumamos todos los créditos y abonos de la hoja
+        global_deuda = df_v[df_v['TIPO'] == 'Crédito']['MONTO($)'].sum()
+        global_abonos = df_v[df_v['TIPO'] == 'Abono']['MONTO($)'].sum()
+        total_en_calle = global_deuda + global_abonos
         
-        # Leemos todas las ventas para calcular
-        resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
-        datos = resp.json()
-        if isinstance(datos, dict) and "Ventas" in datos:
-            lista_final = datos["Ventas"]
-        elif isinstance(datos, list):
-            lista_final = datos
-        else:
-            lista_final = []
-        df_v=pd.DataFrame(lista_final)
-        if not df_v.empty:
-            # Filtramos por cliente
+        st.subheader("💰 Capital Total por Cobrar")
+        st.info(f"Actualmente tienes un total de **${total_en_calle:.2f}** distribuidos entre todos tus clientes.")
+        st.divider() 
+
+        # --- SECCIÓN DETALLE POR CLIENTE ---
+        if clientes_lista:
+            cliente_sel = st.selectbox("Ver detalle de un cliente específico:", clientes_lista)
+            
+            # Filtramos solo lo de este cliente
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel]
             
-            # Calculamos Deuda (Ventas a Crédito) y Pagado (Abonos)
             total_deuda = df_cli[df_cli['TIPO'] == 'Crédito']['MONTO($)'].sum()
             total_abonos = df_cli[df_cli['TIPO'] == 'Abono']['MONTO($)'].sum()
-            saldo = total_deuda + total_abonos
+            saldo = total_deuda + total_abonos # Usamos + porque el abono es negativo
             
-            # Mostramos los cuadritos con los montos
             c1, c2, c3 = st.columns(3)
             c1.metric("Total Fiado", f"${total_deuda:.2f}")
             c2.metric("Total Pagado", f"${total_abonos:.2f}")
@@ -178,5 +186,6 @@ elif menu == "Cuentas por Cobrar":
                 st.error(f"🔴 Este cliente debe ${saldo:.2f}")
             else:
                 st.success("🟢 Este cliente está al día.")
-        else:
-            st.info("No hay registros de ventas para calcular.")
+    else:
+        st.info("No hay registros de ventas para calcular.")
+
