@@ -243,3 +243,76 @@ elif menu == "Cuentas por Cobrar":
                 st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
     else:
         st.info("No hay registros de ventas para calcular.")
+
+# --- 6. CIERRE DE CAJA ---
+elif menu == "Cierre de Caja":
+    st.header("🗄️ Control y Cierre de Caja Diario")
+    
+    # Pedimos los movimientos de ventas del día actual
+    resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
+    datos_recibidos = resp.json()
+    
+    if isinstance(datos_recibidos, list):
+        df_v = pd.DataFrame(datos_recibidos)
+    else:
+        df_v = pd.DataFrame()
+        
+    fecha_hoy = datetime.now().strftime('%Y-%m-%d')
+    
+    st.subheader(f"Resumen de Operaciones: {fecha_hoy}")
+    
+    if not df_v.empty:
+        # Filtramos las ventas y abonos registrados el día de hoy
+        df_v['FECHA_CORTA'] = df_v['FECHA'].str[:10]
+        df_hoy = df_v[df_v['FECHA_CORTA'] == fecha_hoy]
+        
+        if not df_hoy.empty:
+            # Calculamos los totales del día según el tipo de registro
+            total_detal = df_hoy[(df_hoy['TIPO'] != 'Abono') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]['MONTO($)'].sum()
+            total_mayor = df_hoy[(df_hoy['TIPO'] != 'Abono') & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]['MONTO($)'].sum()
+            total_abonos_hoy = df_hoy[df_hoy['TIPO'] == 'Abono']['MONTO($)'].sum()
+            
+            efectivo_abonos = abs(total_abonos_hoy)
+            total_liquido_caja = total_detal + total_mayor + total_abonos_hoy
+            
+            # Mostramos las métricas del día de forma innovadora
+            col1, col2, col3 = st.columns(3)
+            col1.metric("Venta Detal Hoy", f"${total_detal:.2f}")
+            col2.metric("Venta Mayor Hoy", f"${total_mayor:.2f}")
+            col3.metric("Abonos Recibidos Hoy", f"${efectivo_abonos:.2f}")
+            
+            st.markdown(f"### 💵 Total General Estimado en Caja: **${total_liquido_caja:.2f}**")
+            st.caption("Este monto representa el dinero total que debió ingresar entre ventas directas y pagos de deudas.")
+            
+            st.write("---")
+            
+            # Formulario para confirmar el cierre físico
+            with st.form("form_cierre"):
+                st.write("¿Todo cuadra con el dinero físico en mano?")
+                observaciones = st.text_area("Notas o novedades del día (Opcional):", placeholder="Ej. Dejamos $20 de cambio en caja física para mañana...")
+                
+                boton_cerrar = st.form_submit_button("🔒 CONSOLIDAR Y CERRAR CAJA")
+                
+                if boton_cerrar:
+                    # Preparamos los datos para mandarlos a la nueva pestaña del Excel
+                    payload_cierre = {
+                        "fecha": fecha_hoy,
+                        "tipo": "CierreCaja",
+                        "detal": total_detal,
+                        "mayor": total_mayor,
+                        "abonos": efectivo_abonos,
+                        "total": total_liquido_caja,
+                        "notas": observaciones
+                    }
+                    
+                    # Enviamos los datos a tu script de Google
+                    respuesta = requests.post(URL_GOOGLE, json=payload_cierre)
+                    
+                    if respuesta.status_code == 200:
+                        st.success("🎉 ¡Cierre de caja guardado con éxito en el sistema!")
+                    else:
+                        st.error("Hubo un inconveniente al conectar con Google Sheets. Intenta de nuevo.")
+        else:
+            st.info("Aún no se han registrado ventas ni abonos en la jornada de hoy.")
+    else:
+        st.info("No se encontraron registros históricos de ventas.")
