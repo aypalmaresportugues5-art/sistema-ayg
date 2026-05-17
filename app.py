@@ -85,7 +85,7 @@ with st.sidebar:
     # Creamos el menú moderno con sus íconos
     menu = option_menu(
         menu_title="MENÚ AYG 2017",
-        options=["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario", "Cuentas por Cobrar"],
+        options=["Venta Detal", "Venta Mayor (SAYG)", "Cuentas y Abonos", "Inventario", "Cuentas por Cobrar", "Cierre de Caja"],
         icons=["shop", "truck", "wallet2", "box-seam", "cash-stack"], 
         menu_icon="building-gear", 
         default_index=0, 
