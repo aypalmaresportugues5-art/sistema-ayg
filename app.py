@@ -159,11 +159,12 @@ elif menu == "Inventario":
     df_inv = pd.DataFrame([{"Producto": k, "Precio": v['precio'], "Stock": v['stock']} for k,v in productos_dict.items()])
     st.table(df_inv)
     st.write("🟢 Las cantidades se actualizan según las Entradas/Salidas de tu Excel.")
+ 
 # --- 5. CUENTAS POR COBRAR ---
 elif menu == "Cuentas por Cobrar":
-    st.header("📊 Resumen de Deudas")
+    st.header("📊 Resumen de Deudas Activas")
     
-    # 1. Pedimos los datos a Google
+    # 1. Pedimos los datos a Google Sheets
     resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
     datos_recibidos = resp.json()
     
@@ -173,36 +174,82 @@ elif menu == "Cuentas por Cobrar":
         df_v = pd.DataFrame()
 
     if not df_v.empty:
-        # --- SECCIÓN NUEVA: TOTAL GLOBAL (DINERO EN LA CALLE) ---
-        # Sumamos todos los créditos y abonos de la hoja
-        global_deuda = df_v[df_v['TIPO'] == 'Crédito']['MONTO($)'].sum()
-        global_abonos = df_v[df_v['TIPO'] == 'Abono']['MONTO($)'].sum()
-        total_en_calle = global_deuda + global_abonos
-        
+        # --- CÁLCULO DEL DINERO TOTAL REAL EN LA CALLE ---
+        gran_total_en_calle = 0.0
+        if clientes_lista:
+            for c in clientes_lista:
+                df_c = df_v[df_v['CLIENTE'] == c]
+                movimientos = []
+                for _, fila in df_c.iterrows():
+                    movimientos.append({'tipo': fila['TIPO'], 'monto': float(fila['MONTO($)'])})
+                movimientos.reverse()
+                
+                saldo_temporal = 0.0
+                for m in movimientos:
+                    saldo_temporal += m['monto']
+                    if len(movimientos) > 1 and saldo_temporal <= 0:
+                        break
+                if saldo_temporal > 0:
+                    gran_total_en_calle += saldo_temporal
+
         st.subheader("💰 Capital Total por Cobrar")
-        st.info(f"Actualmente tienes un total de **${total_en_calle:.2f}** distribuidos entre todos tus clientes.")
+        st.info(f"Actualmente tienes un total de **${gran_total_en_calle:.2f}** en la calle (solo deudas vigentes).")
         st.divider() 
 
         # --- SECCIÓN DETALLE POR CLIENTE ---
         if clientes_lista:
-            cliente_sel = st.selectbox("Ver detalle de un cliente específico:", clientes_lista)
+            cliente_sel = st.selectbox("Ver deuda de un cliente específico:", clientes_lista)
             
-            # Filtramos solo lo de este cliente
-            df_cli = df_v[df_v['CLIENTE'] == cliente_sel]
+            # Filtramos los movimientos del cliente seleccionado
+            df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
+            movimientos_cliente = df_cli.to_dict('records')
+            movimientos_cliente.reverse()
             
-            total_deuda = df_cli[df_cli['TIPO'] == 'Crédito']['MONTO($)'].sum()
-            total_abonos = df_cli[df_cli['TIPO'] == 'Abono']['MONTO($)'].sum()
-            saldo = total_deuda + total_abonos # Usamos + porque el abono es negativo
+            historial_ciclo_activo = []
+            saldo_acumulado_ciclo = 0.0
             
-            c1, c2, c3 = st.columns(3)
-            c1.metric("Total Fiado", f"${total_deuda:.2f}")
-            c2.metric("Total Pagado", f"${total_abonos:.2f}")
-            c3.metric("SALDO PENDIENTE", f"${saldo:.2f}", delta_color="inverse")
+            # Recorremos de lo más nuevo a lo más viejo para hallar el ciclo activo actual
+            for mov in movimientos_cliente:
+                monto = float(mov['MONTO($)'])
+                saldo_acumulado_ciclo += monto
+                historial_ciclo_activo.append(mov)
+                
+                # Si el saldo acumulado llega a 0 o menos, significa que antes de esto ya estaba al día
+                if saldo_acumulado_ciclo <= 0 and len(historial_ciclo_activo) > 1:
+                    # Removemos el último si este fue el que dejó la cuenta en 0 el ciclo pasado
+                    # para quedarnos solo con el período que generó la deuda actual
+                    break
             
-            if saldo > 0:
-                st.error(f"🔴 Este cliente debe ${saldo:.2f}")
+            # Calculamos deudas y abonos SOLO del ciclo activo descubierto
+            total_deuda = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Crédito')
+            total_abonos = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Abono')
+            saldo_pendiente = total_deuda + total_abonos # El abono ya viene con signo menos en el Excel
+            
+            # Si la matemática da limpia o negativa por seguridad, reseteamos a cero ambos
+            if saldo_pendiente <= 0:
+                saldo_pendiente = 0.0
+                total_abonos = 0.0
+            
+            # Pasamos el abono a positivo solo para mostrarlo de forma natural en la tarjeta visual
+            abonos_mostrar = abs(total_abonos)
+
+            # --- INTERFAZ INNOVADORA EN COLUMNAS ---
+            c1, c2 = st.columns(2)
+            c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${abonos_mostrar:.2f}")
+            c2.metric("SALDO PENDIENTE NETO", f"${saldo_pendiente:.2f}", delta_color="inverse")
+            st.write("---")
+            
+            if saldo_pendiente > 0:
+                st.error(f"🔴 Este cliente tiene una cuenta activa por ${saldo_pendiente:.2f}")
+                
+                # Mostramos la tabla con las compras y abonos que componen la deuda actual
+                st.write("**Detalle de movimientos de la cuenta vigente:**")
+                # Volvemos a poner en orden normal para que el usuario lea de viejo a nuevo en la tabla
+                df_mostrar = pd.DataFrame(historial_ciclo_activo)[['FECHA', 'TIPO', 'MONTO($)']]
+                df_mostrar = df_mostrar.iloc[::-1] # Invierte la tabla para mostrar orden cronológico
+                st.table(df_mostrar)
             else:
-                st.success("🟢 Este cliente está al día.")
+                st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
     else:
         st.info("No hay registros de ventas para calcular.")
 
