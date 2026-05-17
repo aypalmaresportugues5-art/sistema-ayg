@@ -179,18 +179,10 @@ elif menu == "Cuentas por Cobrar":
         if clientes_lista:
             for c in clientes_lista:
                 df_c = df_v[df_v['CLIENTE'] == c]
-                movimientos = []
-                for _, fila in df_c.iterrows():
-                    movimientos.append({'tipo': fila['TIPO'], 'monto': float(fila['MONTO($)'])})
-                movimientos.reverse()
-                
-                saldo_temporal = 0.0
-                for m in movimientos:
-                    saldo_temporal += m['monto']
-                    if len(movimientos) > 1 and saldo_temporal <= 0:
-                        break
-                if saldo_temporal > 0:
-                    gran_total_en_calle += saldo_temporal
+                # Saldo histórico total neto de este cliente
+                saldo_historico = df_c['MONTO($)'].sum()
+                if saldo_historico > 0:
+                    gran_total_en_calle += saldo_historico
 
         st.subheader("💰 Capital Total por Cobrar")
         st.info(f"Actualmente tienes un total de **${gran_total_en_calle:.2f}** en la calle (solo deudas vigentes).")
@@ -198,58 +190,56 @@ elif menu == "Cuentas por Cobrar":
 
         # --- SECCIÓN DETALLE POR CLIENTE ---
         if clientes_lista:
-            cliente_sel = st.selectbox("Ver deuda de un cliente específico:", clientes_lista)
+            cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista)
             
             # Filtramos los movimientos del cliente seleccionado
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
-            movimientos_cliente = df_cli.to_dict('records')
-            movimientos_cliente.reverse()
             
-            historial_ciclo_activo = []
-            saldo_acumulado_ciclo = 0.0
+            # Calculamos primero el saldo real neto de toda su historia
+            saldo_real_neto = df_cli['MONTO($)'].sum()
             
-            # Recorremos de lo más nuevo a lo más viejo para hallar el ciclo activo actual
-            for mov in movimientos_cliente:
-                monto = float(mov['MONTO($)'])
-                saldo_acumulado_ciclo += monto
-                historial_ciclo_activo.append(mov)
+            if saldo_real_neto > 0:
+                # Si el cliente debe, aislamos el último ciclo activo para mostrar el desglose
+                movimientos_cliente = df_cli.to_dict('records')
                 
-                # Si el saldo acumulado llega a 0 o menos, significa que antes de esto ya estaba al día
-                if saldo_acumulado_ciclo <= 0 and len(historial_ciclo_activo) > 1:
-                    # Removemos el último si este fue el que dejó la cuenta en 0 el ciclo pasado
-                    # para quedarnos solo con el período que generó la deuda actual
-                    break
-            
-            # Calculamos deudas y abonos SOLO del ciclo activo descubierto
-            total_deuda = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Crédito')
-            total_abonos = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Abono')
-            saldo_pendiente = total_deuda + total_abonos # El abono ya viene con signo menos en el Excel
-            
-            # Si la matemática da limpia o negativa por seguridad, reseteamos a cero ambos
-            if saldo_pendiente <= 0:
-                saldo_pendiente = 0.0
-                total_abonos = 0.0
-            
-            # Pasamos el abono a positivo solo para mostrarlo de forma natural en la tarjeta visual
-            abonos_mostrar = abs(total_abonos)
+                historial_ciclo_activo = []
+                saldo_acumulado_inverso = 0.0
+                
+                # Recorremos de lo más nuevo a lo más viejo para saber qué compone la deuda actual
+                for mov in reversed(movimientos_cliente):
+                    monto = float(mov['MONTO($)'])
+                    saldo_acumulado_inverso += monto
+                    historial_ciclo_activo.append(mov)
+                    
+                    # Si ya alcanzamos a cubrir el saldo neto actual, detenemos la tabla para no mostrar cosas viejas
+                    if saldo_acumulado_inverso >= saldo_real_neto:
+                        break
+                
+                # Calculamos créditos y abonos solo de este ciclo visible
+                total_deuda = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Crédito')
+                total_abonos = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Abono')
+                abonos_mostrar = abs(total_abonos)
 
-            # --- INTERFAZ INNOVADORA EN COLUMNAS ---
-            c1, c2 = st.columns(2)
-            c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${abonos_mostrar:.2f}")
-            c2.metric("SALDO PENDIENTE NETO", f"${saldo_pendiente:.2f}", delta_color="inverse")
-            st.write("---")
-            
-            if saldo_pendiente > 0:
-                st.error(f"🔴 Este cliente tiene una cuenta activa por ${saldo_pendiente:.2f}")
+                # --- INTERFAZ EN COLUMNAS ---
+                c1, c2 = st.columns(2)
+                c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${abonos_mostrar:.2f}")
+                c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}", delta_color="inverse")
+                st.write("---")
                 
-                # Mostramos la tabla con las compras y abonos que componen la deuda actual
+                st.error(f"🔴 Este cliente tiene una cuenta activa por ${saldo_real_neto:.2f}")
                 st.write("**Detalle de movimientos de la cuenta vigente:**")
-                # Volvemos a poner en orden normal para que el usuario lea de viejo a nuevo en la tabla
+                
+                # Mostramos la tabla ordenada cronológicamente (de viejo a nuevo)
                 df_mostrar = pd.DataFrame(historial_ciclo_activo)[['FECHA', 'TIPO', 'MONTO($)']]
-                df_mostrar = df_mostrar.iloc[::-1] # Invierte la tabla para mostrar orden cronológico
+                df_mostrar = df_mostrar.iloc[::-1] 
                 st.table(df_mostrar)
+                
             else:
+                # Si el saldo histórico es 0 o menor, está totalmente al día
+                c1, c2 = st.columns(2)
+                c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", "$0.00")
+                c2.metric("SALDO PENDIENTE NETO", "$0.00")
+                st.write("---")
                 st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
     else:
         st.info("No hay registros de ventas para calcular.")
-
