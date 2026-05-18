@@ -152,7 +152,9 @@ elif menu == "Cuentas y Abonos":
         payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Abono", "cliente": cli_a, "monto": -monto_a}
         requests.post(URL_GOOGLE, json=payload)
         st.success(f"✅ Abono de {monto_a}$ registrado")
-
+        if "cli_a" in st.session_state:
+            st.session_state["cli_a"] = "Seleccionar..."
+        st.rerun() 
 # 4. INVENTARIO
 elif menu == "Inventario":
     st.header("📦 Estado del Almacén")
