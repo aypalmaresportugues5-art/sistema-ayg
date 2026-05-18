@@ -241,6 +241,10 @@ elif menu == "Cuentas por Cobrar":
                 c2.metric("SALDO PENDIENTE NETO", "$0.00")
                 st.write("---")
                 st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
+                keys_a_limpiar = ["monto_abono", "abono", "monto", "abono_caja"]
+                for k in keys_a_limpiar:
+                  if k in st.session_state:
+                      st.session_state[k] = 0.0
     else:
         st.info("No hay registros de ventas para calcular.")
 
