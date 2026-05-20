@@ -215,15 +215,22 @@ elif menu == "Cuentas por Cobrar":
                     if saldo_acumulado_inverso >= saldo_real_neto:
                         break
                 
-                # Calculamos créditos y abonos solo de este ciclo visible
-                total_deuda = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Crédito')
-                total_abonos = sum(float(m['MONTO($)']) for m in historial_ciclo_activo if m['TIPO'] == 'Abono')
-                abonos_mostrar = abs(total_abonos)
+                                # === MATEMÁTICA EN BASE AL SALDO REAL ===
+                # Si el saldo neto ya es 0 o menor, limpiamos la pantalla a cero absoluto
+                if saldo_real_neto <= 0:
+                    abonos_mostrar = 0.0
+                    saldo_pendiente_pantalla = 0.0
+                else:
+                    # Si aún debe, calculamos los abonos acumulados únicamente de este ciclo activo
+                    total_abonos_ciclo = sum(float(n['MONTO($)']) for n in historial_ciclo_activo if n['TIPO'] == 'Abono')
+                    abonos_mostrar = abs(total_abonos_ciclo)
+                    saldo_pendiente_pantalla = saldo_real_neto
 
                 # --- INTERFAZ EN COLUMNAS ---
                 c1, c2 = st.columns(2)
                 c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${abonos_mostrar:.2f}")
-                c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}", delta_color="inverse")
+                c2.metric("SALDO PENDIENTE NETO", f"${saldo_pendiente_pantalla:.2f}")
+
                 st.write("---")
                 
                 st.error(f"🔴 Este cliente tiene una cuenta activa por ${saldo_real_neto:.2f}")
