@@ -242,9 +242,7 @@ elif menu == "Cuentas por Cobrar":
             st.table(df_mostrar)
 
                
-    else:
-        st.info("No hay registros de ventas para calcular.")
-
+    
 # --- 6. CIERRE DE CAJA ---
 elif menu == "Cierre de Caja":
         st.header("🗄️ Control y Cierre de Caja Diario")
