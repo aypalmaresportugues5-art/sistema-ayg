@@ -153,12 +153,131 @@ elif menu == "Cuentas y Abonos":
         requests.post(URL_GOOGLE, json=payload)
         st.success(f"✅ Abono de {monto_a}$ registrado")
         
-# 4. INVENTARIO
+# # 4. INVENTARIO
 elif menu == "Inventario":
-    st.header("📦 Estado del Almacén")
-    df_inv = pd.DataFrame([{"Producto": k, "Precio": v['precio'], "Stock": v['stock']} for k,v in productos_dict.items()])
-    st.table(df_inv)
-    st.write("🟢 Las cantidades se actualizan según las Entradas/Salidas de tu Excel.")
+    st.header("📦 Gestión de Almacén, Costos y Registros")
+    
+    # Creamos las 4 pestañas para organizar todo sin amontonar el teléfono
+    tab_almacen, tab_insumos, tab_productos, tab_clientes = st.tabs([
+        "📋 Estado del Almacén",
+        "🍎 Materia Prima", 
+        "🥖 Nuevos Productos", 
+        "🤝 Nuevos Clientes"
+    ])
+    
+    # ---------------------------------------------------------------------
+    # PESTAÑA 1: TU TABLA ORIGINAL (ESTADO DEL ALMACÉN)
+    # ---------------------------------------------------------------------
+    with tab_almacen:
+        st.subheader("📦 Estado del Almacén")
+        # Tu fórmula original exacta adaptada a la pestaña
+        if 'productos_dict' in locals() or 'productos_dict' in globals():
+            df_inv = pd.DataFrame([{"Producto": k, "Precio": f"{v['precio']:.4f}", "Stock": v['stock']} for k,v in productos_dict.items()])
+            st.table(df_inv)
+        else:
+            st.info("Cargando datos del almacén...")
+        st.write("🟢 Las cantidades se actualizan según las Entradas/Salidas de tu Excel.")
+
+    # ---------------------------------------------------------------------
+    # PESTAÑA 2: REGISTRO DE MATERIA PRIMA (COSTOS)
+    # ---------------------------------------------------------------------
+    with tab_insumos:
+        st.subheader("🛒 Registro de Costo de Insumos")
+        
+        with st.form("form_costos", clear_on_submit=True):
+            insumo = st.text_input("Nombre del Insumo:", placeholder="Ej: Harina de Trigo, Manteca, Azúcar")
+            costo_compra = st.number_input("Costo Total de Compra ($):", min_value=0.0, step=0.01, format="%.2f")
+            presentacion = st.text_input("Presentación / Empaque:", placeholder="Ej: Saco, Bulto, Caja, Litro")
+            unidad_medida = st.number_input("Cantidad total en Unidades (Kg o Lt):", min_value=0.0, step=0.01, format="%.2f")
+            
+            btn_guardar_costo = st.form_submit_button("Guardar Insumo")
+            
+        if btn_guardar_costo:
+            if insumo and costo_compra > 0 and unidad_medida > 0:
+                costo_por_unidad = round(costo_compra / unidad_medida, 4)
+                
+                payload = {
+                    "accion": "guardar_costo",
+                    "insumo": insumo,
+                    "costo": costo_compra,
+                    "presentacion": presentacion,
+                    "unidad": unidad_medida,
+                    "costo_unidad": costo_por_unidad
+                }
+                
+                try:
+                    res = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                    if res.text == "OK_COSTO":
+                        st.success(f"🟢 ¡{insumo} guardado! Costo calculado: ${costo_por_unidad:.4f} por Kg/Lt.")
+                    else:
+                        st.error(f"❌ Error del servidor: {res.text}")
+                except Exception as e:
+                    st.error(f"❌ Error de conexión: {e}")
+            else:
+                st.warning("⚠️ Por favor, rellene todos los campos con valores mayores a cero.")
+
+    # ---------------------------------------------------------------------
+    # PESTAÑA 3: REGISTRO DE NUEVOS PRODUCTOS
+    # ---------------------------------------------------------------------
+    with tab_productos:
+        st.subheader("✨ Agregar Nuevo Producto al Sistema")
+        
+        with st.form("form_productos", clear_on_submit=True):
+            nuevo_prod = st.text_input("Nombre del Producto:", placeholder="Ej: Pan Canilla, Pan de Tunja, Pan de Guayaba")
+            p_detal = st.number_input("Precio de Venta Detal ($):", min_value=0.0, step=0.01, format="%.2f")
+            p_mayor = st.number_input("Precio de Venta Mayor ($):", min_value=0.0, step=0.01, format="%.2f")
+            
+            btn_guardar_prod = st.form_submit_button("Registrar Producto")
+            
+        if btn_guardar_prod:
+            if nuevo_prod and p_detal > 0 and p_mayor > 0:
+                payload = {
+                    "accion": "guardar_producto",
+                    "nombre_producto": nuevo_prod,
+                    "precio_detal": p_detal,
+                    "precio_mayor": p_mayor
+                }
+                
+                try:
+                    res = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                    if res.text == "OK_PRODUCTO":
+                        st.success(f"🟢 ¡Producto '{nuevo_prod}' registrado con éxito!")
+                        st.info("💡 Reinicia o refresca la app para que aparezca en tus listas de venta.")
+                    else:
+                        st.error(f"❌ Error: {res.text}")
+                except Exception as e:
+                    st.error(f"❌ Error de conexión: {e}")
+            else:
+                st.warning("⚠️ Ingresa el nombre del producto y sus precios válidos.")
+
+    # ---------------------------------------------------------------------
+    # PESTAÑA 4: REGISTRO DE NUEVOS CLIENTES
+    # ---------------------------------------------------------------------
+    with tab_clientes:
+        st.subheader("🤝 Registrar Nuevo Cliente / Bodega")
+        
+        with st.form("form_clientes", clear_on_submit=True):
+            nuevo_cliente = st.text_input("Nombre completo del Cliente o Bodega:", placeholder="Ej: Bodega Ereau, Cliente Nuevo")
+            btn_guardar_cliente = st.form_submit_button("Registrar Cliente")
+            
+        if btn_guardar_cliente:
+            if nuevo_cliente:
+                payload = {
+                    "accion": "guardar_cliente",
+                    "nombre_cliente": nuevo_cliente
+                }
+                
+                try:
+                    res = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                    if res.text == "OK_CLIENTE":
+                        st.success(f"🟢 ¡Cliente '{nuevo_cliente}' guardado correctamente!")
+                        st.info("💡 Refresca la app para que figure en la lista de deudores.")
+                    else:
+                        st.error(f"❌ Error: {res.text}")
+                except Exception as e:
+                    st.error(f"❌ Error de conexión: {e}")
+            else:
+                st.warning("⚠️ Por favor, escribe un nombre válido.")
  
 # --- 5. CUENTAS POR COBRAR ---
 elif menu == "Cuentas por Cobrar":
