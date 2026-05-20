@@ -246,7 +246,7 @@ elif menu == "Cuentas por Cobrar":
         st.info("No hay registros de ventas para calcular.")
 
 # --- 6. CIERRE DE CAJA ---
-    elif menu == "Cierre de Caja":
+elif menu == "Cierre de Caja":
         st.header("🗄️ Control y Cierre de Caja Diario")
         
         # Pedimos los movimientos de ventas del dia actual
