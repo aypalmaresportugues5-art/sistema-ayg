@@ -3,6 +3,7 @@ from streamlit_option_menu import option_menu
 import pandas as pd
 import requests
 from datetime import datetime
+import pytz
 from fpdf import FPDF
 import base64
 
@@ -14,24 +15,10 @@ URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxoXYuo0IkMCmEHKKWEnecUfQs
 
 # --- SISTEMA DE SEGURIDAD ---
 def check_password():
+    # Inicializamos la sesión directo en Verdadero para que entres sin clave
     if "password_correct" not in st.session_state:
-        st.session_state.password_correct = False
-
-    if not st.session_state.password_correct:
-        st.image("1000323326.png.png", width=200) # Tu logo circular
-        st.title("🔐 Acceso Privado - AYG 2017")
-        password = st.text_input("Introduce la clave del sistema", type="password")
-        if st.button("ENTRAR"):
-            if password == "AYG2026": # <--- Tu clave de acceso
-                st.session_state.password_correct = True
-                st.rerun()
-            else:
-                st.error("❌ Clave incorrecta")
-        return False
+        st.session_state.password_correct = True
     return True
-
-if not check_password():
-    st.stop()
 
 # --- CARGA DE DATOS DESDE EL EXCEL ---
 @st.cache_data(ttl=60) # Actualiza los datos cada minuto
@@ -105,7 +92,9 @@ if menu == "Venta Detal":
         m = st.number_input("Monto Total $", min_value=0.0)
         cond = st.selectbox("Condición", ["Contado", "Crédito"])
         if st.form_submit_button("REGISTRAR VENTA"):
-            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": cond, "cliente": c, "monto": m}
+              zona_ve = pytz.timezone('America/Caracas')
+            fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
+            payload = {"fecha": fecha_ve, "tipo": cond, "cliente": c, "monto": m}
             requests.post(URL_GOOGLE, json=payload)
             st.success("✅ Venta guardada")
 
@@ -135,7 +124,9 @@ elif menu == "Venta Mayor (SAYG)":
             st.session_state.carro = []
             st.rerun()
         if st.button("🔒 FINALIZAR Y CREAR PDF"):
-            payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Crédito", "cliente": cli_m, "monto": t_final}
+            zona_ve = pytz.timezone('America/Caracas')
+            fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
+            payload = {"fecha": fecha_ve, "tipo": "Crédito", "cliente": cli_m, "monto": t_final}
             requests.post(URL_GOOGLE, json=payload)
             pdf_b = crear_pdf(cli_m, st.session_state.carro, t_final)
             b64 = base64.b64encode(pdf_b).decode()
@@ -149,7 +140,9 @@ elif menu == "Cuentas y Abonos":
     cli_a = st.selectbox("Cliente", clientes_lista)
     monto_a = st.number_input("Monto del Abono $", min_value=0.0)
     if st.button("REGISTRAR ABONO"):
-        payload = {"fecha": datetime.now().strftime("%d/%m/%Y"), "tipo": "Abono", "cliente": cli_a, "monto": -monto_a}
+        zona_ve = pytz.timezone('America/Caracas')
+        fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
+        payload = {"fecha": fecha_ve, "tipo": "Abono", "cliente": cli_a, "monto": -monto_a}
         requests.post(URL_GOOGLE, json=payload)
         st.success(f"✅ Abono de {monto_a}$ registrado")
         
@@ -415,16 +408,21 @@ elif menu == "Cierre de Caja":
                     boton_cierre = st.form_submit_button("🔒 CONSOLIDAR Y CERRAR CAJA")
                     
                     if boton_cierre:
-                        # Preparamos los datos para mandarlos a la nueva pestaña del Excel
-                        payload_cierre = {
-                            "fecha": fecha_hoy,
-                            "tipo": "CierreCaja",
-                            "detal": total_detal,
-                            "mayor": total_mayor,
-                            "abonos": efectivo_abonos,
-                            "total": total_liquido_caja,
-                            "notas": observaciones
-                        }
+                     # 1. Calculamos la fecha real de Venezuela justo al pisar el botón
+                     zona_ve = pytz.timezone('America/Caracas')
+                     fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
+            
+                     # 2. Preparamos los datos usando la nueva fecha corregida
+                     payload_cierre = {
+                      "fecha": fecha_ve,  # <--- Cambiado aquí para que use tu hora real
+                      "tipo": "CierreCaja",
+                      "detal": total_detal,
+                      "mayor": total_mayor,
+                      "abonos": efectivo_buenos, # Mantén el nombre exacto de tu variable de abonos
+                      "total": total_liquido_caja,
+                      "notas": observaciones
+                     }
+
                         
                         # Enviamos los datos a tu script de Google
                         respuesta = requests.post(URL_GOOGLE, json=payload_cierre)
