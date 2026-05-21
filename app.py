@@ -92,7 +92,7 @@ if menu == "Venta Detal":
         m = st.number_input("Monto Total $", min_value=0.0)
         cond = st.selectbox("Condición", ["Contado", "Crédito"])
         if st.form_submit_button("REGISTRAR VENTA"):
-              zona_ve = pytz.timezone('America/Caracas')
+            zona_ve = pytz.timezone('America/Caracas')
             fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
             payload = {"fecha": fecha_ve, "tipo": cond, "cliente": c, "monto": m}
             requests.post(URL_GOOGLE, json=payload)
