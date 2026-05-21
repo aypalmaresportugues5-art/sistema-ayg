@@ -425,12 +425,12 @@ elif menu == "Cierre de Caja":
 
                         
                         # Enviamos los datos a tu script de Google
-                        respuesta = requests.post(URL_GOOGLE, json=payload_cierre)
+                       respuesta = requests.post(URL_GOOGLE, json=payload_cierre)
                         
-                        if respuesta.status_code == 200:
-                            st.success("🎉 ¡Cierre de caja guardado con éxito en el sistema!")
-                        else:
-                            st.error("Hubo un inconveniente al conectar con Google Sheets. Intenta de nuevo.")
+                       if respuesta.status_code == 200:
+                           st.success("🎉 ¡Cierre de caja guardado con éxito en el sistema!")
+                       else:
+                           st.error("Hubo un inconveniente al conectar con Google Sheets. Intenta de nuevo.")
             else:
                 st.info("Aún no se han registrado ventas ni abonos en la jornada de hoy.")
         else:
