@@ -217,20 +217,20 @@ elif menu == "Inventario":
         
         with st.form("form_productos", clear_on_submit=True):
             nuevo_prod = st.text_input("Nombre del Producto:", placeholder="Ej: Pan Canilla, Pan de Tunja, Pan de Guayaba")
-            p_detal = st.number_input("Precio de Venta Detal ($):", min_value=0.0, step=0.01, format="%.2f")
             p_mayor = st.number_input("Precio de Venta Mayor ($):", min_value=0.0, step=0.01, format="%.2f")
-            
+            cant_inicial = st.number_input("Cantidad o Inventario Inicial:", min_value=1, step=1, value=20)
+
             btn_guardar_prod = st.form_submit_button("Registrar Producto")
-            
+
         if btn_guardar_prod:
-            if nuevo_prod and p_detal > 0 and p_mayor > 0:
+            if nuevo_prod and p_mayor > 0 and cant_inicial > 0:
                 payload = {
                     "accion": "guardar_producto",
                     "nombre_producto": nuevo_prod,
-                    "precio_detal": p_detal,
-                    "precio_mayor": p_mayor
+                    "precio_mayor": p_mayor,
+                    "cantidad_inicial": cant_inicial
                 }
-                
+          
                 try:
                     res = requests.post(URL_GOOGLE, json=payload, timeout=10)
                     if res.text == "OK_PRODUCTO":
