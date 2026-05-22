@@ -230,6 +230,7 @@ elif menu == "Inventario":
                     "precio_mayor": p_mayor,
                     "cantidad_inicial": cant_inicial
                 }
+
           
                 try:
                     res = requests.post(URL_GOOGLE, json=payload, timeout=10)
