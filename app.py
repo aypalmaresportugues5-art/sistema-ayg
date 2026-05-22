@@ -427,7 +427,7 @@ elif menu == "Cierre de Caja":
                       "tipo": "CierreCaja",
                       "detal": total_detal,
                       "mayor": total_mayor,
-                      "abonos": efectivo_buenos, # Mantén el nombre exacto de tu variable de abonos
+                      "abonos": efectivo_abonos, # Mantén el nombre exacto de tu variable de abonos
                       "total": total_liquido_caja,
                       "notas": observaciones
                      }
