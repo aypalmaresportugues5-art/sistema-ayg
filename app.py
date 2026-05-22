@@ -379,16 +379,24 @@ elif menu == "Cierre de Caja":
             df_hoy = df_v[df_v['FECHA_CORTA'] == fecha_hoy]
             
             if not df_hoy.empty:
-                # 1. Ventas del día clasificadas correctamente
-                total_detal = df_hoy[(df_hoy['TIPO'] != 'Abono') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]['MONTO($)'].sum()
-                total_mayor = df_hoy[(df_hoy['TIPO'] != 'Abono') & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]['MONTO($)'].sum()
-                total_abonos_hoy = df_hoy[df_hoy['TIPO'] == 'Abono']['MONTO($)'].sum()
-                
-                # Pasamos los abonos a valor positivo para sumarlos limpiamente
-                efectivo_abonos = abs(total_abonos_hoy)
-                
-                # === LA MATEMÁTICA REAL DE TU CAJA FÍSICA ===
-                total_liquido_caja = total_detal + efectivo_abonos
+                 # # 1. Ventas del día clasificadas correctamente
+                 # Detal (Siempre entra a caja si es de Contado)
+                 total_detal = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]['MONTO($)'].sum()
+        
+                 # Separamos el Mayor de Contado del Mayor de Crédito
+                 total_mayor_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]['MONTO($)'].sum()
+                 total_mayor_credito = df_hoy[(df_hoy['TIPO'] == 'Crédito') & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]['MONTO($)'].sum()
+        
+                 # El total de Mayor que se muestra en el recuadro gris sigue siendo la suma de ambos
+                 total_mayor = total_mayor_contado + total_mayor_credito
+        
+                 # Abonos recibidos hoy
+                 total_abonados = df_hoy[df_hoy['TIPO'] == 'Abono']['MONTO($)'].sum()
+                 efectivo_abonos = abs(total_abonados)
+
+                 # === LA MATEMÁTICA REAL DE TU CAJA FÍSICA ===
+                 # Dinero real en mano = Detal de contado + Mayor de contado + Los abonos que pagaron hoy
+                 total_liquido_caja = total_detal + total_mayor_contado + efectivo_abonos
                 
                 # === MUESTRA LOS RECUADROS EN LA PANTALLA DEL CELULAR ===
                 coll, col2, col3 = st.columns(3)
