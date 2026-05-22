@@ -423,12 +423,12 @@ elif menu == "Cierre de Caja":
             
                      # 2. Preparamos los datos usando la nueva fecha corregida
                      payload_cierre = {
-                      "fecha": fecha_ve,  # <--- Cambiado aquí para que use tu hora real
+                      "fecha": fecha_ve,
                       "tipo": "CierreCaja",
-                      "detal": total_detal,
-                      "mayor": total_mayor,
-                      "abonos": efectivo_abonos, # Mantén el nombre exacto de tu variable de abonos
-                      "total": total_liquido_caja,
+                      "venta_detal": float(total_detal),
+                      "venta_mayor": float(total_mayor),
+                      "abonos": float(efectivo_abonos),
+                      "total": float(total_liquido_caja),
                       "notas": observaciones
                      }
                      # Enviamos los datos a tu script de Google
