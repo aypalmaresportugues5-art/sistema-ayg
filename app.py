@@ -369,7 +369,8 @@ elif menu == "Cierre de Caja":
             df_v = pd.DataFrame()
             
         # === AJUSTE DE FECHA ===
-        fecha_hoy = datetime.now().strftime('%Y-%m-%d')
+        zona_ve = pytz.timezone('America/Caracas')
+        fecha_hoy = datetime.now(zona_ve).strftime('%Y-%m-%d')
         st.subheader(f"Resumen de Operaciones: {fecha_hoy}")
         
         if not df_v.empty:
