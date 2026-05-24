@@ -479,16 +479,25 @@ elif menu == "Simulador Costos":
                     ingredientes_modificados[ingrediente] = cant_actual
                     
                     # Buscador optimizado e integrado
+                    # Buscador optimizado sin errores de columnas
                     costo_unitario = 1.0
                     if not df_costos_real.empty:
+                    # Creamos una copia y limpiamos los nombres de las columnas del Excel
                         df_term = df_costos_real.copy()
+                        df_term.columns = df_term.columns.str.strip() # Borra espacios en los títulos
+    
                         df_term['Insumo_clean'] = df_term['Insumo'].astype(str).str.upper().str.strip()
                         busqueda = str(ingrediente).upper().strip()
+    
                         resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                         if not resultado.empty:
-                            costo_unitario = float(resultado.iloc[0]['Costo Por Unidad'])
-                    
-                    costo_materia_prima_total += (cant_actual * costo_unitario)
+                           # Buscamos la columna sin importar si el Excel tiene espacios o cambios
+                           for col in ['Costo Por Unidad', 'Costo por Unidad', 'costo']:
+                             if col in df_term.columns:
+                                costo_unitario = float(resultado.iloc[0][col])
+                                break
+        costo_materia_prima_total += cant_actual * costo_unitario
+
 
         with col2:
             st.markdown("**Configuración Física del Producto:**")
