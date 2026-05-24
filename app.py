@@ -429,7 +429,7 @@ elif menu == "Cierre de Caja":
                       "venta_detal": float(total_detal),
                       "venta_mayor": float(total_mayor),
                       "abonos": float(efectivo_abonos),
-                      "total": float(total_liquido_caja),
+                      "total_caja": float(total_liquido_caja),
                       "notas": observaciones
                      }
                      # Enviamos los datos a tu script de Google
