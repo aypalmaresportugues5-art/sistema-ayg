@@ -498,7 +498,7 @@ elif menu == "Simulador Costos":
                                 costo_unitario = float(resultado.iloc[0][col])
                                 break
                     costo_materia_prima_total += cant_actual * costo_unitario
-
+                    st.write(f"Buscando: {ingrediente} | Cantidad: {cant_actual} | Precio Encontrado: ${costo_unitario}")
 
         with col2:
             st.markdown("**Configuración Física del Producto:**")
