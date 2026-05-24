@@ -492,7 +492,8 @@ elif menu == "Simulador Costos":
                         resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                         if not resultado.empty:
                            # Buscamos la columna sin importar si el Excel tiene espacios o cambios
-                           for col in ['Costo Por Unidad', 'Costo por Unidad', 'costo']:
+                           for col in ['Costo Por Unidad', 'Costo por Unidad', 'costo', 'costo_unitario']:
+
                              if col in df_term.columns:
                                 costo_unitario = float(resultado.iloc[0][col])
                                 break
