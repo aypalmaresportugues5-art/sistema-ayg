@@ -496,7 +496,7 @@ elif menu == "Simulador Costos":
                              if col in df_term.columns:
                                 costo_unitario = float(resultado.iloc[0][col])
                                 break
-                   costo_materia_prima_total += cant_actual * costo_unitario
+                    costo_materia_prima_total += cant_actual * costo_unitario
 
 
         with col2:
