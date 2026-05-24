@@ -468,12 +468,14 @@ elif menu == "Simulador Costos":
 
         # Intentar leer tu DataFrame real de costos desde el estado de la sesión
         try:
-          url_publica = URL_GOOGLE.replace("/exec", "/export?format=csv")
+          # Enlace directo de tu Google Sheets para la descarga de datos
+          enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5mvN3N5ZfykdTx3O4iPxgUVs2jtaV-dWXmgII"
+    
+          # Construcción de la URL de descarga para formato CSV
+          url_publica = enlace_excel + "/export?format=csv&gid=0"
           df_costos_real = pd.read_csv(url_publica)
-          # Este mensaje nos avisará si la descarga fue exitosa:
-          st.success(f"¡Tabla cargada con {len(df_costos_real)} filas!")
+          st.success("¡Conexión exitosa con la tabla de costos!")
         except Exception as e:
-          # Este mensaje nos mostrará el error real en la pantalla:
           st.error(f"Error de lectura: {e}")
           df_costos_real = st.session_state.get('df_costos', pd.DataFrame(columns=['Insumo', 'Costo Por Unidad']))
 
