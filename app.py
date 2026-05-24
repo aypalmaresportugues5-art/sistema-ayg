@@ -443,7 +443,7 @@ elif menu == "Cierre de Caja":
                 st.info("Aún no se han registrado ventas ni abonos en la jornada de hoy.")
         else:
             st.info("No se encontraron registros históricos de ventas.")
-elif selected == "Simulador Costos":
+elif opcion == "Simulador Costos":
         st.header("🥖 Simulador Unificado de Costos e Insumos")
         st.write("Calcula en tiempo real el costo bruto, operativo y sugerencia de PVP para tu producción.")
 
@@ -478,7 +478,7 @@ elif selected == "Simulador Costos":
                     cant_actual = st.number_input(f"{ingrediente}:", min_value=0.0, value=float(cant_base), step=0.1, format="%.2f")
                     ingredientes_modificados[ingrediente] = cant_actual
                     
-                    # Función local optimizada para buscar costos dinámicos en tu pestaña Excel
+                    # Buscador optimizado e integrado
                     costo_unitario = 1.0
                     if not df_costos_real.empty:
                         df_term = df_costos_real.copy()
@@ -500,7 +500,7 @@ elif selected == "Simulador Costos":
             costo_gas = st.number_input("Costo de Gas / Energía ($):", min_value=0.0, value=0.0, step=0.5)
             costo_bolsa = st.number_input("Costo por cada Bolsa de empaque ($):", min_value=0.0, value=0.05, step=0.01, format="%.2f")
 
-        # 2. Operaciones matemáticas (Tu lógica exacta de Excel)
+        # 2. Operaciones matemáticas (Lógica automatizada)
         total_kilos_mezcla = sum(ingredientes_modificados.values())
         cantidad_unidades_totales = int(total_kilos_mezcla / peso_pan) if peso_pan > 0 else 0
         total_paquetes = cantidad_unidades_totales / unidades_por_paquete if unidades_por_paquete > 0 else 0
