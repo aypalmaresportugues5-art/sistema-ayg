@@ -467,7 +467,14 @@ elif menu == "Simulador Costos":
         col1, col2 = st.columns(2)
 
         # Intentar leer tu DataFrame real de costos desde el estado de la sesión
-        df_costos_real = st.session_state.get('df_costos', pd.DataFrame(columns=['Insumo', 'Costo Por Unidad']))
+        try:
+           # Transforma tu enlace de la API para descargar directamente la pestaña de Costos en CSV
+           url_publica = URL_GOOGLE.split("/exec")[0] + "/pub?gid=0&output=csv"
+           df_costos_real = pd.read_csv(url_publica)
+        except Exception:
+          df_costos_real = st.session_state.get('df_costos', pd.DataFrame(columns=['Insumo', 'Costo Por Unidad']))
+
+    
         ingredientes_modificados = {}
         costo_materia_prima_total = 0.0
 
