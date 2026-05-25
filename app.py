@@ -509,15 +509,17 @@ elif menu == "Simulador Costos":
                         resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                         if not resultado.empty:
                            try:
-                             # Extraemos el texto de la quinta columna (posición 4)
-                             valor_crudo = str(resultado.iloc[0].iloc[4])
-                             # Borramos el símbolo de dólar y espacios para dejar solo el número puro
-                             valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
-                             costo_unitario = float(valor_limpio)
+                              # Sacamos el texto crudo del precio (ej: '$1.36')
+                              valor_crudo = str(resultado.iloc[0].iloc[4])
+                              # Borramos el signo de dólar y espacios extras
+                              valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
+                              costo_unitario = float(valor_limpio)
                            except:
-                                # Si algo falla o está vacío, lo dejamos en 0.0 por seguridad
-                             costo_unitario = 0.0
+                              costo_unitario = 1.0  # Respaldo por si la celda está rota
+                          else:
+                            costo_unitario = 1.0
 
+                          costo_materia_prima_total += cant_actual * costo_unitario
 
                            st.write(f"🔍 **{busqueda}** -> ¡Encontrado! Fila completa: {list(resultado.iloc[0])}")
                         else:
