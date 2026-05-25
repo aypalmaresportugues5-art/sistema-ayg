@@ -497,10 +497,13 @@ elif menu == "Simulador Costos":
                     if not df_costos_real.empty:
                     # Creamos una copia y limpiamos los nombres de las columnas del Excel
                         df_term = df_costos_real.copy()
-                        df_term.columns = df_term.columns.str.strip() # Borra espacios en los títulos
-    
-                        df_term['Insumo_clean'] = df_term['Insumo'].astype(str).str.upper().str.strip()
+                        # Limpiamos espacios y cualquier símbolo raro de los títulos
+                        df_term.columns = df_term.columns.str.strip().str.replace(r'[^\w\s]', '', regex=True)
+        
+                        # Leemos la primera columna de la tabla (posición 0), se llame como se llame
+                        df_term['Insumo_clean'] = df_term.iloc[:, 0].astype(str).str.upper().str.strip()
                         busqueda = str(ingrediente).upper().strip()
+
     
                         resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                         if not resultado.empty:
