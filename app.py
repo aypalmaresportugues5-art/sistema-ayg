@@ -451,7 +451,7 @@ elif menu == "Simulador Costos":
         RECETAS_BASE = {
             "Pan Salado": {"HARINA": 45.0, "AGUA": 19.0, "AZUCAR": 3.0, "SAL": 1.0, "MANTECA": 2.0, "LEVADURA": 0.3, "ESENCIAS": 0.4, "peso_base": 0.05, "unidades_paquete": 12},
             "Pan de Perro": {"HARINA": 50.0, "AGUA": 19.0, "AZUCAR": 5.0, "SAL": 1.0, "MANTECA": 1.7, "LEVADURA": 0.25, "ESENCIAS": 0.4, "peso_base": 0.05, "unidades_paquete": 10},
-            "Polvorosas": {"HARINA": 4.5, "AZUCAR": 2.0, "MANTECA": 2.5, "peso_base": 0.04, "unidades_paquete": 1},
+            "Polvorosas": {"HARINA": 4.5, "AZUCAR": 2.0, " AGUA":0.0, "MANTECA": 2.5, "peso_base": 0.04, "unidades_paquete": 1},
             "Catalinas": {"HARINA": 5.0, "AZUCAR": 3.5, "AGUA": 2.0, "ESENCIAS": 0.1, "peso_base": 0.06, "unidades_paquete": 1},
             "Receta Brownie": {"HARINA": 2.0, "AZUCAR": 3.0, "MANTECA": 1.5, "CACAO": 1.0, "HUEVOS": 1.2, "peso_base": 0.08, "unidades_paquete": 1},
             "PUDIN": {"RECORTES_PAN": 10.0, "LECHE": 5.0, "AZUCAR": 4.0, "HUEVOS": 1.5, "ESENCIAS": 0.2, "peso_base": 0.50, "unidades_paquete": 1},
