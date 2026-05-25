@@ -507,8 +507,15 @@ elif menu == "Simulador Costos":
     
                         resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                         if not resultado.empty:
-                           # Leemos directamente la quinta columna (posición 4) sin importar su nombre
-                           costo_unitario = float(resultado.iloc[0].iloc[4])
+                            try:
+                                # Tomamos el valor de la quinta columna (posición 4)
+                                valor_crudo = str(resultado.iloc[0].iloc[4])
+                                # Limpiamos símbolos como $, letras o espacios para dejar solo el número
+                                valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
+                                costo_unitario = float(valor_limpio) if valor_limpio else 0.0
+                            except:
+                                costo_unitario = 0.0
+
                            st.write(f"🔍 **{busqueda}** -> ¡Encontrado! Fila completa: {list(resultado.iloc[0])}")
                         else:
                            st.write(f"❌ **{busqueda}** -> No se encontró en la columna. Títulos disponibles: {list(df_term.columns)}")
