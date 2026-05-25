@@ -516,10 +516,10 @@ elif menu == "Simulador Costos":
                               costo_unitario = float(valor_limpio)
                            except:
                               costo_unitario = 1.0  # Respaldo por si la celda está rota
-                         else:
-                           costo_unitario = 1.0
+                        else:
+                          costo_unitario = 1.0
 
-                         costo_materia_prima_total += cant_actual * costo_unitario
+                        costo_materia_prima_total += cant_actual * costo_unitario
 
                            st.write(f"🔍 **{busqueda}** -> ¡Encontrado! Fila completa: {list(resultado.iloc[0])}")
                         else:
