@@ -472,7 +472,7 @@ elif menu == "Simulador Costos":
           enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5mvN3N5ZfykdTx3O4iPxgUVs2jtaV-dWXmgII"
     
           # Construcción de la URL de descarga para formato CSV
-          url_publica = enlace_excel + "/export?format=csv&gid=0"
+          url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
           df_costos_real = pd.read_csv(url_publica)
           st.success("¡Conexión exitosa con la tabla de costos!")
         except Exception as e:
