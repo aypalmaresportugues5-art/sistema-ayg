@@ -507,12 +507,9 @@ elif menu == "Simulador Costos":
     
                         resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                         if not resultado.empty:
-                           # Buscamos la columna sin importar si el Excel tiene espacios o cambios
-                           for col in ['Costo Por Unidad', 'Costo por Unidad', 'CostoCompra', 'Costo Compra']:
+                           # Leemos directamente la quinta columna (posición 4) sin importar su nombre
+                           costo_unitario = float(resultado.iloc[0].iloc[4])
 
-                             if col in df_term.columns:
-                                costo_unitario = float(resultado.iloc[0][col])
-                                break
                     costo_materia_prima_total += cant_actual * costo_unitario
                     st.write(f"Buscando: {ingrediente} | Cantidad: {cant_actual} | Precio Encontrado: ${costo_unitario}")
 
