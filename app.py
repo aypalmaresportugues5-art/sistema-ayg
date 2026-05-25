@@ -521,9 +521,7 @@ elif menu == "Simulador Costos":
 
                         costo_materia_prima_total += cant_actual * costo_unitario
 
-                           st.write(f"🔍 **{busqueda}** -> ¡Encontrado! Fila completa: {list(resultado.iloc[0])}")
-                        else:
-                           st.write(f"❌ **{busqueda}** -> No se encontró en la columna. Títulos disponibles: {list(df_term.columns)}")
+                           
 
         with col2:
             st.markdown("**Configuración Física del Producto:**")
