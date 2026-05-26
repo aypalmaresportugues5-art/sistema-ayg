@@ -455,7 +455,7 @@ elif menu == "Simulador Costos":
             "Catalinas": {"HARINA": 5.0, "SODA": 0.5, "MIELINA": 3.5, "MELAO PAPELÓN": 2.0, "AGUA": 2.0, "ESENCIAS": 0.1, "ANIS Y CANELA": 2.0, "peso_base": 0.06, "unidades_paquete": 1},
             "Receta Brownie": {"HARINA": 2.0, "AZUCAR": 3.0, "MANTECA": 1.5, "CACAO": 1.0, "HUEVOS": 1.2, "peso_base": 0.08, "unidades_paquete": 1},
             "PUDIN": {"RECORTES_PAN": 10.0, "LECHE": 5.0, "AZUCAR": 4.0, "HUEVOS": 1.5, "ESENCIAS": 0.2, "peso_base": 0.50, "unidades_paquete": 1},
-            "Banquete (50 und)": {"HARINA": 5.0, "AGUA": 2.0, "AZUCAR": 0.5, "SAL": 0.1, "MANTECA": 0.4, "LEVADURA": 0.1, "peso_base": 0.03, "unidades_paquete": 50}
+            "Banquete (50 und)": {"HARINA": 5.0, "AGUA": 2.0, "AZUCAR": 0.5, "SAL": 0.1, "MANTECA": 0.4, "LEVADURA": 0.1, "peso_base": 0.03, "unidades_paquete": 50}, 
             "PAN DE DULCE": {"HARINA": 1.0, "AGUA": 1.0, "AZUCAR": 1.0, "ANIS-CANELA": 1.0, "MANTECA": 1.0, "LEVADURA": 0.3, "ESENCIAS": 0.3, "GUAYABA": 0.4, "AREQUIPE": 0.4, "peso_base": 0.4, "unidades_paquete": 1}, 
         }
 
