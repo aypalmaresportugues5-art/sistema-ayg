@@ -109,8 +109,8 @@ elif menu == "Venta Mayor (SAYG)":
     precio_u = productos_dict[prod_nom]['precio']
     
     st.info(f"💰 Precio: {precio_u}$ | 📦 Stock: {stock_actual}")
-    cant = col2.number_input("Cantidad", min_value=1, max_value=int(stock_actual) if stock_actual > 0 else 1)
-    
+    cant = col2.number_input("Cantidad", min_value=0.0, max_value=float(stock_actual) if stock_actual > 0 else 1.0, step=0.001, format="%.3f")
+
     if st.button("➕ Agregar al Carrito"):
         if 'carro' not in st.session_state: st.session_state.carro = []
         st.session_state.carro.append({"Producto": prod_nom, "Cant": cant, "Precio": precio_u, "Subtotal": cant * precio_u})
