@@ -15,10 +15,30 @@ URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxoXYuo0IkMCmEHKKWEnecUfQs
 
 # --- SISTEMA DE SEGURIDAD ---
 def check_password():
-    # Inicializamos la sesión directo en Verdadero para que entres sin clave
-    if "password_correct" not in st.session_state:
-        st.session_state.password_correct = True
-    return True
+    # 1. Si el usuario ya inició sesión antes, entra directo
+    if st.session_state.get("password_correct", False):
+        return True
+
+    # 2. Si no ha iniciado sesión, muestra la pantalla según tu boceto
+    # Colocamos la imagen de marca arriba
+    st.image("1000357144.jpg", use_container_width=True)
+    
+    st.subheader("🔑 Inicio de Sesión")
+    
+    # Campos para ingresar los datos
+    usuario_ingresado = st.text_input("Usuario")
+    clave_ingresada = st.text_input("Contraseña", type="password")
+    
+    # Botón para verificar
+    if st.button("Iniciar Sesión"):
+        if usuario_ingresado == "AYG2017" and clave_ingresada == "Admin":
+            st.session_state.password_correct = True
+            st.rerun()
+        else:
+            st.error("❌ Usuario o contraseña incorrectos")
+            
+    return False
+
 
 # --- CARGA DE DATOS DESDE EL EXCEL ---
 @st.cache_data(ttl=60) # Actualiza los datos cada minuto
