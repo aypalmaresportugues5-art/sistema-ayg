@@ -117,8 +117,8 @@ if st.session_state.pantalla == "Menu Principal":
 else:
     # Botón de salida arriba en las pantallas secundarias
     if st.button("⬅️ Volver al Menú Principal", key="btn_volver"):
-        st.session_state.pantalla = "Menu Principal"
-        st.rerun()
+       st.session_state.pantalla = "Menu Principal"
+       st.rerun()
     st.markdown("---")
 
     # --- 1. VENTA DETAL ---
