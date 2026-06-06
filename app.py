@@ -212,7 +212,7 @@ elif st.session_state.pantalla == "Cuentas y Abonos":
         st.success(f"✅ Abono de {monto_a}$ registrado")
         
 # # 4. INVENTARIO
-elif st.session_state.pantalla == "Inventario"
+elif st.session_state.pantalla == "Inventario":
 #elif menu == "Inventario":
     st.header("📦 Gestión de Almacén, Costos y Registros")
     
