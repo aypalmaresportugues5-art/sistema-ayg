@@ -512,7 +512,10 @@ elif st.session_state.pantalla == "Cierre de Caja":
                 st.info("Aún no se han registrado ventas ni abonos en la jornada de hoy.")
         else:
             st.info("No se encontraron registros históricos de ventas.")
-elif menu == "Simulador Costos":
+
+elif st.session_state.pantalla == "Simulador Costos":
+
+#elif menu == "Simulador Costos":
         st.header("🥖 Simulador Unificado de Costos e Insumos")
         st.write("Calcula en tiempo real el costo bruto, operativo y sugerencia de PVP para tu producción.")
 
