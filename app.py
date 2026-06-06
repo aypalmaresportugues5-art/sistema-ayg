@@ -118,6 +118,16 @@ if st.session_state.pantalla == "Menu Principal":
     if st.button("📦\n\nInventario", key="btn_inventario"):
        st.session_state.pantalla = "Inventario"
        st.rerun()
+    # Fila 3: Reportes y Cierre
+    col5, col6 = st.columns(2)
+   with col5:
+    if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar"):
+       st.session_state.pantalla = "Cuentas por Cobrar"
+       st.rerun()
+   with col6:
+    if st.button("🧮\n\nCierre de Caja", key="btn_cierre"):
+       st.session_state.pantalla = "Cierre de Caja"
+       st.rerun()
 
             
     st.write("*(Pronto activaremos los demás botones)*")
