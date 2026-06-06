@@ -123,7 +123,7 @@ else:
 
     # --- 1. VENTA DETAL ---
     # ⚠️ ¡OJO! Aquí es donde conectas con tu código actual:
-    if st.session_state.pantalla == "Venta Detal":
+    #if st.session_state.pantalla == "Venta Detal":
 
 #with st.sidebar:
    # st.write("---") # Línea divisoria elegante
