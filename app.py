@@ -160,7 +160,9 @@ if st.session_state.pantalla == "Venta Detal":
             st.success("✅ Venta guardada")
 
 # 2. VENTA MAYOR (SAYG)
-elif menu == "Venta Mayor (SAYG)":
+elif st.session_state.pantalla == "Venta Mayor":
+
+#elif menu == "Venta Mayor (SAYG)":
     st.header("📦 Pedido al Mayor")
     cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
     
