@@ -108,6 +108,17 @@ if st.session_state.pantalla == "Menu Principal":
     if st.button("🚚\n\nVenta Mayor", key="btn_mayor"):
        st.session_state.pantalla = "Venta Mayor (SAYG)"
        st.rerun()
+       # Fila 2: Gestión
+   col3, col4 = st.columns(2)
+   with col3:
+    if st.button("💰\n\nCuentas y Abonos", key="btn_abonos"):
+       st.session_state.pantalla = "Cuentas y Abonos"
+       st.rerun()
+   with col4:
+    if st.button("📦\n\nInventario", key="btn_inventario"):
+       st.session_state.pantalla = "Inventario"
+       st.rerun()
+
             
     st.write("*(Pronto activaremos los demás botones)*")
 
