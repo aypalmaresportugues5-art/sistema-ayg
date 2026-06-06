@@ -340,7 +340,7 @@ elif st.session_state.pantalla == "Inventario":
                 st.warning("⚠️ Por favor, escribe un nombre válido.")
  
 # --- 5. CUENTAS POR COBRAR ---
-elif st.session_state.pantalla == "Cuentas por Cobrar"
+elif st.session_state.pantalla == "Cuentas por Cobrar":
 #elif menu == "Cuentas por Cobrar":
     st.heade-("📊 Resumen de Deudas Activas")
     
