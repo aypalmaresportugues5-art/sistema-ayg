@@ -198,7 +198,9 @@ elif st.session_state.pantalla == "Venta Mayor":
             st.session_state.carro = []
 
 # 3. CUENTAS Y ABONOS
-elif menu == "Cuentas y Abonos":
+elif st.session_state.pantalla == "Cuentas y Abonos":
+
+#elif menu == "Cuentas y Abonos":
     st.header("💰 Registro de Abonos")
     cli_a = st.selectbox("Cliente", clientes_lista)
     monto_a = st.number_input("Monto del Abono $", min_value=0.0)
@@ -210,7 +212,8 @@ elif menu == "Cuentas y Abonos":
         st.success(f"✅ Abono de {monto_a}$ registrado")
         
 # # 4. INVENTARIO
-elif menu == "Inventario":
+elif st.session_state.pantalla == " Inventario "
+#elif menu == "Inventario":
     st.header("📦 Gestión de Almacén, Costos y Registros")
     
     # Creamos las 4 pestañas para organizar todo sin amontonar el teléfono
@@ -337,8 +340,9 @@ elif menu == "Inventario":
                 st.warning("⚠️ Por favor, escribe un nombre válido.")
  
 # --- 5. CUENTAS POR COBRAR ---
-elif menu == "Cuentas por Cobrar":
-    st.header("📊 Resumen de Deudas Activas")
+elif st.session_state.pantalla == "Cuentas por Cobrar"
+#elif menu == "Cuentas por Cobrar":
+    st.heade-("📊 Resumen de Deudas Activas")
     
     # 1. Pedimos los datos a Google Sheets
     resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
