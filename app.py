@@ -138,12 +138,19 @@ if st.session_state.pantalla == "Menu Principal":
     st.markdown("---")
     
     # Botón Salir Centrado
+    
+    # Botón Salir Centrado
     _, col_centro, _ = st.columns([1, 2, 1])
    with col_centro:
     if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True):
+            # 1. Apagamos el permiso de acceso por seguridad
+       st.session_state.password_correct = False
+            
+            # 2. Reiniciamos la pantalla al menú por si acaso vuelven a entrar
        st.session_state.pantalla = "Menu Principal"
-            # Aquí puedes limpiar otras variables si usas login más adelante
-       st.write("Sesión cerrada")
+            
+            # 3. Forzamos la recarga para que el sistema valide el cambio de inmediato
+       st.rerun()
 
             
     st.write("*(Pronto activaremos los demás botones)*")
