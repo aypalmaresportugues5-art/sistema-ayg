@@ -363,8 +363,9 @@ elif st.session_state.pantalla == "Inventario":
 # --- 5. CUENTAS POR COBRAR ---
 elif st.session_state.pantalla == "Cuentas por Cobrar":
 #elif menu == "Cuentas por Cobrar":
-    st.heade-("📊 Resumen de Deudas Activas")
-    
+   # st.heade-("📊 Resumen de Deudas Activas")
+    st.header("📊 Resumen de Deudas Activas")
+
     # 1. Pedimos los datos a Google Sheets
     resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
     datos_recibidos = resp.json()
