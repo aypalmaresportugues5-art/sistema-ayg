@@ -39,7 +39,6 @@ def check_password():
             
     return False
 
-
 # --- CARGA DE DATOS DESDE EL EXCEL ---
 @st.cache_data(ttl=60) # Actualiza los datos cada minuto
 def cargar_datos_vivos():
