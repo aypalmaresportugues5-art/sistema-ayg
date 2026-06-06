@@ -551,7 +551,7 @@ elif st.session_state.pantalla == "Cierre de Caja":
         else:
             st.info("No se encontraron registros históricos de ventas.")
 
-elif st.session_state.pantalla == "Simulador Costos":
+elif st.session_state.pantalla == "Simulador Costo":
 
 #elif menu == "Simulador Costos":
         st.header("🥖 Simulador Unificado de Costos e Insumos")
