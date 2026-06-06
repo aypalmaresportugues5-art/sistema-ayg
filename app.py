@@ -87,7 +87,7 @@ def crear_pdf(cliente, pedido, total):
 st.image("1000317144.jpg.png", use_container_width=True)
 # --- SISTEMA DE NAVEGACIÓN ---
 if "pantalla" not in st.session_state:
-    st.session_state.pantalla = "Menu Principal"
+   st.session_state.pantalla = "Menu Principal"
 
 # Separador debajo del logo
 st.markdown("---")
@@ -96,18 +96,18 @@ st.markdown("---")
 # 🔲 PANTALLA PRINCIPAL: EL TABLERO DE BOTONES
 # =========================================================
 if st.session_state.pantalla == "Menu Principal":
-    st.subheader("🎛️ Tablero de Control")
+   st.subheader("🎛️ Tablero de Control")
     
     # Fila 1: Ventas
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🏪\n\nVenta Detal", key="btn_detal"):
-            st.session_state.pantalla = "Venta Detal"
-            st.rerun()
-    with col2:
-        if st.button("🚚\n\nVenta Mayor", key="btn_mayor"):
-            st.session_state.pantalla = "Venta Mayor (SAYG)"
-            st.rerun()
+   col1, col2 = st.columns(2)
+   with col1:
+    if st.button("🏪\n\nVenta Detal", key="btn_detal"):
+       st.session_state.pantalla = "Venta Detal"
+       st.rerun()
+   with col2:
+    if st.button("🚚\n\nVenta Mayor", key="btn_mayor"):
+       st.session_state.pantalla = "Venta Mayor (SAYG)"
+       st.rerun()
             
     st.write("*(Pronto activaremos los demás botones)*")
 
