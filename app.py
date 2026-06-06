@@ -160,7 +160,7 @@ if st.session_state.pantalla == "Venta Detal":
             st.success("✅ Venta guardada")
 
 # 2. VENTA MAYOR (SAYG)
-elif st.session_state.pantalla == "Venta Mayor (SAYS)":
+elif st.session_state.pantalla == "Venta Mayor (SAYG)":
 
 #elif menu == "Venta Mayor (SAYG)":
     st.header("📦 Pedido al Mayor")
