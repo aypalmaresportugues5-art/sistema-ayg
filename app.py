@@ -424,7 +424,9 @@ elif st.session_state.pantalla == "Cuentas por Cobrar":
                
     
 # --- 6. CIERRE DE CAJA ---
-elif menu == "Cierre de Caja":
+elif st.session_state.pantalla == "Cierre de Caja":
+
+#elif menu == "Cierre de Caja":
         st.header("🗄️ Control y Cierre de Caja Diario")
         
         # Pedimos los movimientos de ventas del dia actual
