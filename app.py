@@ -128,6 +128,22 @@ if st.session_state.pantalla == "Menu Principal":
     if st.button("🧮\n\nCierre de Caja", key="btn_cierre"):
        st.session_state.pantalla = "Cierre de Caja"
        st.rerun()
+    # Fila 4: Herramientas
+    col7, _ = st.columns([1, 1])
+   with col7:
+    if st.button("📉\n\nSimulador Costo", key="btn_costo"):
+       st.session_state.pantalla = "Simulador Costo"
+       st.rerun()
+
+    st.markdown("---")
+    
+    # Botón Salir Centrado
+    _, col_centro, _ = st.columns([1, 2, 1])
+   with col_centro:
+    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True):
+       st.session_state.pantalla = "Menu Principal"
+            # Aquí puedes limpiar otras variables si usas login más adelante
+       st.write("Sesión cerrada")
 
             
     st.write("*(Pronto activaremos los demás botones)*")
