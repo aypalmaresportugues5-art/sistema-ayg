@@ -105,7 +105,9 @@ with st.sidebar:
     )
 
 # 1. VENTA DETAL
-if menu == "Venta Detal":
+
+if st.session_state.pantalla == "Venta Detal":
+#if menu == "Venta Detal":
     st.header("🏪 Venta Rápida (Detal)")
     with st.form("detal"):
         c = st.selectbox("Cliente", clientes_lista)
