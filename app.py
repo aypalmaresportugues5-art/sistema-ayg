@@ -131,16 +131,17 @@ st.markdown("---")
 if st.session_state.pantalla == "Menu Principal":
    st.subheader("🎛️ SISTEMA AYG2017")
     
-       # 🏪 Fila 1: Ventas (Verde)
-   col1, col2 = st.columns(2)
-   with col1:
-    if st.button("<span style='color:white;'>🏪<br><br>Venta Detal</span>", key="btn_detal", use_container_width=True):
-       st.session_state.pantalla = "Venta Detal"
-       st.rerun()
-   with col2:
-    if st.button("<span style='color:white;'>🛻<br><br>Venta Mayor</span>", key="btn_mayor", use_container_width=True):
-       st.session_state.pantalla = "Venta Mayor (SAYG)"
-       st.rerun()
+           # 🏪 Fila 1: Ventas
+col1, col2 = st.columns(2)
+with col1:
+ if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
+    st.session_state.pantalla = "Venta Detal"
+    st.rerun()
+with col2:
+ if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+    st.session_state.pantalla = "Venta Mayor (SAYG)"
+    st.rerun()
+
 
 
     # 💰 Fila 2: Gestión
