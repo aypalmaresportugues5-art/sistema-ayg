@@ -10,10 +10,10 @@ import base64
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
 
-# --- ESTILO CSS ULTRAPRECISO POR LLAVES ---
+# --- ESTILO CSS ESTABLE PARA PAREJAS ---
 st.markdown("""
   <style>
-  /* Forzamos las parejas en horizontal para el celular */
+  /* Forzamos el contenedor de columnas a mantener el orden horizontal en celulares */
   [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
@@ -25,51 +25,13 @@ st.markdown("""
     min-width: 0 !important;
   }
     
-  /* Configuración base de tamaño y letras para todos los botones del menú */
+  /* Configuración de tamaño para todos los botones */
   div.stButton > button {
     height: 85px !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
     border-radius: 10px !important;
-  }
-
-  /* 🎨 COLORES EXCLUSIVOS POR KEY 🎨 */
-    
-  /* 🟢 Fila 1: Ventas (Verde) y letras blancas */
-  div.stButton:has(button[key="btn_detal"]) > button,
-  div.stButton:has(button[key="btn_mayor"]) > button {
-    background-color: #2E7D32 !important;
-    color: white !important;
-  }
-
-  /* 🔵 Fila 2: Gestión (Azul) y letras blancas */
-  div.stButton:has(button[key="btn_abonos"]) > button,
-  div.stButton:has(button[key="btn_inventario"]) > button {
-    background-color: #1565C0 !important;
-    color: white !important;
-  }
-
-  /* 🟠 Fila 3: Reportes y Cierre (Naranja) y letras blancas */
-  div.stButton:has(button[key="btn_cobrar"]) > button,
-  div.stButton:has(button[key="btn_cierre"]) > button {
-    background-color: #E65100 !important;
-    color: white !important;
-  }
-
-  /* 🟤 Fila 4: Simulador Costo (Gris Oscuro / Carbón) y letras blancas */
-  div.stButton:has(button[key="btn_simulador"]) > button {
-    background-color: #37474F !important;
-    color: white !important;
-  }
-
-  /* 🔴 Botón Final: Cerrar Sesión (Rojo) y letras blancas */
-  div.stButton:has(button[key="btn_salir"]) > button {
-    background-color: #C62828 !important;
-    color: white !important;
   }
   </style>
 """, unsafe_allow_html=True)
-
 
 
 # --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
