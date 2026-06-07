@@ -121,7 +121,8 @@ st.markdown("---")
 if st.session_state.pantalla == "Menu Principal":
    st.subheader("🎛️ SISTEMA AYG2017")
     
-           # 🏪 Fila 1: Ventas
+   # 🏪 Fila 1: Ventas (Categoría en bloque Verde)
+   st.success("🏪 SECCIÓN DE VENTAS")
    col1, col2 = st.columns(2)
    with col1:
     if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
@@ -132,9 +133,8 @@ if st.session_state.pantalla == "Menu Principal":
        st.session_state.pantalla = "Venta Mayor (SAYG)"
        st.rerun()
 
-
-
-    # 💰 Fila 2: Gestión
+   # 💰 Fila 2: Gestión (Categoría en bloque Azul)
+   st.info("💰 GESTIÓN E INVENTARIO")
    col3, col4 = st.columns(2)
    with col3:
     if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
@@ -144,6 +144,7 @@ if st.session_state.pantalla == "Menu Principal":
     if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
        st.session_state.pantalla = "Inventario"
        st.rerun()
+ 
 
     # 📝 Fila 3: Reportes y Cierre
    col5, col6 = st.columns(2)
