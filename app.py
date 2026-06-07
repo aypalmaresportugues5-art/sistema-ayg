@@ -119,7 +119,7 @@ st.markdown("---")
 # 🔲 PANTALLA PRINCIPAL: EL TABLERO DE BOTONES
 # =========================================================
 if st.session_state.pantalla == "Menu Principal":
-   st.subheader("🎛️ Tablero de Control")
+   st.subheader("🎛️ SISTEMA AYG2017")
     
            # 🏪 Fila 1: Ventas
    col1, col2 = st.columns(2)
