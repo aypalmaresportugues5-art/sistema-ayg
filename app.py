@@ -10,7 +10,7 @@ import base64
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
 
-# --- ESTILO CSS POR ORDEN DE BOTONES ---
+# --- ESTILO CSS POR CATEGORÍAS REALES ---
 st.markdown("""
   <style>
   /* Forzamos el contenedor de columnas a mantener el orden horizontal en celulares */
@@ -34,21 +34,21 @@ st.markdown("""
     color: white !important; /* Texto blanco */
   }
 
-  /* 🎨 COLORES POR POSICIÓN DETECTADA 🎨 */
-  /* Fila 1: Botones 1 y 2 -> Categoría Ventas (Verde) */
-  div.stButton:nth-of-type(1) > button,
-  div.stButton:nth-of-type(2) > button {
+  /* Pintamos por el tipo de botón usando clases nativas */
+  /* Categoría Ventas (Verde) */
+  div.stButton > button[aria-label*="🏪"],
+  div.stButton > button[aria-label*="🛻"] {
     background-color: #2E7D32 !important;
   }
 
-  /* Fila 2: Botones 3 y 4 -> Categoría Gestión (Azul) */
-  div.stButton:nth-of-type(3) > button,
-  div.stButton:nth-of-type(4) > button {
+  /* Categoría Gestión (Azul) */
+  div.stButton > button[aria-label*="💰"],
+  div.stButton > button[aria-label*="📦"] {
     background-color: #1565C0 !important;
   }
-    
   </style>
 """, unsafe_allow_html=True)
+
 
 
 # --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
