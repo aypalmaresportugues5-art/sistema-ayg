@@ -56,10 +56,10 @@ def check_password():
     
     st.subheader("🔑 Inicio de Sesión")
     
-    # Campos para ingresar los datos
-    usuario_ingresado = st.text_input("Usuario")
-    clave_ingresada = st.text_input("Contraseña", type="password")
-    
+    # Campos para ingresar los datos con llaves de control
+    usuario_ingresado = st.text_input("Usuario", key="input_usuario")
+    clave_ingresada = st.text_input("Contraseña", type="password", key="input_clave")
+
     # Botón para verificar
     if st.button("Iniciar Sesión"):
         if usuario_ingresado == "AYG2017" and clave_ingresada == "Admin":
