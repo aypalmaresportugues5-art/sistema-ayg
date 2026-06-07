@@ -146,7 +146,8 @@ if st.session_state.pantalla == "Menu Principal":
        st.rerun()
  
 
-    # 📝 Fila 3: Reportes y Cierre
+   # 🗂️ Fila 3: Reportes y Cierre (Categoría en bloque Naranja)
+   st.warning("🗂️ REPORTES Y CIERRE")
    col5, col6 = st.columns(2)
    with col5:
     if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
@@ -157,12 +158,14 @@ if st.session_state.pantalla == "Menu Principal":
        st.session_state.pantalla = "Cierre de Caja"
        st.rerun()
 
-    # 📊 Fila 4: Simulador (Botón único centrado o expandido)
+   # 🧮 Fila 4: Herramientas (Categoría en bloque Gris/Informativo)
+   st.write("🧮 HERRAMIENTAS ADICIONALES")
    col7, col8 = st.columns(2)
    with col7:
     if st.button("📉\n\nSimulador Costo", key="btn_simulador", use_container_width=True):
        st.session_state.pantalla = "Simulador Costo"
        st.rerun()
+
 
 
    st.markdown("---")
