@@ -136,7 +136,7 @@ if st.session_state.pantalla == "Menu Principal":
    with col1:
     if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
        st.session_state.pantalla = "Venta Detal"
-       st.rerun)
+       st.rerun()
    with col2:
     if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
        st.session_state.pantalla = "Venta Mayor (SAYG)"
