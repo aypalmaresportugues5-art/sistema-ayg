@@ -42,9 +42,9 @@ st.markdown("""
   }
 
   /* Fila 2: Botones 3 y 4 -> Categoría Gestión (Azul) */
-    div.stButton:nth-of-type(3) > button,
-    div.stButton:nth-of-type(4) > button {
-      background-color: #1565C0 !important;
+  div.stButton:nth-of-type(3) > button,
+  div.stButton:nth-of-type(4) > button {
+    background-color: #1565C0 !important;
   }
     
   </style>
