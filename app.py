@@ -175,10 +175,11 @@ if st.session_state.pantalla == "Menu Principal":
 
    st.markdown("---")
     
-   # 🚪 Botón de salida independiente abajo
-   if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True):
+   # 🚪 Botón de salida destacado en rojo de forma nativa
+   if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
       st.session_state.password_correct = False
       st.rerun()
+
 
 
 # =========================================================
