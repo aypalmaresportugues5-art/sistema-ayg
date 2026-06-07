@@ -10,10 +10,10 @@ import base64
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
 
-# --- ESTILO CSS POR CATEGORÍAS REALES ---
+# --- ESTILO CSS ULTRAPRECIJO POR LLAVES ---
 st.markdown("""
   <style>
-  /* Forzamos el contenedor de columnas a mantener el orden horizontal en celulares */
+  /* Forzamos las parejas en horizontal para el celular */
   [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
@@ -31,24 +31,24 @@ st.markdown("""
     font-size: 16px !important;
     font-weight: bold !important;
     border-radius: 10px !important;
-    color: white !important; /* Texto blanco */
+    color: white !important; /* Texto blanco siempre visible sobre color */
   }
 
-  /* Pintamos por el tipo de botón usando clases nativas */
-  /* Categoría Ventas (Verde) */
-  div.stButton > button[aria-label*="🏪"],
-  div.stButton > button[aria-label*="🛻"] {
+  /* 🎨 COLORES APUNTANDO A LAS KEYS DE PYTHON 🎨 */
+    
+  /* 🟢 Fila 1: Ventas (Verde) */
+  div.stButton:has(button[key="btn_detal"]) > button,
+  div.stButton:has(button[key="btn_mayor"]) > button {
     background-color: #2E7D32 !important;
   }
 
-  /* Categoría Gestión (Azul) */
-  div.stButton > button[aria-label*="💰"],
-  div.stButton > button[aria-label*="📦"] {
+  /* 🔵 Fila 2: Gestión (Azul) */
+  div.stButton:has(button[key="btn_abonos"]) > button,
+  div.stButton:has(button[key="btn_inventario"]) > button {
     background-color: #1565C0 !important;
   }
   </style>
 """, unsafe_allow_html=True)
-
 
 
 # --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
