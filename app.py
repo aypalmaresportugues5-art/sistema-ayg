@@ -9,6 +9,30 @@ import base64
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
+# --- ESTILO CSS MEJORADO PARA MÓVILES ---
+st.markdown("""
+  <style>
+  /* Forzamos el contenedor de columnas a mantener el orden horizontal en celulares */
+  [data-testid="stHorizontalBlock"] {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+  }
+  /* Ajustamos cada columna para que ocupe exactamente la mitad del espacio */
+  [data-testid="stHorizontalBlock"] > div {
+    flex: 1 1 50% !important;
+    min-width: 0 !important;
+  }
+  /* Hacemos los botones grandes y cómodos para el dedo */
+  div.stButton > button {
+    height: 85px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
+    border-radius: 10px !important;
+  }
+  </style>
+""", unsafe_allow_html=True)
 
 # --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
 URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxoXYuo0IkMCmEHKKWEnecUfQs7dZlm7604eaVV3ep0GrgxInveg_Me-AyjJjxYhfVR/exec"
