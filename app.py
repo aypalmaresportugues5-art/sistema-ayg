@@ -137,7 +137,7 @@ if st.session_state.pantalla == "Menu Principal":
    with col3:
     if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
        st.session_state.pantalla = "Cuentas y Abonos"
-       st.rerun)
+       st.rerun()
    with col4:
     if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
        st.session_state.pantalla = "Inventario"
