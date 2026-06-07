@@ -176,9 +176,9 @@ if st.session_state.pantalla == "Menu Principal":
    st.markdown("---")
     
    # 🚪 Botón de salida destacado en rojo que borra la memoria
-   if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
-      st.session_state.clear()  # 🧹 Borra todo el estado y vacía los inputs
-      st.rerun()
+    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
+       st.session_state.clear()  # 🧹 Borra todo el estado y vacía los inputs
+       st.rerun()
 
 
 # =========================================================
