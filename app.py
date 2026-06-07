@@ -98,7 +98,7 @@ if st.session_state.pantalla == "Menu Principal":
    st.subheader("🎛️ Tablero de Control")
     
         # Fila 1: Ventas (Se organizarán en parejas automáticamente)
-    col1, col2 = st.columns(2)
+   col1, col2 = st.columns(2)
     
     with col1:
      if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
