@@ -9,10 +9,11 @@ import base64
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
-# --- ESTILO CSS COMPACTO Y SEGURO ---
+
+# --- ESTILO CSS POR ORDEN DE BOTONES ---
 st.markdown("""
   <style>
-  /* Forzamos las parejas en horizontal para el celular */
+  /* Forzamos el contenedor de columnas a mantener el orden horizontal en celulares */
   [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
@@ -23,14 +24,24 @@ st.markdown("""
     flex: 1 1 50% !important;
     min-width: 0 !important;
   }
-  /* Tamaño ideal para tus botones */
+    
+  /* Configuración base para todos los botones */
   div.stButton > button {
     height: 85px !important;
+    font-size: 16px !important;
+    font-weight: bold !important;
     border-radius: 10px !important;
+    color: white !important; /* Texto blanco */
+  }
+
+  /* 🎨 COLORES POR POSICIÓN DETECTADA 🎨 */
+  /* Fila 1: Botones 1 y 2 -> Categoría Ventas (Verde) */
+  div.stButton:nth-of-type(1) > button,
+  div.stButton:nth-of-type(2) > button {
+    background-color: #2E7D32 !important;
   }
   </style>
 """, unsafe_allow_html=True)
-
 
 
 # --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
