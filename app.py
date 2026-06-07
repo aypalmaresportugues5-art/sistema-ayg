@@ -30,6 +30,13 @@ st.markdown("""
     height: 85px !important;
     border-radius: 10px !important;
   }
+  /* 🔴 Pintamos el botón de Salir de rojo con letras blancas */
+  div.stButton > button:has(div:contains("Cerrar")) {
+    background-color: #C62828 !important;
+    color: white !important;
+    height: 50px !important;
+  }
+
   </style>
 """, unsafe_allow_html=True)
 
