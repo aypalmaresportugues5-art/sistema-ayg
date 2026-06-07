@@ -115,7 +115,7 @@ def crear_pdf(cliente, pedido, total):
 
 # --- DISEÑO DE LA APP ---
 if check_password():  # 🔑 Si la contraseña es correcta, permite cargar todo lo demás
-st.image("1000317144.jpg.png", use_container_width=True)
+   st.image("1000317144.jpg.png", use_container_width=True)
 # --- SISTEMA DE NAVEGACIÓN ---
 if "pantalla" not in st.session_state:
    st.session_state.pantalla = "Menu Principal"
