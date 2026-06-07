@@ -118,10 +118,10 @@ if check_password():  # 🔑 Si la contraseña es correcta, permite cargar todo 
     st.image("1000317144.jpg.png", use_container_width=True)
 # --- SISTEMA DE NAVEGACIÓN ---
 if "pantalla" not in st.session_state:
-   st.session_state.pantalla = "Menu Principal"
+    st.session_state.pantalla = "Menu Principal"
 
 # Separador debajo del logo
-st.markdown("---")
+    st.markdown("---")
 
 # =========================================================
 # 🔲 PANTALLA PRINCIPAL: EL TABLERO DE BOTONES
