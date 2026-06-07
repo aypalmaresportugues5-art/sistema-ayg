@@ -175,13 +175,17 @@ if st.session_state.pantalla == "Menu Principal":
 
    st.markdown("---")
     
-   # 🚪 Botón de salida que limpia los campos específicos y reinicia
-   if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
-      st.session_state["password_correct"] = False
-      st.session_state["input_usuario"] = ""
-      st.session_state["input_clave"] = ""
-      st.session_state["pantalla"] = "Menu Principal"
-      st.rerun()
+   # 🕵️ Línea de diagnóstico temporal para ver las variables en la pantalla
+   st.write(f"Estado actual: password_correct={st.session_state.get('password_correct')}, usuario={st.session_state.get('input_usuario')}")
+    
+   # 🚪 Botón de salida
+  if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
+     st.session_state["password_correct"] = False
+     st.session_state["input_usuario"] = ""
+     st.session_state["input_clave"] = ""
+     st.session_state["pantalla"] = "Menu Principal"
+     st.rerun()
+
 
 
 
