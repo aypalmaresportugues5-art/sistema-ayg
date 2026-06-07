@@ -52,7 +52,7 @@ def check_password():
 
     # 2. Si no ha iniciado sesión, muestra la pantalla según tu boceto
     # Colocamos la imagen de marca arriba
-    st.image("1000357144.jpg", use_container_width=True)
+    #st.image("1000357144.jpg", use_container_width=True)
     
     st.subheader("🔑 Inicio de Sesión")
     
