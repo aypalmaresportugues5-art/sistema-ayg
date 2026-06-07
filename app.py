@@ -9,56 +9,28 @@ import base64
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
-# --- ESTILO CSS CON COLORES POR CATEGORÍA ---
+# --- ESTILO CSS COMPACTO Y SEGURO ---
 st.markdown("""
   <style>
-  /* Forzamos el contenedor de columnas a mantener el orden horizontal en celulares */
+  /* Forzamos las parejas en horizontal para el celular */
   [data-testid="stHorizontalBlock"] {
     display: flex !important;
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     width: 100% !important;
   }
-  /* Ajustamos cada columna para que ocupe exactamente la mitad del espacio */
   [data-testid="stHorizontalBlock"] > div {
     flex: 1 1 50% !important;
     min-width: 0 !important;
   }
-  /* Configuración base para todos los botones */
+  /* Tamaño ideal para tus botones */
   div.stButton > button {
     height: 85px !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
     border-radius: 10px !important;
-    color: white !important; /* Texto blanco para resaltar */
-  }
-    
-  /* 🟢 COLORES POR CATEGORÍA 🟢 */
-  /* Ventas (Verde) */
-  div.stButton > button:has(div:contains("🏪")), 
-  div.stButton > button:has(div:contains("🛻")) {
-    background-color: #2E7D32 !important;
-  }
-  /* Gestión (Azul) */
-  div.stButton > button:has(div:contains("💰")), 
-  div.stButton > button:has(div:contains("📦")) {
-    background-color: #1565C0 !important;
-  }
-  /* Reportes (Naranja) */
-  div.stButton > button:has(div:contains("📝")), 
-  div.stButton > button:has(div:contains("🧱")) {
-    background-color: #E65100 !important;
-  }
-  /* Herramientas (Gris Oscuro) */
-  div.stButton > button:has(div:contains("📉")) {
-    background-color: #37474F !important;
-  }
-  /* Seguridad (Rojo) */
-  div.stButton > button:has(div:contains("🚪")) {
-    background-color: #C62828 !important;
   }
   </style>
 """, unsafe_allow_html=True)
+
 
 
 # --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
