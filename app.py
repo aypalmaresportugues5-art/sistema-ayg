@@ -134,35 +134,35 @@ if st.session_state.pantalla == "Menu Principal":
 
     # 💰 Fila 2: Gestión
    col3, col4 = st.columns(2)
-    with col3:
-     if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
-        st.session_state.pantalla = "Cuentas y Abonos"
-        st.rerun()
-    with col4:
-     if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-        st.session_state.pantalla = "Inventario"
-        st.rerun()
+   with col3:
+    if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+       st.session_state.pantalla = "Cuentas y Abonos"
+       st.rerun)
+   with col4:
+    if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+       st.session_state.pantalla = "Inventario"
+       st.rerun()
 
     # 📝 Fila 3: Reportes y Cierre
-    col5, col6 = st.columns(2)
-    with col5:
-     if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
-        st.session_state.pantalla = "Cuentas por Cobrar"
-        st.rerun()
-    with col6:
-     if st.button("🧱\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
-        st.session_state.pantalla = "Cierre de Caja"
-        st.rerun()
+   col5, col6 = st.columns(2)
+   with col5:
+    if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
+       st.session_state.pantalla = "Cuentas por Cobrar"
+       st.rerun()
+   with col6:
+    if st.button("🧱\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+       st.session_state.pantalla = "Cierre de Caja"
+       st.rerun()
 
     # 📊 Fila 4: Simulador (Botón único centrado o expandido)
-    col7, col8 = st.columns(2)
-    with col7:
-     if st.button("📉\n\nSimulador Costo", key="btn_simulador", use_container_width=True):
-        st.session_state.pantalla = "Simulador Costo"
-        st.rerun()
+   col7, col8 = st.columns(2)
+   with col7:
+    if st.button("📉\n\nSimulador Costo", key="btn_simulador", use_container_width=True):
+       st.session_state.pantalla = "Simulador Costo"
+       st.rerun()
 
 
-    st.markdown("---")
+   st.markdown("---")
     
     # Botón Salir Centrado
     
