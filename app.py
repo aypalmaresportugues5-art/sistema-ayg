@@ -121,40 +121,46 @@ st.markdown("---")
 if st.session_state.pantalla == "Menu Principal":
    st.subheader("🎛️ Tablero de Control")
     
-       # Fila 1: Ventas (Agrupadas para el control de CSS)
+           # 🏪 Fila 1: Ventas
    col1, col2 = st.columns(2)
    with col1:
-     st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True)
+    if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
+       st.session_state.pantalla = "Venta Detal"
+       st.rerun()
    with col2:
-     st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True)
+    if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+       st.session_state.pantalla = "Venta Mayor (SAYG)"
+       st.rerun()
 
-
-       # Fila 2: Gestión
+    # 💰 Fila 2: Gestión
    col3, col4 = st.columns(2)
-   with col3:
-    if st.button("💰\n\nCuentas y Abonos", key="btn_abonos"):
-       st.session_state.pantalla = "Cuentas y Abonos"
-       st.rerun()
-   with col4:
-    if st.button("📦\n\nInventario", key="btn_inventario"):
-       st.session_state.pantalla = "Inventario"
-       st.rerun()
-    # Fila 3: Reportes y Cierre
+    with col3:
+     if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+        st.session_state.pantalla = "Cuentas y Abonos"
+        st.rerun()
+    with col4:
+     if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+        st.session_state.pantalla = "Inventario"
+        st.rerun()
+
+    # 📝 Fila 3: Reportes y Cierre
     col5, col6 = st.columns(2)
-   with col5:
-    if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar"):
-       st.session_state.pantalla = "Cuentas por Cobrar"
-       st.rerun()
-   with col6:
-    if st.button("🧮\n\nCierre de Caja", key="btn_cierre"):
-       st.session_state.pantalla = "Cierre de Caja"
-       st.rerun()
-    # Fila 4: Herramientas
-    col7, _ = st.columns([1, 1])
-   with col7:
-    if st.button("📉\n\nSimulador Costo", key="btn_costo"):
-       st.session_state.pantalla = "Simulador Costo"
-       st.rerun()
+    with col5:
+     if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
+        st.session_state.pantalla = "Cuentas por Cobrar"
+        st.rerun()
+    with col6:
+     if st.button("🧱\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+        st.session_state.pantalla = "Cierre de Caja"
+        st.rerun()
+
+    # 📊 Fila 4: Simulador (Botón único centrado o expandido)
+    col7, col8 = st.columns(2)
+    with col7:
+     if st.button("📉\n\nSimulador Costo", key="btn_simulador", use_container_width=True):
+        st.session_state.pantalla = "Simulador Costo"
+        st.rerun()
+
 
     st.markdown("---")
     
