@@ -97,15 +97,12 @@ st.markdown("---")
 if st.session_state.pantalla == "Menu Principal":
    st.subheader("🎛️ Tablero de Control")
     
-            # Fila 1: Ventas (Forzados en pareja por CSS)
-   with st.container():
-    if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
-       st.session_state.pantalla = "Venta Detal"
-       st.rerun()
-            
-    if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
-       st.session_state.pantalla = "Venta Mayor (SAYG)"
-       st.rerun()
+       # Fila 1: Ventas (Agrupadas para el control de CSS)
+   col1, col2 = st.columns(2)
+   with col1:
+     st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True)
+   with col2:
+     st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True)
 
 
        # Fila 2: Gestión
