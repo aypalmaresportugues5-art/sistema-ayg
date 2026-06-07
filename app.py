@@ -158,20 +158,21 @@ if st.session_state.pantalla == "Menu Principal":
        st.session_state.pantalla = "Cierre de Caja"
        st.rerun()
 
-   # 🧮 Fila 4: Herramientas (Categoría en bloque Gris/Informativo)
-   st.write("🧮 HERRAMIENTAS ADICIONALES")
+   # 🧮 Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
+   st.error("🧮 HERRAMIENTAS ADICIONALES")
    col7, col8 = st.columns(2)
    with col7:
     if st.button("📉\n\nSimulador Costo", key="btn_simulador", use_container_width=True):
        st.session_state.pantalla = "Simulador Costo"
        st.rerun()
 
-
-
    st.markdown("---")
+    
+   # 🚪 Botón de salida independiente abajo
    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True):
       st.session_state.password_correct = False
       st.rerun()
+
 
 # =========================================================
 # 📲 CONTROL DE LAS VENTANAS DE TRABAJO
