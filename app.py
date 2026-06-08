@@ -444,14 +444,21 @@ elif st.session_state.pantalla == "Cuentas por Cobrar":
         saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
 
         # === EVALUAMOS SI DEBE O ESTÁ AL DÍA ===
-        if saldo_real_neto <= 0.01:
+        if 0.00 <= saldo_real_neto <= 0.01:
             # SI ESTÁ AL DÍA: Forzamos todo a cero limpio y barra verde
             c1, c2 = st.columns(2)
             c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", "$0.00")
             c2.metric("SALDO PENDIENTE NETO", "$0.00")
             st.write("---")
             st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
-            
+        elif saldo_real_neto < 0.00:
+           # 🔵 SI TIENE SALDO A FAVOR: El cliente pagó de más
+            c1, c2 = st.columns(2)
+           # Mostramos el abono real positivo usando abs()
+            c1.metric("TOTAL ABONADO", f"${abs(saldo_real_neto):.2f}")
+            c2.metric("SALDO A FAVOR NETO", f"${abs(saldo_real_neto):.2f}")
+            st.write("---")
+            st.info(f"🔵 El cliente tiene un saldo a favor de ${abs(saldo_real_neto):.2f}")
         else:
             # SI DEBE: Aislamos únicamente el último ciclo de deuda activa
             movimientos_cliente = df_cli.to_dict('records')
