@@ -145,9 +145,9 @@ with col2:
 st.info("💰 GESTIÓN E INVENTARIO")
 col3, col4 = st.columns(2)
 with col3:
-if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
-   st.session_state.pantalla = "Cuentas y Abonos"
-   st.rerun()
+ if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+    st.session_state.pantalla = "Cuentas y Abonos"
+    st.rerun()
 with col4:
  if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
     st.session_state.pantalla = "Inventario"
