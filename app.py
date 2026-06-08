@@ -209,7 +209,7 @@ if st.button("⬅️ Volver al Menú Principal", key="btn_volver"):
 
 # 1. VENTA DETAL
 
-elif st.session_state.pantalla == "Venta Detal":
+if st.session_state.pantalla == "Venta Detal":
 #if menu == "Venta Detal":
     st.header("🏪 Venta Rápida (Detal)")
     with st.form("detal"):
