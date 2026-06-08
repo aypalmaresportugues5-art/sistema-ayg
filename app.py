@@ -200,10 +200,10 @@ if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width
 if st.session_state.pantalla != "Menu Principal":
    st.stop()
     # Botón de salida arriba en las pantallas secundarias
-        if st.button("⬅️ Volver al Menú Principal", key="btn_volver"):
-           st.session_state.pantalla = "Menu Principal"
-           st.rerun()
-           st.markdown("---")
+if st.button("⬅️ Volver al Menú Principal", key="btn_volver"):
+   st.session_state.pantalla = "Menu Principal"
+   st.rerun()
+   st.markdown("---")
 
     
 
