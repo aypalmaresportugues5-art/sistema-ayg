@@ -126,7 +126,8 @@ if "pantalla" not in st.session_state:
 # =========================================================
 # 🔲 PANTALLA PRINCIPAL: EL TABLERO DE BOTONES
 # =========================================================
-if check_password() and st.session_state.pantalla == "Menu Principal":
+if st.session_state.pantalla == "Menu Principal":
+
    st.subheader("🎛️ SISTEMA AYG2017")
     
 # 🏪 Fila 1: Ventas (Categoría en bloque Verde)
