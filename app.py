@@ -197,7 +197,7 @@ if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width
 # 📲 CONTROL DE LAS VENTANAS DE TRABAJO
 # =========================================================
 #else:
- if st.session_state.pantalla != "Menu Principal":
+if st.session_state.pantalla != "Menu Principal":
    #st.stop()
     # Botón de salida arriba en las pantallas secundarias
  if st.button("⬅️ Volver al Menú Principal", key="btn_volver"):
