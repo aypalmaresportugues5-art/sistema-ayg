@@ -126,66 +126,66 @@ if "pantalla" not in st.session_state:
 # =========================================================
 # 🔲 PANTALLA PRINCIPAL: EL TABLERO DE BOTONES
 # =========================================================
-        if st.session_state.pantalla == "Menu Principal":
-           st.subheader("🎛️ SISTEMA AYG2017")
+    if check_password() and st.session_state.pantalla == "Menu Principal":
+       st.subheader("🎛️ SISTEMA AYG2017")
     
-        # 🏪 Fila 1: Ventas (Categoría en bloque Verde)
-        st.success("🏪 SECCIÓN DE VENTAS")
-        col1, col2 = st.columns(2)
-        with col1:
-         if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
-            st.session_state.pantalla = "Venta Detal"
-            st.rerun()
-        with col2:
-         if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
-            st.session_state.pantalla = "Venta Mayor (SAYG)"
-            st.rerun()
+    # 🏪 Fila 1: Ventas (Categoría en bloque Verde)
+    st.success("🏪 SECCIÓN DE VENTAS")
+    col1, col2 = st.columns(2)
+    with col1:
+     if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
+        st.session_state.pantalla = "Venta Detal"
+        st.rerun()
+    with col2:
+     if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+        st.session_state.pantalla = "Venta Mayor (SAYG)"
+        st.rerun()
  
-        # 💰 Fila 2: Gestión (Categoría en bloque Azul)
-        st.info("💰 GESTIÓN E INVENTARIO")
-        col3, col4 = st.columns(2)
-        with col3:
-         if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
-            st.session_state.pantalla = "Cuentas y Abonos"
-            st.rerun()
-        with col4:
-         if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-            st.session_state.pantalla = "Inventario"
-            st.rerun()
+    # 💰 Fila 2: Gestión (Categoría en bloque Azul)
+    st.info("💰 GESTIÓN E INVENTARIO")
+    col3, col4 = st.columns(2)
+    with col3:
+     if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+        st.session_state.pantalla = "Cuentas y Abonos"
+        st.rerun()
+    with col4:
+     if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+        st.session_state.pantalla = "Inventario"
+        st.rerun()
  
 
-        # 🗂️ Fila 3: Reportes y Cierre (Categoría en bloque Naranja)
-        st.warning("🗂️ REPORTES Y CIERRE")
-        col5, col6 = st.columns(2)
-        with col5:
-         if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
-            st.session_state.pantalla = "Cuentas por Cobrar"
-            st.rerun()
-        with col6:
-         if st.button("🧱\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
-            st.session_state.pantalla = "Cierre de Caja"
-            st.rerun()
+    # 🗂️ Fila 3: Reportes y Cierre (Categoría en bloque Naranja)
+    st.warning("🗂️ REPORTES Y CIERRE")
+    col5, col6 = st.columns(2)
+    with col5:
+     if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
+        st.session_state.pantalla = "Cuentas por Cobrar"
+        st.rerun()
+    with col6:
+     if st.button("🧱\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+        st.session_state.pantalla = "Cierre de Caja"
+        st.rerun()
 
-        # 🧮 Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
-        st.error("🧮 HERRAMIENTAS ADICIONALES")
-        col7, col8 = st.columns(2)
-        with col7:
-         if st.button("📉\n\nSimulador Costo", key="btn_simulador", use_container_width=True):
-            st.session_state.pantalla = "Simulador Costo"
-            st.rerun()
+    # 🧮 Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
+    st.error("🧮 HERRAMIENTAS ADICIONALES")
+    col7, col8 = st.columns(2)
+    with col7:
+     if st.button("📉\n\nSimulador Costo", key="btn_simulador", use_container_width=True):
+        st.session_state.pantalla = "Simulador Costo"
+        st.rerun()
 
-        st.markdown("---")
+    st.markdown("---")
     
-        # 🕵️ Línea de diagnóstico temporal para ver las variables en la pantalla
-        st.write(f"Estado actual: password_correct={st.session_state.get('password_correct')}, usuario={st.session_state.get('input_usuario')}")
+    # 🕵️ Línea de diagnóstico temporal para ver las variables en la pantalla
+    st.write(f"Estado actual: password_correct={st.session_state.get('password_correct')}, usuario={st.session_state.get('input_usuario')}")
     
-        # 🚪 Botón de salida
-        if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
-           st.session_state["password_correct"] = False
-           st.session_state["input_usuario"] = ""
-           st.session_state["input_clave"] = ""
-           st.session_state["pantalla"] = "Menu Principal"
-           st.rerun()
+    # 🚪 Botón de salida
+    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
+       st.session_state["password_correct"] = False
+       st.session_state["input_usuario"] = ""
+       st.session_state["input_clave"] = ""
+       st.session_state["pantalla"] = "Menu Principal"
+       st.rerun()
  
 
 
