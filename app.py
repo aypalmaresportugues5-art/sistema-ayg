@@ -607,14 +607,20 @@ def formulario_simulador_costos():
     
     st.subheader(f"⚖️ Ajustar Ingredientes para: {producto_seleccionado}")
     col1, col2 = st.columns(2)
-    
-    # # Intentar leer tu DataFrame real de costos desde la URL de descarga
+        # # Intentar leer tu DataFrame real de costos desde la URL de descarga
     try:
         enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5ewH3M5ZfykdTz3DizPxgUnS2jtaY-dvXmg1I"
         url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
         df_costos_real = pd.read_csv(url_publica)
+        
+        # 🧪 Muestra si la tabla bajó con datos o vacía
+        st.write(f"📊 Filas leídas del Excel: {len(df_costos_real)}")
+        
     except Exception as e:
         df_costos_real = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
+        # 🚨 Esto nos pintará el culpable real en la pantalla del celular
+        st.error(f"⚠️ Error de conexión con Excel: {e}")
+
         
     ingredientes_modificados = {}
     costo_materia_prima_total = 0.0
