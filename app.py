@@ -113,6 +113,29 @@ def crear_pdf(cliente, pedido, total):
     pdf.cell(40, 10, f"{total:.2f}$", 1, 1, 'C')
     return pdf.output(dest='S').encode('latin-1')
 
+@st.dialog("🛒 Registrar Venta Detal")
+def formulario_venta_detal(clientes_lista, URL_GOOGLE):
+    with st.form("detal_flotante"):
+      c = st.selectbox("Cliente", clientes_lista)
+      n = st.number_input("Monto Total $", min_value=0.0)
+      cond = st.selectbox("Condición", ["Contado", "Crédito"])
+        
+      if st.form_submit_button("REGISTRAR VENTA"):
+         import pytz
+         from datetime import datetime
+         import requests
+         import time
+            
+         zona_ve = pytz.timezone('America/Caracas')
+         fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
+         payload = {"fecha": fecha_ve, "tipo": cond, "cliente": c, "monto": n}
+            
+         requests.post(URL_GOOGLE, json=payload)
+         st.success("✅ Venta guardada con éxito")
+         time.sleep(1)
+         st.rerun()
+
+
 # --- DISEÑO DE LA APP ---
 if not check_password():
    st.stop()  # 🛑 Si la clave es incorrecta, el programa se frena aquí y no lee más abajo
@@ -139,8 +162,8 @@ st.success("🏪 SECCIÓN DE VENTAS")
 col1, col2 = st.columns(2)
 with col1:
  if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
-    st.session_state.pantalla = "Venta Detal"
-    st.rerun() 
+    formulario_venta_detal(clientes_lista, URL_GOOGLE)
+
 with col2:
  if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
     st.session_state.pantalla = "Venta Mayor (SAYG)"
