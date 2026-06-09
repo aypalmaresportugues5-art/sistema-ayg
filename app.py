@@ -641,35 +641,95 @@ def formulario_simulador_costos():
                             costo_unitario = float(valor_limpio)
                         except:
                             costo_unitario = 1.0
+@st.dialog("⚖️ Simulador Unificado de Costos e Insumos")
+def formulario_simulador_costos():
+    import pandas as pd
+    import streamlit as st
+    
+    st.subheader("🍞 Simulador Unificado de Costos e Insumos")
+    st.write("Calcula en tiempo real el costo bruto, operativo y sugerencia de PVP para tu producción.")
+    
+    RECETAS_BASE = {
+        "Pan Salado": {"HARINA": 45.0, "AGUA": 18.0, "AZUCAR": 3.0, "SAL": 1.0, "MANTECA": 2.0, "LEVADURA": 0.3, "peso_base": 0.25, "unidades_paquete": 1},
+        "Pan de Perro": {"HARINA": 50.0, "AGUA": 18.0, "AZUCAR": 5.0, "SAL": 1.0, "MANTECA": 1.7, "LEVADURA": 0.25, "peso_base": 0.05, "unidades_paquete": 4},
+        "Polvorosas": {"HARINA": 4.5, "PVP": 0.5, "AZUCAR": 2.0, "AGUA": 0.0, "MANTECA": 2.5, "peso_base": 0.04, "unidades_paquete": 12},
+        "Catalinas": {"HARINA": 5.0, "SODA": 0.5, "MELAZA": 3.5, "MELAO PAPELON": 2.0, "AGUA": 2.0, "ESENCIAS": 0.1, "peso_base": 0.06, "unidades_paquete": 6},
+        "Receta Brownie": {"HARINA": 2.0, "AGUA": 1.0, "AZUCAR": 3.0, "MANTECA": 1.0, "CACAO": 1.0, "HUEVOS": 1.2, "peso_base": 0.05, "unidades_paquete": 1},
+        "Pudin": {"HARINA": 10.0, "LECHE": 5.0, "AZUCAR": 4.0, "HUEVOS": 1.5, "ESENCIAS": 0.2, "peso_base": 0.50, "unidades_paquete": 1},
+        "Banquete (50 und)": {"HARINA": 5.0, "AGUA": 2.0, "AZUCAR": 3.0, "MANTECA": 1.0, "SAL": 0.1, "MANTECA": 0.4, "LEVADURA": 0.2, "peso_base": 0.03, "unidades_paquete": 50},
+        "Pan de Dulce": {"HARINA": 1.0, "AGUA": 1.0, "AZUCAR": 1.0, "ANIS-DULCE": 1.0, "MANTECA": 1.0, "LEVADURA": 0.1, "peso_base": 0.25, "unidades_paquete": 1}
+    }
+    
+    opciones_productos = list(RECETAS_BASE.keys())
+    producto_con_clave = st.selectbox("Selecciona el producto a producir:", opciones_productos, key="sim_prod_sel")
+    receta = RECETAS_BASE[producto_con_clave]
+    
+    st.subheader(f"🥣 Ajustar Ingredientes para: {producto_con_clave}")
+    
+    # CONEXIÓN DIRECTA AL EXCEL DE COSTOS
+    try:
+        enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5ewH3M5ZfykdTz3DizPxgUnS2jtaY-dvXmg1I"
+        url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
+        df_costos_real = pd.read_csv(url_publica)
+    except Exception as e:
+        df_costos_real = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
+        
+    ingredientes_modificados = {}
+    costo_materia_prima_total = 0.0
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("**📋 Cantidad de Insumos (Kg / Unidades):**")
+        for ingrediente, cant_base in receta.items():
+            if ingrediente not in ["peso_base", "unidades_paquete"]:
+                cant_actual = st.number_input(f"{ingrediente}:", min_value=0.0, value=float(cant_base), step=0.1, key=f"sim_cant_{ingrediente}")
+                ingredientes_modificados[ingrediente] = cant_actual
+                
+                # Buscador optimizado de precios
+                costo_unitario = 1.0
+                if not df_costos_real.empty:
+                    df_term = df_costos_real.copy()
+                    df_term.columns = df_term.columns.str.strip().str.replace(r'[^\w\s]', '', regex=True)
+                    df_term['Insumo_clean'] = df_term.iloc[:, 0].astype(str).str.upper().str.strip()
+                    busqueda = str(ingrediente).upper().str.strip()
+                    
+                    resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
+                    if not resultado.empty:
+                        try:
+                            valor_crudo = str(resultado.iloc[0].iloc[4])
+                            valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
+                            costo_unitario = float(valor_limpio)
+                        except:
+                            costo_unitario = 1.0
                             
                 costo_materia_prima_total += cant_actual * costo_unitario
-
+                
     with col2:
-        st.markdown("**Configuración Física del Producto:**")
-        peso_pan = st.number_input("Peso por unidad en crudo (Kg):", min_value=0.001, value=receta["peso_base"], step=0.01, key="sim_peso_pan")
-        unidades_por_paquete = st.number_input("Unidades por paquete terminado:", min_value=1, value=int(receta["unidades_paquete"]), step=1, key="sim_und_pack")
+        st.markdown("**📦 Configuración Física del Producto:**")
+        peso_pan = st.number_input("Peso por unidad en crudo (Kg):", min_value=0.001, value=float(receta["peso_base"]), step=0.001, key="sim_peso_pan")
+        unidades_paquete = st.number_input("Unidades por paquete terminado:", min_value=1, value=int(receta["unidades_paquete"]), step=1, key="sim_und_paq")
         
-        st.markdown("**📊 Costos Operativos y Extras:**")
+        st.markdown("**💰 Costos Operativos y Extras:**")
         costo_mano_obra = st.number_input("Mano de Obra de la tanda ($):", min_value=0.0, value=0.0, step=0.5, key="sim_mo")
         costo_gas = st.number_input("Costo de Gas / Energía ($):", min_value=0.0, value=0.0, step=0.5, key="sim_gas")
         costo_bolsa = st.number_input("Costo por cada Bolsa de empaque ($):", min_value=0.0, value=0.05, step=0.01, key="sim_bolsa")
 
-    # # 2. Operaciones matemáticas (Lógica automatizada)
+    # OPERACIONES MATEMÁTICAS
     total_kilos_mezcla = sum(ingredientes_modificados.values())
     cantidad_unidades_totales = int(total_kilos_mezcla / peso_pan) if peso_pan > 0 else 0
-    total_paquetes = cantidad_unidades_totales / unidades_por_paquete if unidades_por_paquete > 0 else 0
+    total_paquetes = cantidad_unidades_totales / unidades_paquete if unidades_paquete > 0 else 0
     costo_operativo_total = costo_materia_prima_total + costo_mano_obra + costo_gas
     
     if cantidad_unidades_totales > 0:
         costo_por_unidad_bruto = costo_operativo_total / cantidad_unidades_totales
-        costo_por_paquete = (costo_por_unidad_bruto * unidades_por_paquete) + costo_bolsa
+        costo_por_paquete = (costo_por_unidad_bruto * unidades_paquete) + costo_bolsa
     else:
         costo_por_unidad_bruto = 0.0
         costo_por_paquete = 0.0
-
-    # # 3. Reporte final en pantalla
-    st.markdown("---")
-    st.subheader("📋 Reporte Técnico de Rendimiento y Costo Real")
+        
+    st.write("---")
+    st.subheader("📊 Reporte Técnico de Rendimiento y Costo Real")
     
     c_res1, c_res2, c_res3 = st.columns(3)
     c_res1.metric("Masa Total Mezcla", f"{total_kilos_mezcla:.2f} Kg")
@@ -681,8 +741,7 @@ def formulario_simulador_costos():
     c_res3.metric("Total Empacado", f"{total_paquetes:.1f} Paquetes")
     c_res3.metric("Costo por Paquete", f"${costo_por_paquete:.2f}")
     
-    # # 4. Calculador interactivo de ganancias y PVP sugerido
-    st.subheader("💰 Calculador de Ganancia Variable y PVP Sugerido")
+    st.subheader("💰 Calculador Interactivo de Ganancias")
     margen_deseado = st.slider("Selecciona tu porcentaje de ganancia ideal (%):", min_value=10, max_value=150, value=30, key="sim_margen")
     
     factor_ganancia = 1 + (margen_deseado / 100)
@@ -690,8 +749,9 @@ def formulario_simulador_costos():
     pvp_paquete_sugerido = costo_por_paquete * factor_ganancia
     
     col_pvp1, col_pvp2 = st.columns(2)
-    col_pvp1.success(f"**PVP Sugerido por Unidad:**\n\n${pvp_unidad_sugerido:.2f}")
-    col_pvp2.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
+    col_pvp1.success(f"PVP Sugerido por Unidad:\n\n${pvp_unidad_sugerido:.2f}")
+    col_pvp2.success(f"PVP Sugerido por Paquete:\n\n${pvp_paquete_sugerido:.2f}")
+
 
 
 # --- DISEÑO DE LA APP ---
