@@ -515,16 +515,16 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                        recibo_texto += f"   -> SALDO PENDIENTE:  ${pendiente_factura:,.2f}\n"
                        recibo_texto += "--------------------------------------------------\n"
             
-               # Totales del recibo
-               recibo_texto += f"TOTAL EN CRÉDITOS: ${total_creditos:,.2f}\n"
-               recibo_texto += f"TOTAL EN ABONOS:   ${total_abonos:,.2f}\n"
-               recibo_texto += "==================================================\n"
-               recibo_texto += f"SALDO NETO PENDIENTE: ${saldo_real_neto:,.2f}\n"
-               recibo_texto += "==================================================\n"
+                # Totales del recibo
+                recibo_texto += f"TOTAL EN CRÉDITOS: ${total_creditos:,.2f}\n"
+                recibo_texto += f"TOTAL EN ABONOS:   ${total_abonos:,.2f}\n"
+                recibo_texto += "==================================================\n"
+                recibo_texto += f"SALDO NETO PENDIENTE: ${saldo_real_neto:,.2f}\n"
+                recibo_texto += "==================================================\n"
             
-               # 🖨️ Cuadro listo para copiar
-               st.write("### 🖨️ Recibo Listo para WhatsApp:")
-               st.code(recibo_texto, language="text")
+                # 🖨️ Cuadro listo para copiar
+                st.write("### 🖨️ Recibo Listo para WhatsApp:")
+                st.code(recibo_texto, language="text")
 
 
 
