@@ -758,19 +758,17 @@ with col6:
  col7, col8 = st.columns(2)
  with col7:
   if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
-     # 1. Intentamos descargar los costos actualizados
-     try:
-         import pandas as pd
-         enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5ewH3M5ZfykdTz3DizPxgUnS2jtaY-dvXmg1I"
-         url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
-         # Guardamos la tabla directamente en el casillero de la sesión
-         st.session_state["df_costos_real"] = pd.read_csv(url_publica)
-     except Exception as e:
-         # Si falla, guardamos una tabla vacía de respaldo en el mismo casillero
-         st.session_state["df_costos_real"] = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
+      try:
+          import pandas as pd
+          # Dirección completamente actualizada con tu ID nuevo y tu GID
+          enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5mvN3N5ZfykdTx3O4iPxgUVs2jtaV-dWXmgII"
+          url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
+                    
+          st.session_state["df_costos_real"] = pd.read_csv(url_publica)
+      except Exception as e:
+          st.session_state["df_costos_real"] = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
                 
-     # 2. Llamamos a la función limpia (sin pasarle variables entre paréntesis)
-     formulario_simulador_costos()
+      formulario_simulador_costos()
 
 
 
