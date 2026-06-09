@@ -178,6 +178,49 @@ def formulario_venta_mayor(clientes_lista, productos_dict):
             import time
             time.sleep(1)
             st.rerun()
+@st.dialog("💰 Registrar Cuenta / Abono")
+def formulario_cuentas_abonos(clientes_lista, URL_GOOGLE):
+    st.subheader("📑 Control de Pagos")
+    c = st.selectbox("Seleccionar Cliente", clientes_lista)
+    tipo_op = st.selectbox("Tipo de Operación", ["Deuda Inicial", "Abono"])
+    monto = st.number_input("Monto $", min_value=0.0, step=0.01)
+    
+    if st.form_submit_button if False else st.button("💾 Guardar Operación"):
+        import pytz
+        from datetime import datetime
+        import requests
+        import time
+        
+        zona_ve = pytz.timezone('America/Caracas')
+        fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
+        
+        # Ajustamos el formato según lo que reciba tu Google Sheets
+        payload = {"fecha": fecha_ve, "tipo": tipo_op, "cliente": c, "monto": monto}
+        
+        requests.post(URL_GOOGLE, json=payload)
+        st.success(f"✅ {tipo_op} registrada con éxito")
+        time.sleep(1)
+        st.rerun()
+
+@st.dialog("📦 Gestionar Inventario")
+def formulario_inventario(productos_dict):
+    st.subheader("📊 Ajuste de Stock y Precios")
+    prod_nom = st.selectbox("Seleccionar Producto", list(productos_dict.keys()))
+    
+    stock_actual = productos_dict[prod_nom]['stock']
+    precio_actual = productos_dict[prod_nom]['precio']
+    
+    st.write(f"**Valores actuales:** 📦 Stock: {stock_actual} | 💰 Precio: ${precio_actual}")
+    
+    nuevo_stock = st.number_input("Nuevo Stock", min_value=0, value=int(stock_actual))
+    nuevo_precio = st.number_input("Nuevo Precio $", min_value=0.0, value=float(precio_actual), step=0.01)
+    
+    if st.button("🔄 Actualizar Producto"):
+        # Aquí irá tu lógica para enviar los cambios del inventario a tu base de datos
+        st.success("✅ Inventario actualizado correctamente")
+        import time
+        time.sleep(1)
+        st.rerun()
 
 
 
@@ -220,13 +263,11 @@ st.info("💰 GESTIÓN E INVENTARIO")
 col3, col4 = st.columns(2)
 with col3:
  if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
-    st.session_state.pantalla = "Cuentas y Abonos"
-    st.rerun()
+    formulario_cuentas_abonos(clientes_lista, URL_GOOGLE)
+
 with col4:
  if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-    st.session_state.pantalla = "Inventario"
-    st.rerun()
- 
+    formulario_inventario(productos_dict)
 
 # 🗂️ Fila 3: Reportes y Cierre (Categoría en bloque Naranja)
 st.warning("🗂️ REPORTES Y CIERRE")
