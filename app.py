@@ -613,7 +613,9 @@ def formulario_simulador_costos():
         df_costos_real = pd.read_csv(url_publica)
     except Exception as e:
         df_costos_real = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
-        
+            # 🧪 LÍNEA DE PRUEBA: Muestra los datos del Excel en la pantalla del celular
+    st.write("📋 Datos leídos de tu Excel de costos:", df_costos_real.head(5))
+
     ingredientes_modificados = {}
     costo_materia_prima_total = 0.0
     
