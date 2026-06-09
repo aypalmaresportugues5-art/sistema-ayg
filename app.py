@@ -497,6 +497,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     monto_factura = float(cred['MONTO($)'])
                     fecha_completa = str(cred['FECHA'])
                     fecha_factura = fecha_completa[:10] if "T" in fecha_completa else fecha_completa
+
                 
                     if abonos_pool >= monto_factura:
                        abonos_pool -= monto_factura
