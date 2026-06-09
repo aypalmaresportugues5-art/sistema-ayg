@@ -419,6 +419,101 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                 df_mostrar = df_mostrar.iloc[::-1]
                 st.table(df_mostrar)
 
+@st.dialog("🔒 Control y Cierre de Caja Diario")
+def formulario_cierre_de_caja(URL_GOOGLE):
+    import requests
+    import pandas as pd
+    import pytz
+    from datetime import datetime
+    import time
+    
+    st.subheader("🏁 Control y Cierre de Caja Diario")
+    
+    # Pedimos los movimientos de ventas del día actual
+    resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
+    datos_recibidos = resp.json()
+    
+    if isinstance(datos_recibidos, list):
+        df_v = pd.DataFrame(datos_recibidos)
+    else:
+        df_v = pd.DataFrame()
+        
+    # --- AJUSTE DE FECHA ---
+    zona_ve = pytz.timezone('America/Caracas')
+    fecha_hoy = datetime.now(zona_ve).strftime('%Y-%m-%d')
+    fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
+    
+    st.write(f"📅 **Resumen de Operaciones:** {fecha_ve}")
+    
+    if not df_v.empty:
+        # Forzamos la limpieza de la fecha para tomar solo AÑO-MES-DÍA
+        df_v['FECHA_CORTA'] = df_v['FECHA'].astype(str).str.slice(0, 10)
+        df_hoy = df_v[df_v['FECHA_CORTA'] == fecha_hoy]
+        
+        if not df_hoy.empty:
+            # # 1. Ventas del día clasificadas correctamente
+            # Detal (Siempre entra a caja si es de Contado)
+            df_detal_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]
+            total_detal = df_detal_contado['MONTO($)'].sum() if not df_detal_contado.empty else 0.0
+            
+            # Separamos el Mayor de Contado del Mayor de Crédito
+            df_mayor_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
+            total_mayor_contado = df_mayor_contado['MONTO($)'].sum() if not df_mayor_contado.empty else 0.0
+            
+            df_mayor_credito = df_hoy[(df_hoy['TIPO'] == 'Crédito') & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
+            total_mayor_credito = df_mayor_credito['MONTO($)'].sum() if not df_mayor_credito.empty else 0.0
+            
+            total_mayor = total_mayor_contado + total_mayor_credito
+            
+            # Abonos recibidos hoy
+            df_abonos = df_hoy[df_hoy['TIPO'] == 'Abono']
+            total_abonos = df_abonos['MONTO($)'].sum() if not df_abonos.empty else 0.0
+            efectivo_abonos = abs(total_abonos)
+            
+            # --- LA MATEMÁTICA REAL DE TU CAJA FÍSICA ---
+            total_liquido_caja = total_detal + total_mayor_contado + efectivo_abonos
+            
+            # --- MUESTRA LOS RECUADROS EN LA PANTALLA ---
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Venta Detal Hoy", f"${total_detal:.2f}")
+            c2.metric("Venta Mayor Hoy", f"${total_mayor:.2f}")
+            c3.metric("Abonos Recibidos Hoy", f"${efectivo_abonos:.2f}")
+            
+            st.markdown(f"### 💵 Total General Estimado en Caja: **${total_liquido_caja:.2f}**")
+            st.caption("Este monto representa el dinero total que debió ingresar entre ventas directas y pagos de deudas.")
+            st.write("---")
+            
+            # Formulario para confirmar el cierre físico
+            with st.form("form_cierre", clear_on_submit=True):
+                st.write("¿Todo cuadra con el dinero físico en mano?")
+                observaciones = st.text_area("Notas o novedades del día (Opcional):", placeholder="Ej: Dejamos $20 para base...")
+                boton_cierre = st.form_submit_button("🔒 CONSOLIDAR Y CERRAR CAJA")
+                
+            if boton_cierre:
+                payload_cierre = {
+                    "fecha": fecha_ve,
+                    "tipo": "CierreCaja",
+                    "venta_detal": float(total_detal),
+                    "venta_mayor": float(total_mayor),
+                    "abonos": float(efectivo_abonos),
+                    "total_caja": float(total_liquido_caja),
+                    "notas": observaciones
+                }
+                
+                try:
+                    respuesta = requests.post(URL_GOOGLE, json=payload_cierre, timeout=10)
+                    if respuesta.status_code == 200:
+                        st.success("🏁 ¡Cierre de caja guardado con éxito en el sistema!")
+                        time.sleep(1.5)
+                        st.rerun()
+                    else:
+                        st.error("Hubo un inconveniente al conectar con Google Sheets. Intenta de nuevo.")
+                except Exception as e:
+                    st.error(f"❌ Error de conexión: {e}")
+        else:
+            st.info("Aún no se han registrado ventas ni abonos en la jornada de hoy.")
+    else:
+        st.info("No se encontraron registros históricos de ventas.")
 
 
 
@@ -474,10 +569,10 @@ with col5:
  if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
     formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE)
 
-with col6:
- if st.button("🧱\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
-    st.session_state.pantalla = "Cierre de Caja"
-    st.rerun()
+ with col6:
+  if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+     formulario_cierre_de_caja(URL_GOOGLE)
+
 
 # 🧮 Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
 st.error("🧮 HERRAMIENTAS ADICIONALES")
