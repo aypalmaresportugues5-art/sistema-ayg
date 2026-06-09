@@ -489,7 +489,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                  recibo_texto += "DETALLE DE CUENTAS PENDIENTES:\n\n"
             
                  # Filtramos deudas y abonos cronológicamente
-                 creditos = [m for m in movimientos_cliente if m['TIPO'].strip().capitalize() == 'Credito']
+                 creditos = [m for m in movimientos_cliente if m['TIPO'].strip().capitalize() == 'Crédito']
                  abonos_pool = total_abonos
             
                  # Vinculamos abonos históricos a cada factura vieja
