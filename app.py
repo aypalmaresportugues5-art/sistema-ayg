@@ -178,6 +178,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict):
             import time
             time.sleep(1)
             st.rerun()
+          
 @st.dialog("💰 Registrar Cuenta / Abono")
 def formulario_cuentas_abonos(clientes_lista, URL_GOOGLE):
     st.subheader("📑 Control de Pagos")
@@ -202,25 +203,146 @@ def formulario_cuentas_abonos(clientes_lista, URL_GOOGLE):
         time.sleep(1)
         st.rerun()
 
-@st.dialog("📦 Gestionar Inventario")
-def formulario_inventario(productos_dict):
-    st.subheader("📊 Ajuste de Stock y Precios")
-    prod_nom = st.selectbox("Seleccionar Producto", list(productos_dict.keys()))
+@st.dialog("📦 Gestión Integral de Inventario")
+def formulario_inventario(productos_dict, clientes_lista, URL_GOOGLE):
+    # 📑 Creamos las 5 pestañas organizadas para el teléfono
+    tab_almacen, tab_insumos, tab_productos, tab_clientes, tab_imprimir = st.tabs([
+        "📊 Estado del Almacén",
+        "🍎 Materia Prima",
+        "✏️ Nuevos Productos",
+        "👤 Nuevos Clientes",
+        "🖨️ Imprimir Lista"
+    ])
     
-    stock_actual = productos_dict[prod_nom]['stock']
-    precio_actual = productos_dict[prod_nom]['precio']
-    
-    st.write(f"**Valores actuales:** 📦 Stock: {stock_actual} | 💰 Precio: ${precio_actual}")
-    
-    nuevo_stock = st.number_input("Nuevo Stock", min_value=0, value=int(stock_actual))
-    nuevo_precio = st.number_input("Nuevo Precio $", min_value=0.0, value=float(precio_actual), step=0.01)
-    
-    if st.button("🔄 Actualizar Producto"):
-        # Aquí irá tu lógica para enviar los cambios del inventario a tu base de datos
-        st.success("✅ Inventario actualizado correctamente")
-        import time
-        time.sleep(1)
-        st.rerun()
+    # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
+    with tab_almacen:
+        st.subheader("📦 Estado del Almacén")
+        if 'productos_dict' in locals() or 'productos_dict' in globals():
+            import pandas as pd
+            df_inv = pd.DataFrame([{"Producto": k, "Precio": f"${v['precio']:.2f}", "Stock": v['stock']} for k, v in productos_dict.items()])
+            st.table(df_inv)
+        else:
+            st.info("Cargando datos del almacén...")
+        st.write("⚠️ Las cantidades se actualizan según las Entradas/Salidas de tu Excel.")
+
+    # === PESTAÑA 2: REGISTRO DE MATERIA PRIMA (COSTOS) ===
+    with tab_insumos:
+        st.subheader("📑 Registro de Costo de Insumos")
+        with st.form("form_costos", clear_on_submit=True):
+            insumo = st.text_input("Nombre del Insumo:", placeholder="Ej: Harina de Trigo, Manteca, Azúcar")
+            costo_compra = st.number_input("Costo Total de Compra ($):", min_value=0.0, step=0.01, format="%.2f")
+            presentacion = st.text_input("Presentación / Empaque:", placeholder="Ej: Saco, Bulto, Caja, Litro")
+            unidad_medida = st.number_input("Cantidad total en Unidades (Kg o Lt):", min_value=0.0, step=0.01, format="%.2f")
+            
+            btn_guardar_costo = st.form_submit_button("Guardar Insumo")
+            
+        if btn_guardar_costo:
+            if insumo and costo_compra > 0 and unidad_medida > 0:
+                costo_por_unidad = round(costo_compra / unidad_medida, 4)
+                payload = {
+                    "accion": "guardar_costo",
+                    "insumo": insumo,
+                    "costo": costo_compra,
+                    "presentacion": presentacion,
+                    "unidad": unidad_medida,
+                    "costo_unidad": costo_por_unidad
+                }
+                try:
+                    import requests
+                    res = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                    if res.text == "OK_COSTO":
+                        st.success(f"🟢 ¡{insumo} guardado! Costo calculado: ${costo_por_unidad:.4f} por Kg/Lt.")
+                    else:
+                        st.error(f"❌ Error del servidor: {res.text}")
+                except Exception as e:
+                    st.error(f"❌ Error de conexión: {e}")
+            else:
+                st.warning("⚠️ Por favor, rellene todos los campos con valores mayores a cero.")
+
+    # === PESTAÑA 3: REGISTRO DE NUEVOS PRODUCTOS ===
+    with tab_productos:
+        st.subheader("✨ Agregar Nuevo Producto al Sistema")
+        with st.form("form_productos", clear_on_submit=True):
+            nuevo_prod = st.text_input("Nombre del Producto:", placeholder="Ej: Pan Camilla, Pan de Tunja")
+            p_mayor = st.number_input("Precio de Venta Mayor ($):", min_value=0.0, step=0.01, format="%.2f")
+            cant_inicial = st.number_input("Cantidad o Inventario Inicial:", min_value=1, step=1, value=20)
+            
+            btn_guardar_prod = st.form_submit_button("Registrar Producto")
+            
+        if btn_guardar_prod:
+            if nuevo_prod and p_mayor > 0 and cant_inicial > 0:
+                payload = {
+                    "accion": "guardar_producto",
+                    "nombre_producto": nuevo_prod,
+                    "precio_mayor": p_mayor,
+                    "cantidad_inicial": cant_inicial
+                }
+                try:
+                    import requests
+                    res = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                    if res.text == "OK_PRODUCTO":
+                        st.success(f"🟢 ¡Producto '{nuevo_prod}' registrado con éxito!")
+                        st.info("💡 Reinicia o refresca la app para que aparezca en tus listas de venta.")
+                    else:
+                        st.error(f"❌ Error del servidor: {res.text}")
+                except Exception as e:
+                    st.error(f"❌ Error de conexión: {e}")
+            else:
+                st.warning("⚠️ Ingresa el nombre del producto y sus precios válidos.")
+
+    # === PESTAÑA 4: REGISTRO DE NUEVOS CLIENTES ===
+    with tab_clientes:
+        st.subheader("🤝 Registrar Nuevo Cliente / Bodega")
+        with st.form("form_clientes", clear_on_submit=True):
+            nuevo_cliente = st.text_input("Nombre completo del Cliente o Bodega:", placeholder="Ej: Bodega Ereau")
+            btn_guardar_cliente = st.form_submit_button("Registrar Cliente")
+            
+        if btn_guardar_cliente:
+            if nuevo_cliente:
+                payload = {
+                    "accion": "guardar_cliente",
+                    "nombre_cliente": nuevo_cliente
+                }
+                try:
+                    import requests
+                    res = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                    if res.text == "OK_CLIENTE":
+                        st.success(f"🟢 ¡Cliente '{nuevo_cliente}' guardado correctamente!")
+                        st.info("💡 Refresca la app para que figure en la lista de deudores.")
+                    else:
+                        st.error(f"❌ Error del servidor: {res.text}")
+                except Exception as e:
+                    st.error(f"❌ Error de conexión: {e}")
+            else:
+                st.warning("⚠️ Por favor, escribe un nombre válido.")
+
+    # === PESTAÑA 5: IMPRIMIR LISTA DE PRECIOS ===
+    with tab_imprimir:
+        st.subheader("🖨️ Generar Catálogo en PDF")
+        st.write("Presiona el botón para descargar la lista de precios vigente basada en la hoja **Productos**.")
+        
+        if st.button("📄 Generar PDF de Precios"):
+            from fpdf import FPDF
+            pdf = FPDF()
+            pdf.add_page()
+            pdf.set_font("Arial", "B", 16)
+            pdf.cell(0, 10, "LISTA DE PRECIOS VIGENTE", ln=True, align="C")
+            pdf.ln(10)
+            
+            pdf.set_font("Arial", "B", 12)
+            pdf.cell(100, 10, "PRODUCTO", 1)
+            pdf.cell(40, 10, "PRECIO", 1, align="C")
+            pdf.cell(40, 10, "STOCK", 1, ln=True, align="C")
+            
+            pdf.set_font("Arial", "", 12)
+            for prod, datos in productos_dict.items():
+                pdf.cell(100, 10, str(prod), 1)
+                pdf.cell(40, 10, f"${datos['precio']:.2f}", 1, align="C")
+                pdf.cell(40, 10, str(datos['stock']), 1, ln=True, align="C")
+            
+            pdf_bytes = pdf.output(dest="S").encode("latin-1")
+            st.download_button("📥 Descargar PDF", data=pdf_bytes, file_name="lista_precios.pdf", mime="application/pdf", use_container_width=True)
+
 
 
 
@@ -265,9 +387,10 @@ with col3:
  if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
     formulario_cuentas_abonos(clientes_lista, URL_GOOGLE)
 
-with col4:
- if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-    formulario_inventario(productos_dict)
+ with col4:
+  if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+     formulario_inventario(productos_dict, clientes_lista, URL_GOOGLE)
+
 
 # 🗂️ Fila 3: Reportes y Cierre (Categoría en bloque Naranja)
 st.warning("🗂️ REPORTES Y CIERRE")
