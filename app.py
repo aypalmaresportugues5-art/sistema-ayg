@@ -134,6 +134,52 @@ def formulario_venta_detal(clientes_lista, URL_GOOGLE):
          st.success("✅ Venta guardada con éxito")
          time.sleep(1)
          st.rerun()
+        
+@st.dialog("📦 Registrar Venta Mayor (SAYG)")
+def formulario_venta_mayor(clientes_lista, productos_dict):
+    st.subheader("🛒 Pedido al Mayor")
+    cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
+    
+    col1, col2 = st.columns(2)
+    prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
+    
+    # Extraemos la información del producto seleccionado
+    stock_actual = productos_dict[prod_nom]['stock']
+    precio_u = productos_dict[prod_nom]['precio']
+    
+    st.info(f"💰 Precio: ${precio_u} | 📦 Stock: {stock_actual}")
+    
+    # Validamos el límite del número input según el stock
+    max_cant = float(stock_actual) if stock_actual > 0 else 1.0
+    cant = col2.number_input("Cantidad", min_value=0.0, max_value=max_cant, step=1.0)
+    
+    if st.button("➕ Agregar al Carrito"):
+        if 'carro' not in st.session_state:
+            st.session_state.carro = []
+        st.session_state.carro.append({"Producto": prod_nom, "Cant": cant, "Precio": precio_u, "Subtotal": cant * precio_u})
+        st.success(f"✅ ¡{prod_nom} agregado!")
+        
+    # Si hay cosas en el carrito, las mostramos aquí mismo
+    if 'carro' in st.session_state and st.session_state.carro:
+        import pandas as pd
+        st.table(pd.DataFrame(st.session_state.carro))
+        t_final = sum(i['Subtotal'] for i in st.session_state.carro)
+        st.subheader(f"Total: ${t_final:.2f}")
+        
+        col_b1, col_b2 = st.columns(2)
+        if col_b1.button("🗑️ Vaciar Carrito"):
+            st.session_state.carro = []
+            st.rerun()
+            
+        if col_b2.button("🚀 Finalizar y Registrar"):
+            # Aquí irá la lógica para guardar en la base de datos o Google Sheets
+            st.success("✅ Venta registrada correctamente")
+            st.session_state.carro = []
+            import time
+            time.sleep(1)
+            st.rerun()
+
+
 
 
 # --- DISEÑO DE LA APP ---
@@ -165,9 +211,9 @@ with col1:
     formulario_venta_detal(clientes_lista, URL_GOOGLE)
 
 with col2:
- if st.button("🛻\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
-    st.session_state.pantalla = "Venta Mayor (SAYG)"
-    st.rerun()
+ if st.button("🚗\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+    formulario_venta_mayor(clientes_lista, productos_dict)
+
  
 # 💰 Fila 2: Gestión (Categoría en bloque Azul)
 st.info("💰 GESTIÓN E INVENTARIO")
