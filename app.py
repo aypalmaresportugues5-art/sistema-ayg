@@ -224,29 +224,45 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
         st.write("El carrito está vacío. Agrega productos para comenzar.")
 
           
-@st.dialog("💰 Registrar Cuenta / Abono")
+@st.dialog("💰 Registrar Abono")
 def formulario_cuentas_abonos(clientes_lista, URL_GOOGLE):
-    st.subheader("📑 Control de Pagos")
-    c = st.selectbox("Seleccionar Cliente", clientes_lista)
-    tipo_op = st.selectbox("Tipo de Operación", ["Deuda Inicial", "Abono"])
-    monto = st.number_input("Monto $", min_value=0.0, step=0.01)
+    import requests
+    import pytz
+    from datetime import datetime
+    import time
     
-    if st.form_submit_button if False else st.button("💾 Guardar Operación"):
-        import pytz
-        from datetime import datetime
-        import requests
-        import time
-        
-        zona_ve = pytz.timezone('America/Caracas')
-        fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
-        
-        # Ajustamos el formato según lo que reciba tu Google Sheets
-        payload = {"fecha": fecha_ve, "tipo": tipo_op, "cliente": c, "monto": monto}
-        
-        requests.post(URL_GOOGLE, json=payload)
-        st.success(f"✅ {tipo_op} registrada con éxito")
-        time.sleep(1)
-        st.rerun()
+    st.subheader("🧾 Registro Rápido de Abono")
+    
+    # Solo dos campos: cliente y cuánto paga
+    c = st.selectbox("Seleccionar Cliente", clientes_lista, key="abono_cli_sel")
+    monto = st.number_input("Monto $", min_value=0.0, step=0.01, key="abono_monto")
+    
+    if st.button("💾 Guardar Operación", use_container_width=True, type="primary"):
+        if monto > 0:
+            zona_ve = pytz.timezone('America/Caracas')
+            fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
+            
+            # El "tipo" siempre es "Abono" y el monto va en negativo para restar
+            payload = {
+                "fecha": fecha_ve, 
+                "tipo": "Abono", 
+                "cliente": c, 
+                "monto": -float(monto)
+            }
+            
+            try:
+                respuesta = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                if respuesta.status_code == 200:
+                    st.success(f"✅ Abono de ${monto:.2f} registrado con éxito")
+                    time.sleep(1)
+                    st.rerun()
+                else:
+                    st.error("Error al conectar con Google Sheets.")
+            except Exception as e:
+                st.error(f"❌ Error: {e}")
+        else:
+            st.warning("Escribe un monto mayor a cero.")
+
 
 @st.dialog("📦 Gestión Integral de Inventario")
 def formulario_inventario(productos_dict, clientes_lista, URL_GOOGLE):
