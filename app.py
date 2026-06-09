@@ -458,74 +458,76 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                 st.write("---")
                 st.info(f"🔵 El cliente tiene un saldo a favor de ${abs(saldo_real_neto):.2f}")
             else:
-                # 🧮 1. REUTILIZAMOS TUS VARIABLES PARA EL CÁLCULO HISTÓRICO
-                movimientos_cliente = df_cli.to_dict('records')
+                    
+                # 🧮 1. REPRODUCIMOS TU LÓGICA ORIGINAL DE SUMA TOTAL
+                saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
             
-                total_creditos = sum(float(m['MONTO($)']) for m in movimientos_cliente if m['TIPO'].strip().lower() in ['credito', 'crédito'])
-                total_abonos = abs(sum(float(m['MONTO($)']) for m in movimientos_cliente if m['TIPO'].strip().lower() in ['abono']))
-                saldo_real_neto = total_creditos - total_abonos
+                # Calculamos totales históricos solo para los marcadores visuales
+                total_creditos = sum(float(m['MONTO($)']) for m in df_cli.to_dict('records') if m['TIPO'].strip().lower() in ['credito', 'crédito'])
+                total_abonos = abs(sum(float(m['MONTO($)']) for m in df_cli.to_dict('records') if m['TIPO'].strip().lower() in ['abono']))
 
-                # 📊 2. TUS MISMAS COLUMNAS VISUALES
+                # 📊 2. PANTALLA PRINCIPAL (Tus marcadores limpios)
                 c1, c2 = st.columns(2)
-                c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${total_abonos:,.2f}")
-                c2.metric("SALDO PENDIENTE NETO", f"${max(0.0, saldo_real_neto):,.2f}")
-                st.write("---")
-            
-                # 📝 3. GENERACIÓN DEL RECIBO ESTILO MÁQUINA DE ESCRIBIR
-                st.write("### 📄 Detalle de Cuentas Vigentes:")
-            
-                import datetime
-                fecha_hoy = datetime.date.today().strftime("%d/%m/%Y")
-            
-                recibo_texto =  "==================================================\n"
-                recibo_texto += "       *** REPORTE DE COBRO - AYG *** \n"
-                recibo_texto += "==================================================\n"
-                recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                recibo_texto += f"EMPRESA: INVERSIONES AYG 2017 C.A.\n"
-                recibo_texto += "--------------------------------------------------\n"
-                recibo_texto += f"CLIENTE: {cliente_sel}\n"
-                recibo_texto += "--------------------------------------------------\n"
-                recibo_texto += "DETALLE DE CUENTAS PENDIENTES:\n\n"
-            
-                # 🔄 VOLTEAMOS LAS DEUDAS DE ABAJO HACIA ARRIBA (REVERSED)
-                creditos_ordenados = [m for m in movimientos_cliente if m['TIPO'].strip().lower() in ['credito', 'crédito']]
-                creditos = list(reversed(creditos_ordenados))
-                abonos_pool = total_abonos
-            
-                # Vinculamos abonos desde lo más nuevo hacia lo más viejo
-                for cred in creditos:
-                    monto_factura = float(cred['MONTO($)'])
-                    fecha_completa = str(cred['FECHA'])
-                    fecha_factura = fecha_completa[:10] if "T" in fecha_completa else fecha_completa
-
+                if saldo_real_neto <= 0.01:
+                   c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", "$0.00")
+                   c2.metric("SALDO PENDIENTE NETO", "$0.00")
+                   st.write("---")
+                   st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
+                else:
+                    c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${total_abonos:,.2f}")
+                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:,.2f}")
+                    st.write("---")
                 
-                    if abonos_pool >= monto_factura:
-                       abonos_pool -= monto_factura
-                    else:
-                        pendiente_factura = monto_factura - abonos_pool
-                        abonos_aplicados = abonos_pool
-                        abonos_pool = 0
-                    
-                    # Alertas visuales en la app
-                    st.error(f"📅 **{fecha_factura}** — Crédito original: ${monto_factura:,.2f} (Restan: **${pendiente_factura:,.2f}**)")
-                    
-                    # Estructura del ticket de texto
-                    recibo_texto += f"📅 {fecha_factura} | Crédito Original: ${monto_factura:,.2f}\n"
-                    if abonos_aplicados > 0:
-                       recibo_texto += f"   -> Abonos aplicados: ${abonos_aplicados:,.2f}\n"
-                       recibo_texto += f"   -> SALDO PENDIENTE:  ${pendiente_factura:,.2f}\n"
-                       recibo_texto += "--------------------------------------------------\n"
-            
-                # Totales del recibo
-                recibo_texto += f"TOTAL EN CRÉDITOS: ${total_creditos:,.2f}\n"
-                recibo_texto += f"TOTAL EN ABONOS:   ${total_abonos:,.2f}\n"
-                recibo_texto += "==================================================\n"
+                    # 📝 3. CONSTRUCCIÓN DEL RECIBO (Solo si debe)
+                    st.write("### 📄 Detalle de Cuentas Vigentes:")
+                
+                    import datetime
+                    fecha_hoy = datetime.date.today().strftime("%d/%m/%Y")
+                
+                    recibo_texto =  "==================================================\n"
+                    recibo_texto += "       *** REPORTE DE COBRO - AYG *** \n"
+                    recibo_texto += "==================================================\n"
+                    recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
+                    recibo_texto += f"EMPRESA: INVERSIONES AYG 2017 C.A.\n"
+                    recibo_texto += "--------------------------------------------------\n"
+                    recibo_texto += f"CLIENTE: {cliente_sel}\n"
+                    recibo_texto += "--------------------------------------------------\n"
+                    recibo_texto += "DETALLE DE CUENTAS PENDIENTES:\n\n"
+                
+                    # RECORRIDO INVERSO CON TU FRENO ORIGINAL
+                    movimientos_cliente = df_cli.to_dict('records')
+                    saldo_acumulado_inverso = 0.0
+                
+                for mov in reversed(movimientos_cliente):
+                    tipo_mov = mov['TIPO'].strip().lower()
+                    if tipo_mov in ['credito', 'crédito']:
+                        monto = float(mov['MONTO($)'])
+                        saldo_acumulado_inverso += monto
+                        
+                        # Limpieza de la fecha string
+                        fecha_completa = str(mov['FECHA'])
+                        fecha_factura = fecha_completa[:10] if "T" in fecha_completa else fecha_completa
+                        
+                        # Mostramos la alerta en la app
+                        st.error(f"📅 **{fecha_factura}** — Crédito original: ${monto:,.2f}")
+                        
+                        # Agregamos al texto del recibo
+                        recibo_texto += f"📅 {fecha_factura} | Crédito Original: ${monto:,.2f}\n"
+                        recibo_texto += f"   -> SALDO PENDIENTE:  ${monto:,.2f}\n"
+                        recibo_texto += "--------------------------------------------------\n"
+                        
+                        # Tu freno original de la línea 1116
+                        if saldo_acumulado_inverso >= saldo_real_neto:
+                            break
+                
+                # Totales finales en el recibo de texto
                 recibo_texto += f"SALDO NETO PENDIENTE: ${saldo_real_neto:,.2f}\n"
                 recibo_texto += "==================================================\n"
-            
-                # 🖨️ Cuadro listo para copiar
+                
+                # 🖨️ Despliegue del recuadro para WhatsApp
                 st.write("### 🖨️ Recibo Listo para WhatsApp:")
                 st.code(recibo_texto, language="text")
+
 
 
 
