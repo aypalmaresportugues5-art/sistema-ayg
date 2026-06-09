@@ -510,20 +510,20 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                          # Estructura del ticket de texto
                          recibo_texto += f"📅 {fecha_factura} | Crédito Original: ${monto_factura:,.2f}\n"
                          if abonos_aplicados > 0:
-                         recibo_texto += f"   -> Abonos aplicados: ${abonos_aplicados:,.2f}\n"
-                         recibo_texto += f"   -> SALDO PENDIENTE:  ${pendiente_factura:,.2f}\n"
-                         recibo_texto += "--------------------------------------------------\n"
+                            recibo_texto += f"   -> Abonos aplicados: ${abonos_aplicados:,.2f}\n"
+                            recibo_texto += f"   -> SALDO PENDIENTE:  ${pendiente_factura:,.2f}\n"
+                            recibo_texto += "--------------------------------------------------\n"
             
-                # Totales del recibo
-                recibo_texto += f"TOTAL EN CRÉDITOS: ${total_creditos:,.2f}\n"
-                recibo_texto += f"TOTAL EN ABONOS:   ${total_abonos:,.2f}\n"
-                recibo_texto += "==================================================\n"
-                recibo_texto += f"SALDO NETO PENDIENTE: ${saldo_real_neto:,.2f}\n"
-                recibo_texto += "==================================================\n"
-            
-                # 🖨️ Cuadro gris con tipo de letra monoespaciada y botón "Copiar"
-                st.write("### 🖨️ Recibo Listo para WhatsApp:")
-                st.code(recibo_texto, language="text")
+                 # Totales del recibo
+                 recibo_texto += f"TOTAL EN CRÉDITOS: ${total_creditos:,.2f}\n"
+                 recibo_texto += f"TOTAL EN ABONOS:   ${total_abonos:,.2f}\n"
+                 recibo_texto += "==================================================\n"
+                 recibo_texto += f"SALDO NETO PENDIENTE: ${saldo_real_neto:,.2f}\n"
+                 recibo_texto += "==================================================\n"
+             
+                 # 🖨️ Cuadro gris con tipo de letra monoespaciada y botón "Copiar"
+                 st.write("### 🖨️ Recibo Listo para WhatsApp:")
+                 st.code(recibo_texto, language="text")
 
 
 @st.dialog("🔒 Control y Cierre de Caja Diario")
