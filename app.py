@@ -581,11 +581,13 @@ def formulario_cierre_de_caja(URL_GOOGLE):
         st.info("No se encontraron registros históricos de ventas.")
 
 @st.dialog("⚖️ Simulador Unificado de Costos e Insumos")
-def formulario_simulador_costos():
+def formulario_simulador_costos(df_costos_real):
     import pandas as pd
     import streamlit as st
     
-    st.subheader("⚖️ Simulador Unificado de Costos e Insumos")
+    st.subheader("🍞 Simulador Unificado de Costos e Insumos")
+    # ... (El resto de tu código del simulador continúa igual abajo)
+
     st.write("Calcula en tiempo real el costo bruto, operativo y sugerencia de PVP para tu producción.")
     
     # # 1. Base de datos interna con tus recetas reales de Excel
