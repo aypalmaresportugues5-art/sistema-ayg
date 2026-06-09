@@ -636,7 +636,7 @@ def formulario_simulador_costos():
                     resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                     if not resultado.empty:
                         try:
-                            valor_crudo = str(resultado.iloc[0].iloc[4])
+                            valor_crudo = str(resultado.iloc[0].iloc[2])
                             valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
                             costo_unitario = float(valor_limpio)
                         except:
