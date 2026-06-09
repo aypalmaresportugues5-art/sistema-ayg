@@ -827,12 +827,25 @@ with col6:
     formulario_cierre_de_caja(URL_GOOGLE)
 
 
-# 🧮 Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
-st.error("🧮 HERRAMIENTAS ADICIONALES")
+# # Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
+st.error("🛠️ HERRAMIENTAS ADICIONALES")
 col7, col8 = st.columns(2)
-with col7: # O el identificador de columna que le corresponda en tu fila 4
- if st.button("🧮\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
-    formulario_simulador_costos()
+        
+with col7:
+ if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
+    # 1. Descargamos el Excel de costos en tiempo real al pulsar el botón
+    try:
+        import pandas as pd
+        enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5ewH3M5ZfykdTz3DizPxgUnS2jtaY-dvXmg1I"
+        url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
+        df_costos_real = pd.read_csv(url_publica)
+    except Exception as e:
+        # Si falla la conexión, creamos una tabla vacía de respaldo
+        df_costos_real = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
+                
+    # 2. Llamamos a la ventana flotante pasándole los datos frescos
+    formulario_simulador_costos(df_costos_real)
+
 
    
 st.markdown("---")
