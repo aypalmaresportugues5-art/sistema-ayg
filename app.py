@@ -135,49 +135,94 @@ def formulario_venta_detal(clientes_lista, URL_GOOGLE):
          time.sleep(1)
          st.rerun()
         
-@st.dialog("📦 Registrar Venta Mayor (SAYG)")
-def formulario_venta_mayor(clientes_lista, productos_dict):
-    st.subheader("🛒 Pedido al Mayor")
-    cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
+@st.dialog("📦 Registro de Venta al Mayor")
+def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
+    import requests
+    import pytz
+    from datetime import datetime
+    import base64
     
-    col1, col2 = st.columns(2)
-    prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
+    st.subheader("🛒 Selector de Pedido al Mayor")
     
-    # Extraemos la información del producto seleccionado
+    # Inicializamos el carrito en la sesión si no existe para que no se borre
+    if 'carro_mayor' not in st.session_state:
+        st.session_state.carro_mayor = []
+        
+    cli_m = st.selectbox("Seleccionar Cliente:", clientes_lista, key="mayor_cli_sel")
+    
+    # 1. AGREGAR PRODUCTOS (Fuera de un formulario para que actualice el stock dinámico)
+    c1, c2 = st.columns(2)
+    prod_nom = c1.selectbox("Producto:", list(productos_dict.keys()), key="mayor_prod_sel")
+    
     stock_actual = productos_dict[prod_nom]['stock']
     precio_u = productos_dict[prod_nom]['precio']
     
-    st.info(f"💰 Precio: ${precio_u} | 📦 Stock: {stock_actual}")
+    st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock Disponible: {stock_actual}")
     
-    # Validamos el límite del número input según el stock
     max_cant = float(stock_actual) if stock_actual > 0 else 1.0
-    cant = col2.number_input("Cantidad", min_value=0.0, max_value=max_cant, step=1.0)
+    cant = c2.number_input("Cantidad:", min_value=1.0, max_value=max_cant, step=1.0, key="mayor_cant")
     
-    if st.button("➕ Agregar al Carrito"):
-        if 'carro' not in st.session_state:
-            st.session_state.carro = []
-        st.session_state.carro.append({"Producto": prod_nom, "Cant": cant, "Precio": precio_u, "Subtotal": cant * precio_u})
-        st.success(f"✅ ¡{prod_nom} agregado!")
+    if st.button("➕ Agregar al Carrito", use_container_width=True):
+        subtotal = cant * precio_u
+        st.session_state.carro_mayor.append({
+            "Producto": prod_nom,
+            "Cant": cant,
+            "Precio": precio_u,
+            "Subtotal": subtotal
+        })
+        st.toast(f"¡{prod_nom} agregado!")
         
-    # Si hay cosas en el carrito, las mostramos aquí mismo
-    if 'carro' in st.session_state and st.session_state.carro:
+    # 2. MOSTRAR EL CARRITO ACTUAL
+    if st.session_state.carro_mayor:
+        st.write("---")
+        st.markdown("**📋 Contenido del Carrito:**")
         import pandas as pd
-        st.table(pd.DataFrame(st.session_state.carro))
-        t_final = sum(i['Subtotal'] for i in st.session_state.carro)
-        st.subheader(f"Total: ${t_final:.2f}")
+        st.table(pd.DataFrame(st.session_state.carro_mayor))
         
-        col_b1, col_b2 = st.columns(2)
-        if col_b1.button("🗑️ Vaciar Carrito"):
-            st.session_state.carro = []
+        t_final = sum(item['Subtotal'] for item in st.session_state.carro_mayor)
+        st.markdown(f"### 🧾 Total a Facturar: **${t_final:.2f}**")
+        
+        c_btn1, c_btn2 = st.columns(2)
+        
+        if c_btn1.button("🗑️ Vaciar Carrito", use_container_width=True):
+            st.session_state.carro_mayor = []
             st.rerun()
             
-        if col_b2.button("🚀 Finalizar y Registrar"):
-            # Aquí irá la lógica para guardar en la base de datos o Google Sheets
-            st.success("✅ Venta registrada correctamente")
-            st.session_state.carro = []
-            import time
-            time.sleep(1)
-            st.rerun()
+        # 3. PROCESAR Y ENVIAR LA VENTA
+        if c_btn2.button("💾 CONSOLIDAR Y CREAR PDF", type="primary", use_container_width=True):
+            zona_ve = pytz.timezone('America/Caracas')
+            fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
+            
+            # Preparamos el paquete para Google Sheets
+            payload = {
+                "fecha": fecha_ve,
+                "tipo": "Crédito",
+                "cliente": cli_m,
+                "monto": t_final
+            }
+            
+            try:
+                # Enviamos los datos a Excel
+                res = requests.post(URL_GOOGLE, json=payload, timeout=10)
+                
+                # Generamos el archivo PDF de la factura (Llamando a tu función crear_pdf)
+                pdf_b = crear_pdf(cli_m, st.session_state.carro_mayor, t_final)
+                b64 = base64.b64encode(pdf_b).decode()
+                
+                st.success("🟢 ¡Venta registrada en Google Sheets!")
+                
+                # Creamos el botón de descarga automática para el teléfono
+                href = f'<a href="data:application/octet-stream;base64,{b64}" download="Factura_{cli_m}.pdf" style="text-decoration:none;"><button style="width:100%; background-color:#4CAF50; color:white; padding:10px; border:none; border-radius:5px;">📥 Descargar Factura PDF</button></a>'
+                st.markdown(href, unsafe_allow_html=True)
+                
+                # Limpiamos el carrito para la próxima venta
+                st.session_state.carro_mayor = []
+                
+            except Exception as e:
+                st.error(f"❌ Error al procesar la venta: {e}")
+    else:
+        st.write("El carrito está vacío. Agrega productos para comenzar.")
+
           
 @st.dialog("💰 Registrar Cuenta / Abono")
 def formulario_cuentas_abonos(clientes_lista, URL_GOOGLE):
