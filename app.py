@@ -458,75 +458,110 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                 st.write("---")
                 st.info(f"🔵 El cliente tiene un saldo a favor de ${abs(saldo_real_neto):.2f}")
             else:
-                    
-                # 🧮 1. REPRODUCIMOS TU LÓGICA ORIGINAL DE SUMA TOTAL
+                # 🧮 1. TU LÓGICA ORIGINAL DE SUMA TOTAL NETA
                 saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
             
-                # Calculamos totales históricos solo para los marcadores visuales
+                # Totales históricos de la base de datos
                 total_creditos = sum(float(m['MONTO($)']) for m in df_cli.to_dict('records') if m['TIPO'].strip().lower() in ['credito', 'crédito'])
-                total_abonos = abs(sum(float(m['MONTO($)']) for m in df_cli.to_dict('records') if m['TIPO'].strip().lower() in ['abono']))
+                total_abonos_historicos = abs(sum(float(m['MONTO($)']) for m in df_cli.to_dict('records') if m['TIPO'].strip().lower() in ['abono']))
 
-                # 📊 2. PANTALLA PRINCIPAL (Tus marcadores limpios)
+                # 📊 2. PANTALLA PRINCIPAL
                 c1, c2 = st.columns(2)
                 if saldo_real_neto <= 0.01:
-                   c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", "$0.00")
+                   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", "$0.00")
                    c2.metric("SALDO PENDIENTE NETO", "$0.00")
                    st.write("---")
                    st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
-                else:
-                    c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${total_abonos:,.2f}")
-                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:,.2f}")
-                    st.write("---")
                 
-                    # 📝 3. CONSTRUCCIÓN DEL RECIBO (Solo si debe)
-                    st.write("### 📄 Detalle de Cuentas Vigentes:")
+                   # Definimos el texto vacío o de cuenta limpia por si intentan imprimir
+                   recibo_texto = "El cliente se encuentra al día con sus cuentas."
+               else:
+                   # RECORRIDO INVERSO PARA CALCULAR SOLO LOS ABONOS DEL CICLO ACTIVO
+                   movimientos_cliente = df_cli.to_dict('records')
+                   saldo_acumulado_inverso = 0.0
+                   total_abonos_ciclo = 0.0
                 
-                    import datetime
-                    fecha_hoy = datetime.date.today().strftime("%d/%m/%Y")
+                   # Estructura temporal para guardar lo que se va a imprimir
+                   lineas_recibo = []
                 
-                    recibo_texto =  "==================================================\n"
-                    recibo_texto += "       *** REPORTE DE COBRO - AYG *** \n"
-                    recibo_texto += "==================================================\n"
-                    recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                    recibo_texto += f"EMPRESA: INVERSIONES AYG 2017 C.A.\n"
-                    recibo_texto += "--------------------------------------------------\n"
-                    recibo_texto += f"CLIENTE: {cliente_sel}\n"
-                    recibo_texto += "--------------------------------------------------\n"
-                    recibo_texto += "DETALLE DE CUENTAS PENDIENTES:\n\n"
-                
-                    # RECORRIDO INVERSO CON TU FRENO ORIGINAL
-                    movimientos_cliente = df_cli.to_dict('records')
-                    saldo_acumulado_inverso = 0.0
-                
-                for mov in reversed(movimientos_cliente):
-                    tipo_mov = mov['TIPO'].strip().lower()
-                    if tipo_mov in ['credito', 'crédito']:
-                        monto = float(mov['MONTO($)'])
-                        saldo_acumulado_inverso += monto
+                   for mov in reversed(movimientos_cliente):
+                       tipo_mov = mov['TIPO'].strip().lower()
+                       if tipo_mov in ['credito', 'crédito']:
+                           monto = float(mov['MONTO($)'])
+                           saldo_acumulado_inverso += monto
                         
-                        # Limpieza de la fecha string
-                        fecha_completa = str(mov['FECHA'])
-                        fecha_factura = fecha_completa[:10] if "T" in fecha_completa else fecha_completa
+                           fecha_completa = str(mov['FECHA'])
+                           fecha_factura = fecha_completa[:10] if "T" in fecha_completa else fecha_completa
                         
-                        # Mostramos la alerta en la app
-                        st.error(f"📅 **{fecha_factura}** — Crédito original: ${monto:,.2f}")
+                           # Matemática de frenado e identificación de abonos aplicados
+                           if saldo_acumulado_inverso >= saldo_real_neto:
+                               pendiente_factura = saldo_real_neto - (saldo_acumulado_inverso - monto)
+                               abonos_aplicados = monto - pendiente_factura
+                           else:
+                               pendiente_factura = monto
+                               abonos_aplicados = 0.0
                         
-                        # Agregamos al texto del recibo
-                        recibo_texto += f"📅 {fecha_factura} | Crédito Original: ${monto:,.2f}\n"
-                        recibo_texto += f"   -> SALDO PENDIENTE:  ${monto:,.2f}\n"
-                        recibo_texto += "--------------------------------------------------\n"
+                           total_abonos_ciclo += abonos_aplicados
                         
-                        # Tu freno original de la línea 1116
-                        if saldo_acumulado_inverso >= saldo_real_neto:
-                            break
+                          # Guardamos los datos procesados de la factura
+                          lineas_recibo.append({
+                              'fecha': fecha_factura,
+                              'original': monto,
+                              'abono': abonos_aplicados,
+                              'pendiente': pendiente_factura
+                          })
+                        
+                          if saldo_acumulado_inverso >= saldo_real_neto:
+                              break
+
+                  # Mostramos los marcadores en la App basados en el ciclo activo
+                  c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:,.2f}")
+                  c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:,.2f}")
+                  st.write("---")
                 
-                # Totales finales en el recibo de texto
-                recibo_texto += f"SALDO NETO PENDIENTE: ${saldo_real_neto:,.2f}\n"
-                recibo_texto += "==================================================\n"
+                  # 📝 3. CONSTRUCCIÓN DEL TICKET PARA WHATSAPP
+                  st.write("### 📄 Detalle de Cuentas Vigentes:")
                 
-                # 🖨️ Despliegue del recuadro para WhatsApp
-                st.write("### 🖨️ Recibo Listo para WhatsApp:")
-                st.code(recibo_texto, language="text")
+                  import datetime
+                  fecha_hoy = datetime.date.today().strftime("%d/%m/%Y")
+                
+                  recibo_texto =  "==================================================\n"
+                  recibo_texto += "       *** REPORTE DE COBRO - AYG *** \n"
+                  recibo_texto += "==================================================\n"
+                  recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
+                  recibo_texto += f"EMPRESA: INVERSIONES AYG 2017 C.A.\n"
+                  recibo_texto += "--------------------------------------------------\n"
+                  recibo_texto += f"CLIENTE: {cliente_sel}\n"
+                  recibo_texto += "--------------------------------------------------\n"
+                  recibo_texto += "DETALLE DE CUENTAS PENDIENTES:\n\n"
+                
+                  # Imprimimos las alertas visuales y llenamos el ticket de texto
+                  for item in lineas_recibo:
+                      st.error(f"📅 **{item['fecha']}** — Crédito original: ${item['original']:,.2f} (Restan: **${item['pendiente']:,.2f}**)")
+                    
+                      recibo_texto += f"📅 {item['fecha']} | Crédito Original: ${item['original']:,.2f}\n"
+                      if item['abono'] > 0:
+                          recibo_texto += f"   -> Abonos aplicados: ${item['abono']:,.2f}\n"
+                      recibo_texto += f"   -> SALDO PENDIENTE:  ${item['pendiente']:,.2f}\n"
+                      recibo_texto += "--------------------------------------------------\n"
+                
+                  recibo_texto += f"TOTAL EN CRÉDITOS: ${saldo_real_neto + total_abonos_ciclo:,.2f}\n"
+                  recibo_texto += f"TOTAL EN ABONOS:   ${total_abonos_ciclo:,.2f}\n"
+                  recibo_texto += "==================================================\n"
+                  recibo_texto += f"SALDO NETO PENDIENTE: ${saldo_real_neto:,.2f}\n"
+                  recibo_texto += "==================================================\n"
+                
+                  # 🖨️ Despliegue del cuadro de texto
+                  st.write("### 🖨️ Recibo Listo para WhatsApp:")
+                  st.code(recibo_texto, language="text")
+                
+             # 📄 4. BOTÓN PARA GENERAR COMPROBANTE EN PDF
+              st.write("---")
+              st.write("### 📥 Opciones de Exportación:")
+              if st.button("📊 Generar Comprobante de Cobro (PDF)"):
+                  st.info("🔄 Preparando el documento para impresión...")
+                 # Aquí conectaremos la función de generación de PDF usando la variable recibo_texto
+
 
 
 
