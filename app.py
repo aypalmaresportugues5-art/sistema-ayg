@@ -343,6 +343,81 @@ def formulario_inventario(productos_dict, clientes_lista, URL_GOOGLE):
             pdf_bytes = pdf.output(dest="S").encode("latin-1")
             st.download_button("📥 Descargar PDF", data=pdf_bytes, file_name="lista_precios.pdf", mime="application/pdf", use_container_width=True)
 
+@st.dialog("📋 Resumen de Deudas Activas")
+def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
+    import requests
+    import pandas as pd
+    
+    st.subheader("💰 Resumen de Deudas Activas")
+    
+    # 1. Pedimos los datos a Google Sheets
+    resp = requests.get(f"{URL_GOOGLE}?tipo=Ventas")
+    datos_recibidos = resp.json()
+    
+    if isinstance(datos_recibidos, list):
+        df_v = pd.DataFrame(datos_recibidos)
+    else:
+        df_v = pd.DataFrame()
+        
+    if not df_v.empty:
+        # --- CÁLCULO DEL DINERO TOTAL REAL EN LA CALLE ---
+        gran_total_en_calle = 0.0
+        if clientes_lista:
+            for c in clientes_lista:
+                df_c = df_v[df_v['CLIENTE'] == c]
+                saldo_historico = df_c['MONTO($)'].sum()
+                if saldo_historico > 0:
+                    gran_total_en_calle += saldo_historico
+                    
+        st.subheader("💰 Capital Total por Cobrar")
+        st.info(f"Actualmente tienes un total de **${gran_total_en_calle:.2f}** en la calle (solo deudas vigentes).")
+        st.divider()
+        
+        # --- SECCIÓN DETALLE POR CLIENTE ---
+        if clientes_lista:
+            cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
+            df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
+            saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
+            
+            # --- EVALUAMOS SI DEBE O ESTÁ AL DÍA ---
+            if 0.00 <= saldo_real_neto <= 0.01:
+                c1, c2 = st.columns(2)
+                c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", "$0.00")
+                c2.metric("SALDO PENDIENTE NETO", "$0.00")
+                st.write("---")
+                st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
+            elif saldo_real_neto < 0.00:
+                c1, c2 = st.columns(2)
+                c1.metric("TOTAL ABONADO", f"${abs(saldo_real_neto):.2f}")
+                c2.metric("SALDO A FAVOR NETO", f"${abs(saldo_real_neto):.2f}")
+                st.write("---")
+                st.info(f"🔵 El cliente tiene un saldo a favor de ${abs(saldo_real_neto):.2f}")
+            else:
+                movimientos_cliente = df_cli.to_dict('records')
+                historial_ciclo_activo = []
+                saldo_acumulado_inverso = 0.0
+                
+                for mov in reversed(movimientos_cliente):
+                    monto = float(mov['MONTO($)'])
+                    saldo_acumulado_inverso += monto
+                    historial_ciclo_activo.append(mov)
+                    if saldo_acumulado_inverso >= saldo_real_neto:
+                        break
+                        
+                total_abonos_ciclo = sum(float(n['MONTO($)']) for n in historial_ciclo_activo if n['TIPO'] == 'Abono')
+                abonos_mostrar = abs(total_abonos_ciclo)
+                
+                c1, c2 = st.columns(2)
+                c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", f"${abonos_mostrar:.2f}")
+                c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                st.write("---")
+                
+                st.error(f"🔴 Este cliente tiene una cuenta activa por ${saldo_real_neto:.2f}")
+                st.write("**Detalle de movimientos de la cuenta vigente:**")
+                
+                df_mostrar = pd.DataFrame(historial_ciclo_activo)[['FECHA', 'TIPO', 'MONTO($)']]
+                df_mostrar = df_mostrar.iloc[::-1]
+                st.table(df_mostrar)
 
 
 
@@ -387,9 +462,9 @@ with col3:
  if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
     formulario_cuentas_abonos(clientes_lista, URL_GOOGLE)
 
- with col4:
-  if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-     formulario_inventario(productos_dict, clientes_lista, URL_GOOGLE)
+with col4:
+ if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+    formulario_inventario(productos_dict, clientes_lista, URL_GOOGLE)
 
 
 # 🗂️ Fila 3: Reportes y Cierre (Categoría en bloque Naranja)
@@ -397,8 +472,8 @@ st.warning("🗂️ REPORTES Y CIERRE")
 col5, col6 = st.columns(2)
 with col5:
  if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
-    st.session_state.pantalla = "Cuentas por Cobrar"
-    st.rerun()
+    formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE)
+
 with col6:
  if st.button("🧱\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
     st.session_state.pantalla = "Cierre de Caja"
