@@ -46,29 +46,33 @@ URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxoXYuo0IkMCmEHKKWEnecUfQs
 
 # --- SISTEMA DE SEGURIDAD ---
 def check_password():
-    # 1. Si el usuario ya inició sesión antes, entra directo
-    if st.session_state.get("password_correct", False):
-        return True
+ # 1. Verificamos si la URL del navegador ya tiene guardado el acceso exitoso
+ if st.query_params.get("login") == "exitoso":
+    st.session_state["password_correct"] = True
+    return True
 
-    # 2. Si no ha iniciado sesión, muestra la pantalla según tu boceto
-    # Colocamos la imagen de marca arriba
-    #st.image("1000357144.jpg", use_container_width=True)
-    
-    st.subheader("🔑 Inicio de Sesión")
-    
-    # Campos para ingresar los datos con llaves de control
-    usuario_ingresado = st.text_input("Usuario", key="input_usuario")
-    clave_ingresada = st.text_input("Contraseña", type="password", key="input_clave")
+# 2. Respaldo por si acaso está en la sesión interna
+ if st.session_state.get("password_correct", False):
+    return True
 
-    # Botón para verificar
-    if st.button("Iniciar Sesión"):
-        if usuario_ingresado == "AYG2017" and clave_ingresada == "Admin":
-            st.session_state.password_correct = True
-            st.rerun()
-        else:
-            st.error("❌ Usuario o contraseña incorrectos")
+ # 3. Si no hay credenciales registradas, pintamos el formulario de entrada
+ st.subheader("🔑 Inicio de Sesión")
+    
+ usuario_ingresado = st.text_input("Usuario", key="input_usuario")
+ clave_ingresada = st.text_input("Contraseña", type="password", key="input_clave")
+    
+ if st.button("Iniciar Sesión", use_container_width=True):
+ # Mantenemos tus mismas credenciales de validación
+    if usuario_ingresado == "AYG2017" and clave_ingresada == "AyG2017.":
+       st.session_state["password_correct"] = True
+       # Guardamos el estado directamente en la barra de navegación del teléfono
+       st.query_params["login"] = "exitoso"
+       st.rerun()
+    else:
+       st.error("❌ Usuario o contraseña incorrectos")
             
-    return False
+ return False
+
 
 # --- CARGA DE DATOS DESDE EL EXCEL ---
 @st.cache_data(ttl=60) # Actualiza los datos cada minuto
@@ -761,12 +765,13 @@ st.markdown("---")
 st.write(f"Estado actual: password_correct={st.session_state.get('password_correct')}, usuario={st.session_state.get('input_usuario')}")
     
 # 🚪 Botón de salida
+        
 if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
    st.session_state["password_correct"] = False
-   st.session_state["input_usuario"] = ""
-   st.session_state["input_clave"] = ""
-   st.session_state["pantalla"] = "Menu Principal"
+   # Limpiamos el parámetro de la URL para bloquear el acceso de nuevo
+   st.query_params.clear()
    st.rerun()
+
  
 
 # =========================================================
