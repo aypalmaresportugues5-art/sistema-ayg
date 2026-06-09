@@ -607,19 +607,29 @@ def formulario_simulador_costos():
     
     st.subheader(f"⚖️ Ajustar Ingredientes para: {producto_seleccionado}")
     col1, col2 = st.columns(2)
-        # # Intentar leer tu DataFrame real de costos desde la URL de descarga
+            # # Intentar leer tu DataFrame real de costos con conexión segura
     try:
+        import requests
+        import io
+        
         enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5ewH3M5ZfykdTz3DizPxgUnS2jtaY-dvXmg1I"
         url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
-        df_costos_real = pd.read_csv(url_publica)
         
-        # 🧪 Muestra si la tabla bajó con datos o vacía
-        st.write(f"📊 Filas leídas del Excel: {len(df_costos_real)}")
+        # Bajamos el archivo usando un paquete seguro con tiempo límite de 5 segundos
+        respuesta = requests.get(url_publica, timeout=5)
         
+        if respuesta.status_code == 200:
+            # Convertimos el texto descargado en una tabla de Pandas
+            df_costos_real = pd.read_csv(io.StringIO(respuesta.text))
+            st.success(f"🟢 ¡Excel conectado! Filas leídas: {len(df_costos_real)}")
+        else:
+            df_costos_real = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
+            st.warning(f"⚠️ Google Sheets respondió con código: {respuesta.status_code}")
+            
     except Exception as e:
         df_costos_real = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
-        # 🚨 Esto nos pintará el culpable real en la pantalla del celular
-        st.error(f"⚠️ Error de conexión con Excel: {e}")
+        st.error(f"🚨 Error al intentar conectar: {e}")
+
 
         
     ingredientes_modificados = {}
