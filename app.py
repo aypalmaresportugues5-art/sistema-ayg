@@ -842,7 +842,7 @@ def formulario_simulador_costos():
             
             if not resultado.empty:
                 try:
-                    valor_crudo = str(resultado.iat[0, 1])
+                    valor_crudo = str(resultado.iat[0,4])
                     valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
                     costo_unitario = float(valor_limpio)
                 except:
