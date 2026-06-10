@@ -579,22 +579,22 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         reporte_formal += f"   - Saldo Restante:   ${item['pendiente']:,.2f}\n"
                         reporte_formal += "--------------------------------------------------\n"
             
-                   reporte_formal += "\n==================================================\n"
-                   reporte_formal += f" TOTAL PENDIENTE NETO: ${saldo_real_neto:,.2f}\n"
-                   reporte_formal += "==================================================\n"
-                   reporte_formal += "       Gracias por su confianza y puntualidad.    \n"
+                    reporte_formal += "\n==================================================\n"
+                    reporte_formal += f" TOTAL PENDIENTE NETO: ${saldo_real_neto:,.2f}\n"
+                    reporte_formal += "==================================================\n"
+                    reporte_formal += "       Gracias por su confianza y puntualidad.    \n"
             
-                  # Nombre limpio para el archivo que se descargará
-                  nombre_archivo = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.txt"
+                   # Nombre limpio para el archivo que se descargará
+                    nombre_archivo = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.txt"
             
-                 # Botón nativo que descarga de inmediato sin tumbar la aplicación
-                 st.download_button(
-                     label="📊 Descargar Reporte de Cobro",
-                     data=reporte_formal,
-                     file_name=nombre_archivo,
-                     mime="text/plain"
-                 )
-
+                   # Botón nativo que descarga de inmediato sin tumbar la aplicación
+                   st.download_button(
+                       label="📊 Descargar Reporte de Cobro",
+                       data=reporte_formal,
+                       file_name=nombre_archivo,
+                       mime="text/plain"
+                   )
+   
 
 
 
