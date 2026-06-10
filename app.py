@@ -555,12 +555,46 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         st.write("### 🖨️ Recibo Listo para WhatsApp:")
                         st.code(recibo_texto, language="text")
                 
-                    # 📄 4. BOTÓN PARA GENERAR COMPROBANTE EN PDF
+                    # 📄 4. BOTÓN PARA GENERAR COMPROBANTE DE COBRO (Listo para imprimir)
                     st.write("---")
                     st.write("### 📥 Opciones de Exportación:")
-                    if st.button("📊 Generar Comprobante de Cobro (PDF)"):
-                        st.info("🔄 Preparando el documento para impresión...")
-                        # Aquí conectaremos la función de generación de PDF usando la variable recibo_texto
+            
+                    # Construimos la versión formal del reporte para el archivo descargable
+                    reporte_formal =  "==================================================\n"
+                    reporte_formal += "          INVERSIONES AYG 2017 C.A.               \n"
+                    reporte_formal += "==================================================\n"
+                    reporte_formal += "               ESTADO DE CUENTA                   \n"
+                    reporte_formal += "--------------------------------------------------\n"
+                    reporte_formal += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
+                    reporte_formal += f"CLIENTE:          {cliente_sel}\n"
+                    reporte_formal += "==================================================\n"
+                    reporte_formal += "DETALLE DE CUENTAS VIGENTES (Orden: Reciente a Vieja):\n\n"
+            
+                    # Llenamos la tabla del reporte con los mismos datos del ciclo activo
+                    for item in lineas_recibo:
+                        reporte_formal += f"📅 Fecha: {item['fecha']}\n"
+                        reporte_formal += f"   - Crédito Original: ${item['original']:,.2f}\n"
+                        if item['abono'] > 0:
+                            reporte_formal += f"   - Abono Aplicado:   ${item['abono']:,.2f}\n"
+                        reporte_formal += f"   - Saldo Restante:   ${item['pendiente']:,.2f}\n"
+                        reporte_formal += "--------------------------------------------------\n"
+            
+                   reporte_formal += "\n==================================================\n"
+                   reporte_formal += f" TOTAL PENDIENTE NETO: ${saldo_real_neto:,.2f}\n"
+                   reporte_formal += "==================================================\n"
+                   reporte_formal += "       Gracias por su confianza y puntualidad.    \n"
+            
+                  # Nombre limpio para el archivo que se descargará
+                  nombre_archivo = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.txt"
+            
+                 # Botón nativo que descarga de inmediato sin tumbar la aplicación
+                 st.download_button(
+                     label="📊 Descargar Reporte de Cobro",
+                     data=reporte_formal,
+                     file_name=nombre_archivo,
+                     mime="text/plain"
+                 )
+
 
 
 
