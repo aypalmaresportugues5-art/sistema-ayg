@@ -831,16 +831,16 @@ def formulario_simulador_costos():
                    resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
                  
                    if not resultado.empty:
-                   try:
-                       # 🟢 CORRECCIÓN: Usamos .iat[0, 1] para agarrar la fila 0, columna 1 de forma segura
-                       valor_crudo = str(resultado.iat[0, 1])
+                       try:
+                           # 🟢 CORRECCIÓN: Usamos .iat[0, 1] para agarrar la fila 0, columna 1 de forma segura
+                           valor_crudo = str(resultado.iat[0, 1])
                         
-                       # Limpiamos el texto por si trae letras, espacios o el símbolo de dólar
-                       valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
-                       costo_unitario = float(valor_limpio)
-                   except:
-                       # Si algo falla en la conversión, se va a 1.0 para proteger la app
-                       costo_unitario = 1.0
+                           # Limpiamos el texto por si trae letras, espacios o el símbolo de dólar
+                           valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
+                           costo_unitario = float(valor_limpio)
+                       except:
+                           # Si algo falla en la conversión, se va a 1.0 para proteger la app
+                           costo_unitario = 1.0
 
 
                             
