@@ -873,7 +873,7 @@ with col6:
  st.error("🛠️ HERRAMIENTAS ADICIONALES")
  col7, col8 = st.columns(2)
  with col7:
-  if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
+  if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=false):
       try:
           import pandas as pd
           # 🟢 Dirección corregida con la 'W' incluida:
