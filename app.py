@@ -588,12 +588,12 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     nombre_archivo = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.txt"
             
                    # Botón nativo que descarga de inmediato sin tumbar la aplicación
-                   st.download_button(
-                       label="📊 Descargar Reporte de Cobro",
-                       data=reporte_formal,
-                       file_name=nombre_archivo,
-                       mime="text/plain"
-                   )
+                    st.download_button(
+                        label="📊 Descargar Reporte de Cobro",
+                        data=reporte_formal,
+                        file_name=nombre_archivo,
+                        mime="text/plain"
+                    )
    
 
 
