@@ -844,7 +844,7 @@ def formulario_simulador_costos():
 
 
                             
-                   costo_materia_prima_total += cant_actual * costo_unitario
+                  costo_materia_prima_total += cant_actual * costo_unitario
                 
     with col2:
         st.markdown("**📦 Configuración Física del Producto:**")
