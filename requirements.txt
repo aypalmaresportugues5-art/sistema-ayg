@@ -4,3 +4,4 @@ pandas
 fpdf
 streamlit-option-menu
 pytz
+reportlab
