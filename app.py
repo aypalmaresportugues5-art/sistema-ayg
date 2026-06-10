@@ -559,37 +559,116 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     st.write("---")
                     st.write("### 📥 Opciones de Exportación:")
             
+                    
                     # Construimos la versión formal del reporte para el archivo descargable
-                    reporte_formal =  "==================================================\n"
-                    reporte_formal += "          INVERSIONES AYG 2017 C.A.               \n"
-                    reporte_formal += "==================================================\n"
-                    reporte_formal += "               ESTADO DE CUENTA                   \n"
-                    reporte_formal += "--------------------------------------------------\n"
-                    reporte_formal += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                    reporte_formal += f"CLIENTE:          {cliente_sel}\n"
-                    reporte_formal += "==================================================\n"
-                    reporte_formal += "DETALLE DE CUENTAS VIGENTES (Orden: Reciente a Vieja):\n\n"
+                    import io
+                    from reportlab.lib.pagesizes import letter
+                    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+                    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+                    from reportlab.lib import colors
+
+                    def crear_pdf_ayg(cliente, fecha, lineas, saldo_neto):
+                        buffer = io.BytesIO()
+                        doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
+                        story = []
+                
+                        styles = getSampleStyleSheet()
+                
+                        title_style = ParagraphStyle(
+                             'TitleStyle',
+                             parent=styles['Heading1'],
+                             fontSize=18,
+                             leading=22,
+                             alignment=1,
+                             spaceAfter=10
+                        )
+                        subtitle_style = ParagraphStyle(
+                            'SubTitleStyle',
+                            parent=styles['Normal'],
+                            fontSize=12,
+                            leading=14,
+                            alignment=1,
+                            spaceAfter=20
+                        )
+                        normal_style = ParagraphStyle(
+                            'NormalStyle',
+                            parent=styles['Normal'],
+                            fontSize=11,
+                            leading=15,
+                            spaceAfter=6
+                        )
+                
+                        story.append(Paragraph("<b>INVERSIONES AYG 2017 C.A.</b>", title_style))
+                        story.append(Paragraph("<b>ESTADO DE CUENTA</b>", subtitle_style))
+                        story.append(Spacer(1, 10))
+                
+                        story.append(Paragraph(f"<b>FECHA DE EMISIÓN:</b> {fecha}", normal_style))
+                        story.append(Paragraph(f"<b>CLIENTE:</b> {cliente}", normal_style))
+                        story.append(Spacer(1, 15))
+                        story.append(Paragraph("<b>DETALLE DE CUENTAS VIGENTES:</b>", normal_style))
+                        story.append(Spacer(1, 5))
+                
+                        tabla_datos = [['Fecha', 'Crédito Original', 'Abono Aplicado', 'Saldo Restante']]
+                
+                        for item in lineas:
+                            abono_str = f"${item['abono']:,.2f}" if item['abono'] > 0 else "$0.00"
+                            tabla_datos.append([
+                                item['fecha'],
+                                f"${item['original']:,.2f}",
+                                abono_str,
+                                f"${item['pendiente']:,.2f}"
+                            ])
+                
+                        t = Table(tabla_datos, colWidths=[90, 130, 130, 130])
+                        t.setStyle(TableStyle([
+                            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1f77b4')),
+                            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                            ('FONTSIZE', (0, 0), (-1, 0), 10),
+                            ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+                            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#fcfcfc')),
+                            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                            ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                            ('FONTSIZE', (0, 1), (-1, -1), 9),
+                            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                        ]))
+                        story.append(t)
+                        story.append(Spacer(1, 20))
+                
+                        total_style = ParagraphStyle(
+                           'TotalStyle',
+                           parent=styles['Normal'],
+                           fontSize=13,
+                           leading=16,
+                           alignment=2,
+                           spaceAfter=25
+                        )
+                        story.append(Paragraph(f"<b>TOTAL PENDIENTE NETO: ${saldo_neto:,.2f}</b>", total_style))
+                
+                        footer_style = ParagraphStyle(
+                            'FooterStyle',
+                            parent=styles['Normal'],
+                            fontSize=10,
+                            alignment=1,
+                            textColor=colors.gray
+                        )
+                        story.append(Paragraph("<i>Gracias por su confianza y puntualidad.</i>", footer_style))
+                
+                        doc.build(story)
+                        buffer.seek(0)
+                        return buffer.getvalue()
+
+                    pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, lineas_recibo, saldo_real_neto)
+                    nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.pdf"
             
-                    # Llenamos la tabla del reporte con los mismos datos del ciclo activo
-                    for item in lineas_recibo:
-                        reporte_formal += f"📅 Fecha: {item['fecha']}\n"
-                        reporte_formal += f"   - Crédito Original: ${item['original']:,.2f}\n"
-                        if item['abono'] > 0:
-                            reporte_formal += f"   - Abono Aplicado:   ${item['abono']:,.2f}\n"
-                        reporte_formal += f"   - Saldo Restante:   ${item['pendiente']:,.2f}\n"
-                        reporte_formal += "--------------------------------------------------\n"
-            
-                    reporte_formal += "\n==================================================\n"
-                    reporte_formal += f" TOTAL PENDIENTE NETO: ${saldo_real_neto:,.2f}\n"
-                    reporte_formal += "==================================================\n"
-                    reporte_formal += "       Gracias por su confianza y puntualidad.    \n"
-            
-                   # Nombre limpio para el archivo que se descargará
-                    nombre_archivo = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.txt"
-            
-                   # Botón nativo que descarga de inmediato sin tumbar la aplicación
                     st.download_button(
-                        label="📊 Descargar Reporte de Cobro",
+                       label="📥 Descargar Reporte en PDF Profesional",
+                       data=pdf_data,
+                       file_name=nombre_pdf,
+                       mime="application/pdf"
+                    )
+   label="📊 Descargar Reporte de Cobro",
                         data=reporte_formal,
                         file_name=nombre_archivo,
                         mime="text/plain"
