@@ -816,7 +816,7 @@ def formulario_simulador_costos():
                 ingredientes_modificados[ingrediente] = cant_actual
                 
                 # # Buscador optimizado de precios
-                costo_unitario = 1.0
+                costo_unitario = 10
                 if not df_costos_real.empty:
                    df_term = df_costos_real.copy()
                    df_term.columns = df_term.columns.str.strip().str.replace(r'[^\w\s]', '', regex=True)
