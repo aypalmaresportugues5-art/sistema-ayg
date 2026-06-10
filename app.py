@@ -815,22 +815,30 @@ def formulario_simulador_costos():
                 cant_actual = st.number_input(f"{ingrediente}:", min_value=0.0, value=float(cant_base), step=0.1, key=f"sim_cant_{ingrediente}")
                 ingredientes_modificados[ingrediente] = cant_actual
                 
-                # Buscador optimizado de precios
+                # # Buscador optimizado de precios
                 costo_unitario = 1.0
                 if not df_costos_real.empty:
-                    df_term = df_costos_real.copy()
-                    df_term.columns = df_term.columns.str.strip().str.replace(r'[^\w\s]', '', regex=True)
-                    df_term['Insumo_clean'] = df_term.iloc[:, 0].astype(str).str.upper().str.strip()
-                    busqueda = str(ingrediente).upper().str.strip()
-                    
-                    resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
-                    if not resultado.empty:
-                        try:
-                            valor_crudo = str(resultado.iloc[0].iloc[4])
-                            valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
-                            costo_unitario = float(valor_limpio)
-                        except:
-                            costo_unitario = 1.0
+                   df_term = df_costos_real.copy()
+                   df_term.columns = df_term.columns.str.strip().str.replace(r'[^\w\s]', '', regex=True)
+                
+                   # Guardamos la primera columna limpia en mayúsculas
+                   df_term['Insumo_clean'] = df_term.iloc[:, 0].astype(str).str.upper().str.strip()
+                
+                   # 🟢 CORRECCIÓN: Quitamos el ".str" de la variable de texto plano
+                   busqueda = str(ingrediente).upper().strip()
+                
+                   # Buscamos si el ingrediente de la receta está en la columna de Excel
+                   resultado = df_term[df_term['Insumo_clean'].str.contains(busqueda, na=False)]
+                 
+                   if not resultado.empty:
+                       try:
+                           # Sacamos el precio de la segunda columna (posición 1)
+                           valor_crudo = str(resultado.iloc[0].iloc[1])
+                           valor_limpio = valor_crudo.replace('$', '').replace(' ', '').strip()
+                           costo_unitario = float(valor_limpio)
+                       except:
+                           costo_unitario = 1.0
+
                             
                 costo_materia_prima_total += cant_actual * costo_unitario
                 
