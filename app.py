@@ -668,15 +668,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                        file_name=nombre_pdf,
                        mime="application/pdf"
                     )
-   label="📊 Descargar Reporte de Cobro",
-                        data=reporte_formal,
-                        file_name=nombre_archivo,
-                        mime="text/plain"
-                    )
    
-
-
-
 
 
 @st.dialog("🔒 Control y Cierre de Caja Diario")
