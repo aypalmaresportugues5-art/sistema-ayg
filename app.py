@@ -872,19 +872,20 @@ with col6:
  # # Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
  st.error("🛠️ HERRAMIENTAS ADICIONALES")
  
-  if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
-      try:
-          import pandas as pd
-          # 🟢 Dirección corregida con la 'W' incluida:
-          enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5mvN3N5ZfykdTx3O4iPxgUVs2jtaV-dWXmgII"
-          url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
+ if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=False):
+      
+    try:
+       import pandas as pd
+       # 🟢 Dirección corregida con la 'W' incluida:
+       enlace_excel = "https://docs.google.com/spreadsheets/d/1UczgRQ5mvN3N5ZfykdTx3O4iPxgUVs2jtaV-dWXmgII"
+       url_publica = enlace_excel + "/export?format=csv&gid=1138925550"
 
                     
-          st.session_state["df_costos_real"] = pd.read_csv(url_publica)
-      except Exception as e:
-          st.session_state["df_costos_real"] = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
+       st.session_state["df_costos_real"] = pd.read_csv(url_publica)
+    except Exception as e:
+       st.session_state["df_costos_real"] = pd.DataFrame(columns=['Insumo', 'Costo Por Unidad'])
                 
-      formulario_simulador_costos()
+    formulario_simulador_costos()
 
 
 
