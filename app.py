@@ -872,7 +872,7 @@ with col6:
  # # Fila 4: Herramientas (Categoría en bloque Rojo/Rosa)
  st.error("🛠️ HERRAMIENTAS ADICIONALES")
  
-  if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=False):
+  if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
       try:
           import pandas as pd
           # 🟢 Dirección corregida con la 'W' incluida:
