@@ -487,7 +487,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # 1. Convertimos el historial a lista cronológica usando tu variable df_cli
                     movimientos_cliente = df_cli.to_dict('records')
                     saldo_cronologico = 0.0
-                     for mov in df_cli.to_dict('records'):
+                    for mov in df_cli.to_dict('records'):
 
                     #for mov in movimientos_cliente:           
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
