@@ -488,7 +488,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     movimientos_cliente = df_cli.to_dict('records')
                     saldo_cronologico = 0.0
         
-                    for mov in movimientos_cliente:
+                    for mov in movimientos_cliente:           
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                         monto = float(mov.get('MONTO($)', 0.0))
             
@@ -522,46 +522,46 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         if abs(saldo_cronologico) < 0.01:
                             saldo_cronologico = 0.0
 
-                     # 2. Reconstruimos el ticket para WhatsApp con tus datos reales
-                     import datetime
-                     fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
+                    # 2. Reconstruimos el ticket para WhatsApp con tus datos reales
+                    import datetime
+                    fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
         
-                     recibo_texto = "=========================================\n"
-                     recibo_texto += "        *** REPORTE DE COBRO - AYG *** \n"
-                     recibo_texto += "=========================================\n"
-                     recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                     recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
-                     recibo_texto += "-----------------------------------------\n"
-                     recibo_texto += f"CLIENTE: {cliente_sel}\n"
-                     recibo_texto += "-----------------------------------------\n"
-                     recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
+                    recibo_texto = "=========================================\n"
+                    recibo_texto += "        *** REPORTE DE COBRO - AYG *** \n"
+                    recibo_texto += "=========================================\n"
+                    recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
+                    recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += f"CLIENTE: {cliente_sel}\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
         
-                     # 3. Mostramos las alertas en la app y llenamos el texto del ticket corrido
-                     if lineas_recibo:
-                         for item in lineas_recibo:
-                             if item['tipo'] == 'credito':
-                                linea_formateada = f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}"
-                                st.error(linea_formateada)
+                    # 3. Mostramos las alertas en la app y llenamos el texto del ticket corrido
+                    if lineas_recibo:
+                        for item in lineas_recibo:
+                            if item['tipo'] == 'credito':
+                               linea_formateada = f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}"
+                               st.error(linea_formateada)
+                               recibo_texto += f"{linea_formateada}\n"
+                            else:
+                                linea_formateada = f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}"
+                                st.success(linea_formateada)
                                 recibo_texto += f"{linea_formateada}\n"
-                             else:
-                                 linea_formateada = f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}"
-                                 st.success(linea_formateada)
-                                 recibo_texto += f"{linea_formateada}\n"
-                     else:
-                         recibo_texto += "Sin movimientos activos en este ciclo.\n"
+                    else:
+                        recibo_texto += "Sin movimientos activos en este ciclo.\n"
             
-                     recibo_texto += "-----------------------------------------\n"
-                     recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${saldo_real_neto + total_abonos_ciclo:.2f}\n"
-                     recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
-                     recibo_texto += "-----------------------------------------\n"
-                     recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
-                     recibo_texto += "=========================================\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${saldo_real_neto + total_abonos_ciclo:.2f}\n"
+                    recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
+                    recibo_texto += "=========================================\n"
         
-                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
-                     c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                     c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                     st.write("---")
-                     # === FIN DEL REEMPLAZO UNIFICADO ===
+                    # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
+                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                    st.write("---")
+                    # === FIN DEL REEMPLAZO UNIFICADO ===
 
 
                 
