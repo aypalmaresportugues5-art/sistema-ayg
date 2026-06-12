@@ -648,6 +648,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         doc.build(story)
                         buffer.seek(0)
                         return buffer.getvalue()
+                    
                     pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, historial_recuadro, saldo_real_neto)
 
                   #  pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, historial_recuadro, saldo_real_neto)
