@@ -481,110 +481,90 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     saldo_acumulado_inverso = 0.0
                     total_abonos_ciclo = 0.0
                 
-                    # =========================================================
-                    # 1. CÁLCULO DEL CICLO ACTIVO (BORRANDO HISTORIAL MUERTO)
-                    # =========================================================
-                    lineas_recibo = []
+                    # =======================================================
+                    # =======================================================
+                    # 1. CONTROL DEL HISTORIAL ACTUAL (REINICIO AUTOMÁTICO)
+                    # =======================================================
+                    historial_recuadro = []
                     saldo_cronologico = 0.0
-                    total_abonos_ciclo = 0.0  # Aquí guardaremos solo el abono de este ciclo
 
-                    # Recorremos cronológicamente de la venta más vieja a la más nueva
                     for mov in df_cli.to_dict('records'):
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                         monto = float(mov.get('MONTO($)', 0.0))
             
-                        # Limpieza de fecha corta (quita la hora si viene de la base de datos)
+                        # Limpieza de fecha corta (quita las horas del recuadro)
                         fecha_completa = str(mov.get('FECHA', ''))
                         fecha_factura = fecha_completa[:10] if " " in fecha_completa or "T" in fecha_completa else fecha_completa
 
-                        # 🔄 REINICIO AUTOMÁTICO: Si la cuenta venía en cero y arranca una deuda nueva,
-                        # vaciamos el recibo viejo y ponemos en cero los abonos del ciclo pasado.
+                        # 🔄 REINICIO: Si la cuenta estaba en cero y arranca una deuda nueva, borrón y cuenta nueva
                         if abs(saldo_cronologico) < 0.01 and monto > 0:
-                            lineas_recibo = []
-                            total_abonos_ciclo = 0.0
+                            historial_recuadro = []
 
+                        # Guardamos el movimiento estructurado exactamente como lo lee tu tabla y tu PDF
                         if tipo_mov in ['crédito', 'credito']:
                             saldo_cronologico += monto
-                            lineas_recibo.append({
-                                'fecha': fecha_factura,
+                            historial_recuadro.append({
+                                'FECHA': fecha_factura,
+                                'TIPO': 'Crédito',
+                                'MONTO($)': monto,
                                 'original': monto,
-                                'abono': 0.0,
-                                'pendiente': saldo_cronologico,
-                                'tipo': 'credito'
+                                'abono': 0.0
                             })
                         elif tipo_mov == 'abono':
                             saldo_cronologico -= monto
-                            total_abonos_ciclo += monto  # Va acumulando los abonos del ciclo activo
-                            lineas_recibo.append({
-                                'fecha': fecha_factura,
+                            historial_recuadro.append({
+                                'FECHA': fecha_factura,
+                                'TIPO': 'Abono',
+                                'MONTO($)': monto,
                                 'original': 0.0,
-                                'abono': monto,
-                                'pendiente': saldo_cronologico,
-                                'tipo': 'abono'
+                                'abono': monto
                             })
 
                         if abs(saldo_cronologico) < 0.01:
                             saldo_cronologico = 0.0
 
-                    # =========================================================
-                    # 2. INTERFAZ EN PANTALLA: SOLO DOS CUADROS INDICADORES
-                    # =========================================================
-                    total_creditos_ciclo = sum(float(n['original']) for n in lineas_recibo)
-    
-                    c1, c2 = st.columns(2)
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                    st.write("---")
+                       # =========================================================
+                       # 2. CÁLCULO PRECISO PARA LOS DOS INDICADORES DE ARRIBA
+                       # =========================================================
+                       # El abono real de este ciclo es la suma de créditos menos lo que queda debiendo neto
+                       total_creditos_ciclo = sum(float(n['original']) for n in historial_recuadro)
+                       abonos_mostrar = total_creditos_ciclo - saldo_real_neto
+                       abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
 
-                    # =========================================================
-                    # 3. GENERACIÓN DEL TICKET DE TEXTO PARA WHATSAPP
-                    # =========================================================
-                    import datetime
-                    fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
+                       # Colocamos las dos métricas limpias arriba
+                       c1, c2 = st.columns(2)
+                       c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
+                       c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                       st.write("---")
 
-                    recibo_texto = "=========================================\n"
-                    recibo_texto += "       *** REPORTE DE COBRO - AYG ***\n"
-                    recibo_texto += "=========================================\n"
-                    recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                    recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"CLIENTE: {cliente_sel}\n"
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
-
-                    if lineas_recibo:
-                        for item in lineas_recibo:
-                            if item['tipo'] == 'credito':
-                               recibo_texto += f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}\n"
-                            else:
-                                recibo_texto += f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}\n"
-
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${total_creditos_ciclo:.2f}\n"
-                    recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
-                    recibo_texto += "========================================="
-
-                     # Una sola caja de texto limpia en la pantalla
-                    st.text_area("🖨️ Recibo Listo para WhatsApp:", value=recibo_texto, height=350)
+                       # =========================================================
+                       # 3. EL RECUADRO CON EL HISTORIAL ACTUAL DE LA CUENTA
+                       # =========================================================
+                       st.markdown("### 📋 Historial Actual de la Cuenta")
+                       if historial_recuadro:
+                           import pandas as pd
+                           # Creamos la tabla interactiva solo con las columnas que necesitas ver
+                           df_mostrar = pd.DataFrame(historial_recuadro)[['FECHA', 'TIPO', 'MONTO($)']]
+                           st.table(df_mostrar)
+                       else:
+                           st.info("No hay movimientos activos en este ciclo.")
 
 
                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
                  #   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
                   #  c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${(saldo_real_neto + total_abonos_ciclo) - saldo_real_neto:.2f}")
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                   # c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
+                 #   c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
 
                     #c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                    st.write("---")
+                   # st.write("---")
                     # === FIN DEL REEMPLAZO UNIFICADO ===
 
 
                 
                     # 🖨️ Despliegue del cuadro de texto
-                    st.write("### 🖨️ Recibo Listo para WhatsApp:")
-                    st.code(recibo_texto, language="text")
+                   # st.write("### 🖨️ Recibo Listo para WhatsApp:")
+                 #   st.code(recibo_texto, language="text")
                 
                     # 📄 4. BOTÓN PARA GENERAR COMPROBANTE DE COBRO (Listo para imprimir)
                     st.write("---")
