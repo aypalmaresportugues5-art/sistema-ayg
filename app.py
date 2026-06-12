@@ -500,7 +500,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         # 🔄 REINICIO AUTOMÁTICO: Si la cuenta llegó a cero, borrón y cuenta nueva
                         if saldo_cronologico == 0.0 and monto > 0:
                             lineas_recibo = []
-                            total_abonos_ciclo = 0.0
+                           # total_abonos_ciclo = 0.0
 
                         if tipo_mov == 'crédito' or tipo_mov == 'credito':
                             saldo_cronologico += monto
