@@ -652,9 +652,12 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         buffer.seek(0)
                         return buffer.getvalue()
                 try:   
-                   pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, historial_recuadro, saldo_real_neto)
-                   nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.pdf"
+                   import datetime
+                   fecha_pdf = datetime.datetime.now().strftime("%Y-%m-%d")
             
+                   pdf_data = crear_pdf_ayg(cliente_sel, fecha_pdf, historial_recuadro, saldo_real_neto)
+                   nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_pdf}.pdf"
+
                    st.download_button(
                        label="📥 Descargar Reporte en PDF Profesional",
                        data=pdf_data,
