@@ -517,41 +517,41 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         if abs(saldo_cronologico) < 0.01:
                             saldo_cronologico = 0.0
 
-                   # 2. Reconstruimos el ticket clásico para WhatsApp sin duplicar textos intermedios
-                   import datetime
-                   fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
+                    # 2. Reconstruimos el ticket clásico para WhatsApp sin duplicar textos intermedios
+                    import datetime
+                    fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
         
-                   recibo_texto = "=========================================\n"
-                   recibo_texto += "        *** REPORTE DE COBRO - AYG *** \n"
-                   recibo_texto += "=========================================\n"
-                   recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                   recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
-                   recibo_texto += "-----------------------------------------\n"
-                   recibo_texto += f"CLIENTE: {cliente_sel}\n"
-                   recibo_texto += "-----------------------------------------\n"
-                   recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
-        
-                   # Añadimos las líneas corridas cronológicas que la patrona quiere ver
-                   if lineas_pantalla_limpia:
-                       for item_linea in lineas_pantalla_limpia:
-                           recibo_texto += f"{item_linea}\n"
-                           # Pintamos también las alertas visuales en la app
-                           if "Crédito" in item_linea:
-                               st.error(item_linea)
-                           else:
-                               st.success(item_linea)
-                   else:
-                       recibo_texto += "Sin movimientos activos en este ciclo.\n"
+                    recibo_texto = "=========================================\n"
+                    recibo_texto += "        *** REPORTE DE COBRO - AYG *** \n"
+                    recibo_texto += "=========================================\n"
+                    recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
+                    recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += f"CLIENTE: {cliente_sel}\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
+         
+                    # Añadimos las líneas corridas cronológicas que la patrona quiere ver
+                    if lineas_pantalla_limpia:
+                        for item_linea in lineas_pantalla_limpia:
+                            recibo_texto += f"{item_linea}\n"
+                            # Pintamos también las alertas visuales en la app
+                            if "Crédito" in item_linea:
+                                st.error(item_linea)
+                            else:
+                                st.success(item_linea)
+                    else:
+                        recibo_texto += "Sin movimientos activos en este ciclo.\n"
             
-                   recibo_texto += "-----------------------------------------\n"
-                   recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
-                   recibo_texto += "=========================================\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
+                    recibo_texto += "=========================================\n"
         
-                   # Mostramos los indicadores resumidos en la app para cumplir con la estructura
-                   c1.metric("TOTAL DEUDA ACTIVA", f"${saldo_real_neto:.2f}")
-                   c2.metric("ESTADO CUENTA", "PENDIENTE" if saldo_real_neto > 0 else "AL DÍA")
-                   st.write("---")
-                   # === FIN DEL REEMPLAZO OPTIMIZADO ===
+                    # Mostramos los indicadores resumidos en la app para cumplir con la estructura
+                    c1.metric("TOTAL DEUDA ACTIVA", f"${saldo_real_neto:.2f}")
+                    c2.metric("ESTADO CUENTA", "PENDIENTE" if saldo_real_neto > 0 else "AL DÍA")
+                    st.write("---")
+                    # === FIN DEL REEMPLAZO OPTIMIZADO ===
 
                 
                         # 🖨️ Despliegue del cuadro de texto
