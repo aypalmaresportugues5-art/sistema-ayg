@@ -487,8 +487,9 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # 1. Convertimos el historial a lista cronológica usando tu variable df_cli
                     movimientos_cliente = df_cli.to_dict('records')
                     saldo_cronologico = 0.0
-        
-                    for mov in movimientos_cliente:           
+                     for mov in df_cli.to_dict('records'):
+
+                    #for mov in movimientos_cliente:           
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                         monto = float(mov.get('MONTO($)', 0.0))
             
@@ -560,9 +561,11 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
         
                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
                  #   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${(saldo_real_neto + total_abonos_ciclo) - saldo_real_neto:.2f}")
-
+                  #  c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${(saldo_real_neto + total_abonos_ciclo) - saldo_real_neto:.2f}")
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
                     c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+
+                    #c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
                     st.write("---")
                     # === FIN DEL REEMPLAZO UNIFICADO ===
 
