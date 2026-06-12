@@ -527,14 +527,14 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # =========================================================
                     # 2. INDICADORES EN PANTALLA (Cajas limpias sin duplicados)
                     # =========================================================
-                     total_creditos_ciclo = sum(float(n.get('original', 0.0)) for n in lineas_recibo)
-                     abonos_mostrar = total_creditos_ciclo - saldo_real_neto
-                     abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
+                    total_creditos_ciclo = sum(float(n.get('original', 0.0)) for n in lineas_recibo)
+                    abonos_mostrar = total_creditos_ciclo - saldo_real_neto
+                    abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
 
-                     c1, c2 = st.columns(2)
-                     c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
-                     c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                     st.write("---")
+                    c1, c2 = st.columns(2)
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
+                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                    st.write("---")
 
                     # =========================================================
                     # 3. EL RECUADRO CON EL HISTORIAL ACTUAL DE LA CUENTA
