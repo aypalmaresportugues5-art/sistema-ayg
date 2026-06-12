@@ -524,7 +524,9 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                 
                         if abs(saldo_cronologico) < 0.01:
                             saldo_cronologico = 0.0
-
+                          
+                        if saldo_cronologico >= saldo_real_neto:
+                            break
                     # 2. Reconstruimos el ticket para WhatsApp con tus datos reales
                     import datetime
                     fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
