@@ -476,64 +476,51 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                    # Definimos el texto vacío o de cuenta limpia por si intentan imprimir
                    recibo_texto = "El cliente se encuentra al día con sus cuentas."
                 else:
-                    # RECORRIDO INVERSO PARA CALCULAR SOLO LOS ABONOS DEL CICLO ACTIVO
-                    movimientos_cliente = df_cli.to_dict('records')
-                    saldo_acumulado_inverso = 0.0
-                    total_abonos_ciclo = 0.0
-                
-                    # =======================================================
-                    # =======================================================
+                    # =========================================================
                     # 1. CONTROL DEL HISTORIAL ACTUAL (REINICIO AUTOMÁTICO)
-                    # =======================================================
-                    historial_recuadro = []
+                    # =========================================================
+                    lineas_recibo = []
                     saldo_cronologico = 0.0
+                    total_abonos_ciclo = 0.0  # El sumador que se va a reiniciar
 
                     for mov in df_cli.to_dict('records'):
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                         monto = float(mov.get('MONTO($)', 0.0))
-            
+                
                         # Limpieza de fecha corta (quita las horas del recuadro)
                         fecha_completa = str(mov.get('FECHA', ''))
                         fecha_factura = fecha_completa[:10] if " " in fecha_completa or "T" in fecha_completa else fecha_completa
 
-                        # 🔄 REINICIO: Si la cuenta estaba en cero y arranca una deuda nueva, borrón y cuenta nueva
+                        # 🔄 REINICIO: Si la cuenta llegó a cero y arranca deuda nueva, borrón y cuenta nueva
                         if abs(saldo_cronologico) < 0.01 and monto > 0:
-                            historial_recuadro = []
+                           lineas_recibo = []
+                           total_abonos_ciclo = 0.0  # <--- AQUÍ SE QUITA LA BASURA DE MAYO
 
-                        # Guardamos el movimiento estructurado exactamente como lo lee tu tabla y tu PDF
+                        # Guardamos exactamente lo que lee tu tabla y tu PDF
                         if tipo_mov in ['crédito', 'credito']:
                             saldo_cronologico += monto
-                            historial_recuadro.append({
+                            lineas_recibo.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Crédito',
-                                'MONTO($)': monto,
-                                'original': monto,
-                                'abono': 0.0
+                                'MONTO($)': monto
                             })
                         elif tipo_mov == 'abono':
                             saldo_cronologico -= monto
-                            historial_recuadro.append({
+                            total_abonos_ciclo += monto  # Va acumulando solo los abonos del ciclo activo
+                            lineas_recibo.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Abono',
-                                'MONTO($)': monto,
-                                'original': 0.0,
-                                'abono': monto
+                                'MONTO($)': -monto  # Se muestra en negativo en tu recuadro
                             })
 
                         if abs(saldo_cronologico) < 0.01:
                             saldo_cronologico = 0.0
 
-                    # ========================================================
-                    # 2. CÁLCULO PRECISO PARA LOS DOS INDICADORES DE ARRIBA
                     # =========================================================
-                    # El abono real de este ciclo es la suma de créditos menos lo que queda debiendo neto
-                    total_creditos_ciclo = sum(float(n['original']) for n in historial_recuadro)
-                    abonos_mostrar = total_creditos_ciclo - saldo_real_neto
-                    abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
-
-                    # Colocamos las dos métricas limpias arriba
+                    # 2. INDICADORES EN PANTALLA (Cajas limpias sin duplicados)
+                    # =========================================================
                     c1, c2 = st.columns(2)
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
                     c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
                     st.write("---")
 
@@ -541,30 +528,15 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # 3. EL RECUADRO CON EL HISTORIAL ACTUAL DE LA CUENTA
                     # =========================================================
                     st.markdown("### 📋 Historial Actual de la Cuenta")
-                    if historial_recuadro:
+                    if lineas_recibo:
                         import pandas as pd
-                        # Creamos la tabla interactiva solo con las columnas que necesitas ver
-                        df_mostrar = pd.DataFrame(historial_recuadro)[['FECHA', 'TIPO', 'MONTO($)']]
+                        df_mostrar = pd.DataFrame(lineas_recibo)[['FECHA', 'TIPO', 'MONTO($)']]
                         st.table(df_mostrar)
                     else:
                         st.info("No hay movimientos activos en este ciclo.")
 
 
-                    # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
-                 #   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                  #  c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${(saldo_real_neto + total_abonos_ciclo) - saldo_real_neto:.2f}")
-                   # c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                 #   c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
 
-                    #c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                   # st.write("---")
-                    # === FIN DEL REEMPLAZO UNIFICADO ===
-
-
-                
-                    # 🖨️ Despliegue del cuadro de texto
-                   # st.write("### 🖨️ Recibo Listo para WhatsApp:")
-                 #   st.code(recibo_texto, language="text")
                 
                     # 📄 4. BOTÓN PARA GENERAR COMPROBANTE DE COBRO (Listo para imprimir)
                     st.write("---")
