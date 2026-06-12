@@ -523,31 +523,31 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         if abs(saldo_cronologico) < 0.01:
                             saldo_cronologico = 0.0
 
-                       # =========================================================
-                       # 2. CÁLCULO PRECISO PARA LOS DOS INDICADORES DE ARRIBA
-                       # =========================================================
-                       # El abono real de este ciclo es la suma de créditos menos lo que queda debiendo neto
-                       total_creditos_ciclo = sum(float(n['original']) for n in historial_recuadro)
-                       abonos_mostrar = total_creditos_ciclo - saldo_real_neto
-                       abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
+                    # ========================================================
+                    # 2. CÁLCULO PRECISO PARA LOS DOS INDICADORES DE ARRIBA
+                    # =========================================================
+                    # El abono real de este ciclo es la suma de créditos menos lo que queda debiendo neto
+                    total_creditos_ciclo = sum(float(n['original']) for n in historial_recuadro)
+                    abonos_mostrar = total_creditos_ciclo - saldo_real_neto
+                    abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
 
-                       # Colocamos las dos métricas limpias arriba
-                       c1, c2 = st.columns(2)
-                       c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
-                       c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                       st.write("---")
+                    # Colocamos las dos métricas limpias arriba
+                    c1, c2 = st.columns(2)
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
+                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                    st.write("---")
 
-                       # =========================================================
-                       # 3. EL RECUADRO CON EL HISTORIAL ACTUAL DE LA CUENTA
-                       # =========================================================
-                       st.markdown("### 📋 Historial Actual de la Cuenta")
-                       if historial_recuadro:
-                           import pandas as pd
-                           # Creamos la tabla interactiva solo con las columnas que necesitas ver
-                           df_mostrar = pd.DataFrame(historial_recuadro)[['FECHA', 'TIPO', 'MONTO($)']]
-                           st.table(df_mostrar)
-                       else:
-                           st.info("No hay movimientos activos en este ciclo.")
+                    # =========================================================
+                    # 3. EL RECUADRO CON EL HISTORIAL ACTUAL DE LA CUENTA
+                    # =========================================================
+                    st.markdown("### 📋 Historial Actual de la Cuenta")
+                    if historial_recuadro:
+                        import pandas as pd
+                        # Creamos la tabla interactiva solo con las columnas que necesitas ver
+                        df_mostrar = pd.DataFrame(historial_recuadro)[['FECHA', 'TIPO', 'MONTO($)']]
+                        st.table(df_mostrar)
+                    else:
+                        st.info("No hay movimientos activos en este ciclo.")
 
 
                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
