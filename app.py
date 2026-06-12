@@ -502,7 +502,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             lineas_recibo.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Crédito',
-                                'MONTO($)': monto
+                                'MONTO($)': monto, 
                                 'fecha': fecha_factura,      # <--- Para el PDF
                                 'original': monto,           # <--- Para el PDF
                                 'abono': 0.0,                # <--- Para el PDF
@@ -514,7 +514,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             lineas_recibo.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Abono',
-                                'MONTO($)': -monto  # Se muestra en negativo en tu recuadro
+                                'MONTO($)': -monto, # Se muestra en negativo en tu recuadro
                                 'fecha': fecha_factura,      # <--- Para el PDF
                                 'original': 0.0,             # <--- Para el PDF
                                 'abono': monto,              # <--- Para el PDF
