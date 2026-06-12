@@ -503,6 +503,10 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Crédito',
                                 'MONTO($)': monto
+                                'fecha': fecha_factura,      # <--- Para el PDF
+                                'original': monto,           # <--- Para el PDF
+                                'abono': 0.0,                # <--- Para el PDF
+                                'pendiente': saldo_cronologico
                             })
                         elif tipo_mov == 'abono':
                             saldo_cronologico -= monto
@@ -511,6 +515,10 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Abono',
                                 'MONTO($)': -monto  # Se muestra en negativo en tu recuadro
+                                'fecha': fecha_factura,      # <--- Para el PDF
+                                'original': 0.0,             # <--- Para el PDF
+                                'abono': monto,              # <--- Para el PDF
+                                'pendiente': saldo_cronologico
                             })
 
                         if abs(saldo_cronologico) < 0.01:
