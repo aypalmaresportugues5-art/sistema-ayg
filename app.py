@@ -523,51 +523,51 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                                 'tipo': 'abono'
                             })
 
-                       if abs(saldo_cronologico) < 0.01:
-                           saldo_cronologico = 0.0
+                        if abs(saldo_cronologico) < 0.01:
+                            saldo_cronologico = 0.0
 
-                   # =========================================================
-                   # 2. INTERFAZ EN PANTALLA: SOLO DOS CUADROS INDICADORES
-                   # =========================================================
-                   total_creditos_ciclo = sum(float(n['original']) for n in lineas_recibo)
+                    # =========================================================
+                    # 2. INTERFAZ EN PANTALLA: SOLO DOS CUADROS INDICADORES
+                    # =========================================================
+                    total_creditos_ciclo = sum(float(n['original']) for n in lineas_recibo)
     
-                   c1, c2 = st.columns(2)
-                   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                   c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                   st.write("---")
+                    c1, c2 = st.columns(2)
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
+                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                    st.write("---")
 
-                   # =========================================================
-                   # 3. GENERACIÓN DEL TICKET DE TEXTO PARA WHATSAPP
-                   # =========================================================
-                   import datetime
-                   fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
+                    # =========================================================
+                    # 3. GENERACIÓN DEL TICKET DE TEXTO PARA WHATSAPP
+                    # =========================================================
+                    import datetime
+                    fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
 
-                   recibo_texto = "=========================================\n"
-                   recibo_texto += "       *** REPORTE DE COBRO - AYG ***\n"
-                   recibo_texto += "=========================================\n"
-                   recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                   recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
-                   recibo_texto += "-----------------------------------------\n"
-                   recibo_texto += f"CLIENTE: {cliente_sel}\n"
-                   recibo_texto += "-----------------------------------------\n"
-                   recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
-
-                   if lineas_recibo:
-                       for item in lineas_recibo:
-                           if item['tipo'] == 'credito':
-                              recibo_texto += f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}\n"
-                           else:
-                               recibo_texto += f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}\n"
-
+                    recibo_texto = "=========================================\n"
+                    recibo_texto += "       *** REPORTE DE COBRO - AYG ***\n"
+                    recibo_texto += "=========================================\n"
+                    recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
+                    recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
                     recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${total_creditos_ciclo:.2f}\n"
-                    recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
+                    recibo_texto += f"CLIENTE: {cliente_sel}\n"
                     recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
-                    recibo_texto += "========================================="
+                    recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
 
-                    # Una sola caja de texto limpia en la pantalla
-                    st.text_area("🖨️ Recibo Listo para WhatsApp:", value=recibo_texto, height=350)
+                    if lineas_recibo:
+                        for item in lineas_recibo:
+                            if item['tipo'] == 'credito':
+                               recibo_texto += f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}\n"
+                            else:
+                                recibo_texto += f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}\n"
+
+                     recibo_texto += "-----------------------------------------\n"
+                     recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${total_creditos_ciclo:.2f}\n"
+                     recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
+                     recibo_texto += "-----------------------------------------\n"
+                     recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
+                     recibo_texto += "========================================="
+
+                     # Una sola caja de texto limpia en la pantalla
+                     st.text_area("🖨️ Recibo Listo para WhatsApp:", value=recibo_texto, height=350)
 
 
                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
