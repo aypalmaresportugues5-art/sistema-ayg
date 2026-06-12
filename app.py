@@ -511,7 +511,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             })
                         elif tipo_mov == 'abono':
                             saldo_cronologico -= monto
-                        #    total_abonos_ciclo += monto
+                            total_abonos_ciclo += monto
                             lineas_recibo.append({
                                 'fecha': fecha_factura,
                                 'original': 0.0,
@@ -559,7 +559,9 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     recibo_texto += "=========================================\n"
         
                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
+                 #   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${(saldo_real_neto + total_abonos_ciclo) - saldo_real_neto:.2f}")
+
                     c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
                     st.write("---")
                     # === FIN DEL REEMPLAZO UNIFICADO ===
