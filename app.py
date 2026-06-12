@@ -477,47 +477,46 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                    recibo_texto = "El cliente se encuentra al día con sus cuentas."
                 else:
                     # =========================================================
-                    # 1. CONTROL DEL HISTORIAL ACTUAL (REINICIO AUTOMÁTICO)
+                    # 1. MOTOR CRONOLÓGICO ORIGINAL Y LIMPIO
                     # =========================================================
-                    historial_recuadro= []
+                    historial_recuadro = []
                     saldo_cronologico = 0.0
-                    total_abonos_ciclo = 0.0  # El sumador que se va a reiniciar
+                    total_abonos_ciclo = 0.0
 
                     for mov in df_cli.to_dict('records'):
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                         monto = float(mov.get('MONTO($)', 0.0))
-                
-                        # Limpieza de fecha corta (quita las horas del recuadro)
+            
+                        # Formatear fecha corta
                         fecha_completa = str(mov.get('FECHA', ''))
                         fecha_factura = fecha_completa[:10] if " " in fecha_completa or "T" in fecha_completa else fecha_completa
 
-                        # 🔄 REINICIO: Si la cuenta llegó a cero y arranca deuda nueva, borrón y cuenta nueva
+                        # 🔄 REINICIO COMPLETO: Si la cuenta llega a cero, borrón y cuenta nueva
                         if abs(saldo_cronologico) < 0.01 and monto > 0:
-                           historial_recuadro= []
-                           total_abonos_ciclo = 0.0  # <--- AQUÍ SE QUITA LA BASURA DE MAYO
+                            historial_recuadro = []
+                            total_abonos_ciclo = 0.0
 
-                        # Guardamos exactamente lo que lee tu tabla y tu PDF
                         if tipo_mov in ['crédito', 'credito']:
                             saldo_cronologico += monto
                             historial_recuadro.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Crédito',
-                                'MONTO($)': monto, 
-                                'fecha': fecha_factura,      # <--- Para el PDF
-                                'original': monto,           # <--- Para el PDF
-                                'abono': 0.0,                # <--- Para el PDF
+                                'MONTO($)': monto,
+                                'fecha': fecha_factura,
+                                'original': monto,
+                                'abono': 0.0,
                                 'pendiente': saldo_cronologico
                             })
                         elif tipo_mov == 'abono':
                             saldo_cronologico -= monto
-                            total_abonos_ciclo += monto  # Va acumulando solo los abonos del ciclo activo
+                            total_abonos_ciclo += monto
                             historial_recuadro.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Abono',
-                                'MONTO($)': -monto, # Se muestra en negativo en tu recuadro
-                                'fecha': fecha_factura,      # <--- Para el PDF
-                                'original': 0.0,             # <--- Para el PDF
-                                'abono': monto,              # <--- Para el PDF
+                                'MONTO($)': monto,
+                                'fecha': fecha_factura,
+                                'original': 0.0,
+                                'abono': monto,
                                 'pendiente': saldo_cronologico
                             })
 
@@ -525,19 +524,15 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             saldo_cronologico = 0.0
 
                     # =========================================================
-                    # 2. INDICADORES EN PANTALLA (Cajas limpias sin duplicados)
+                    # 2. COLOCAR LAS MÉTRICAS EXACTAS EN PANTALLA
                     # =========================================================
-                    total_creditos_ciclo = sum(float(n.get('original', 0.0)) for n in historial_recuadro)
-                    abonos_mostrar = total_creditos_ciclo - saldo_real_neto
-                    abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
-
                     c1, c2 = st.columns(2)
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
+                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
                     c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
                     st.write("---")
 
                     # =========================================================
-                    # 3. EL RECUADRO CON EL HISTORIAL ACTUAL DE LA CUENTA
+                    # 3. EL RECUADRO INTERACTIVO EN PANTALLA
                     # =========================================================
                     st.markdown("### 📋 Historial Actual de la Cuenta")
                     if historial_recuadro:
@@ -653,8 +648,9 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         doc.build(story)
                         buffer.seek(0)
                         return buffer.getvalue()
-
                     pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, historial_recuadro, saldo_real_neto)
+
+                  #  pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, historial_recuadro, saldo_real_neto)
                     nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.pdf"
             
                     st.download_button(
