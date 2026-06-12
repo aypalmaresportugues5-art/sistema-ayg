@@ -481,87 +481,94 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     saldo_acumulado_inverso = 0.0
                     total_abonos_ciclo = 0.0
                 
-                    # Estructura temporal para guardar lo que se va a imprimir
+                    # =========================================================
+                    # 1. CÁLCULO DEL HISTORIAL Y GENERACIÓN DEL RECIBO LIMPIO
+                    # =========================================================
                     lineas_recibo = []
-        
-                    # 1. Convertimos el historial a lista cronológica usando tu variable df_cli
-                    movimientos_cliente = df_cli.to_dict('records')
                     saldo_cronologico = 0.0
+        
+                    # Recorremos en orden normal (cronológico de arriba a abajo)
                     for mov in df_cli.to_dict('records'):
-
-                    #for mov in movimientos_cliente:           
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                         monto = float(mov.get('MONTO($)', 0.0))
-            
-                        # Limpieza de fecha
-                        fecha_completa = str(mov.get('FECHA', ''))
-                        fecha_factura = fecha_completa[:10] if " " in fecha_completa else fecha_completa
-            
-                        # 🔄 REINICIO AUTOMÁTICO: Si la cuenta llegó a cero, borrón y cuenta nueva
-                        if saldo_cronologico == 0.0 and monto > 0:
-                            lineas_recibo = []
-                           # total_abonos_ciclo = 0.0
+         
+                       # Limpieza de fecha
+                       fecha_completa = str(mov.get('FECHA', ''))
+                       fecha_factura = fecha_completa[:10] if " " in fecha_completa or "T" in fecha_completa else fecha_completa
 
-                        if tipo_mov == 'crédito' or tipo_mov == 'credito':
-                            saldo_cronologico += monto
-                            lineas_recibo.append({
-                                'fecha': fecha_factura,
-                                'original': monto,
-                                'abono': 0.0,
-                                'pendiente': saldo_cronologico,
-                                'tipo': 'credito'
-                            })
-                        elif tipo_mov == 'abono':
-                            saldo_cronologico -= monto
-                            total_abonos_ciclo += monto
-                            lineas_recibo.append({
-                                'fecha': fecha_factura,
-                                'original': 0.0,
-                                'abono': monto,
-                                'pendiente': saldo_cronologico,
-                                'tipo': 'abono'
-                            })
-                
-                        if abs(saldo_cronologico) < 0.01:
-                            saldo_cronologico = 0.0
-                          
-                        if saldo_cronologico >= saldo_real_neto:
-                            break
-                    # 2. Reconstruimos el ticket para WhatsApp con tus datos reales
-                    import datetime
-                    fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
-        
-                    recibo_texto = "=========================================\n"
-                    recibo_texto += "        *** REPORTE DE COBRO - AYG *** \n"
-                    recibo_texto += "=========================================\n"
-                    recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
-                    recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"CLIENTE: {cliente_sel}\n"
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
-        
-                    # 3. Mostramos las alertas en la app y llenamos el texto del ticket corrido
-                    if lineas_recibo:
-                        for item in lineas_recibo:
-                            if item['tipo'] == 'credito':
-                               linea_formateada = f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}"
-                            #   st.error(linea_formateada)
-                               recibo_texto += f"{linea_formateada}\n"
-                            else:
-                                linea_formateada = f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}"
-                               # st.success(linea_formateada)
-                                recibo_texto += f"{linea_formateada}\n"
-                    else:
-                        recibo_texto += "Sin movimientos activos en este ciclo.\n"
-            
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${saldo_real_neto + total_abonos_ciclo:.2f}\n"
-                    recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
-                    recibo_texto += "-----------------------------------------\n"
-                    recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
-                    recibo_texto += "=========================================\n"
-        
+                       # 🔄 REINICIO AUTOMÁTICO: Si la cuenta llegó a cero, borrón y cuenta nueva
+                       if abs(saldo_cronologico) < 0.01 and monto > 0:
+                           lineas_recibo = []
+
+                       if tipo_mov in ['crédito', 'credito']:
+                           saldo_cronologico += monto
+                           lineas_recibo.append({
+                               'fecha': fecha_factura,
+                               'original': monto,
+                               'abono': 0.0,
+                               'pendiente': saldo_cronologico,
+                               'tipo': 'credito'
+                           })
+                       elif tipo_mov == 'abono':
+                           saldo_cronologico -= monto
+                           lineas_recibo.append({
+                               'fecha': fecha_factura,
+                               'original': 0.0,
+                               'abono': monto,
+                               'pendiente': saldo_cronologico,
+                               'tipo': 'abono'
+                           })
+
+                       if abs(saldo_cronologico) < 0.01:
+                           saldo_cronologico = 0.0
+
+                   # ========================================================
+                   # 2. INTERFAZ EN PANTALLA: MÉTRICAS E INDICADORES
+                   # ========================================================
+                   # Truco matemático exacto: Sumamos los créditos del ciclo activo y restamos el saldo real neto
+                   total_creditos_ciclo = sum(float(n['original']) for n in lineas_recibo)
+                   abonos_mostrar = total_creditos_ciclo - saldo_real_neto
+                   abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
+
+                   c1, c2 = st.columns(2)
+                   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
+                   c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                   st.write("---")
+
+                   # =========================================================
+                   # 3. RECONSTRUCCIÓN DEL TICKET TEXTUAL PARA WHATSAPP
+                   # =========================================================
+                   import datetime
+                   fecha_hoy = datetime.date.today().strftime('%d/%m/%Y')
+
+                   recibo_texto = "=========================================\n"
+                   recibo_texto += "       *** REPORTE DE COBRO - AYG ***\n"
+                   recibo_texto += "=========================================\n"
+                   recibo_texto += f"FECHA DE EMISIÓN: {fecha_hoy}\n"
+                   recibo_texto += "EMPRESA: INVERSIONES AYG 2017 C.A.\n"
+                   recibo_texto += "-----------------------------------------\n"
+                   recibo_texto += f"CLIENTE: {cliente_sel}\n"
+                   recibo_texto += "-----------------------------------------\n"
+                   recibo_texto += "DETALLE DE CUENTAS VIGENTES:\n\n"
+
+                   # Aquí metemos las líneas de texto dentro del cuadro gris, pero SIN pintar cuadros de colores en la app
+                   if lineas_recibo:
+                       for item in lineas_recibo:
+                           if item['tipo'] == 'credito':
+                              recibo_texto += f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}\n"
+                           else:
+                               recibo_texto += f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}\n"
+   
+                   recibo_texto += "-----------------------------------------\n"
+                   recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${total_creditos_ciclo:.2f}\n"
+                   recibo_texto += f"💵 TOTAL EN ABONOS: ${abonos_mostrar:.2f}\n"
+                   recibo_texto += "-----------------------------------------\n"
+                   recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
+                   recibo_texto += "========================================="
+
+                   # Mostramos la caja gris limpia para copiar en WhatsApp
+                   st.text_area("🖨️ Recibo Listo para WhatsApp:", value=recibo_texto, height=350)
+
                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
                  #   c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
                   #  c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${(saldo_real_neto + total_abonos_ciclo) - saldo_real_neto:.2f}")
