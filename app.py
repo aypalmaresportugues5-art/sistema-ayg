@@ -479,7 +479,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # =========================================================
                     # 1. CONTROL DEL HISTORIAL ACTUAL (REINICIO AUTOMÁTICO)
                     # =========================================================
-                    lineas_recibo = []
+                    historial_recuadro= []
                     saldo_cronologico = 0.0
                     total_abonos_ciclo = 0.0  # El sumador que se va a reiniciar
 
@@ -493,13 +493,13 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
 
                         # 🔄 REINICIO: Si la cuenta llegó a cero y arranca deuda nueva, borrón y cuenta nueva
                         if abs(saldo_cronologico) < 0.01 and monto > 0:
-                           lineas_recibo = []
+                           historial_recuadro= []
                            total_abonos_ciclo = 0.0  # <--- AQUÍ SE QUITA LA BASURA DE MAYO
 
                         # Guardamos exactamente lo que lee tu tabla y tu PDF
                         if tipo_mov in ['crédito', 'credito']:
                             saldo_cronologico += monto
-                            lineas_recibo.append({
+                            historial_recuadro.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Crédito',
                                 'MONTO($)': monto, 
@@ -511,7 +511,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         elif tipo_mov == 'abono':
                             saldo_cronologico -= monto
                             total_abonos_ciclo += monto  # Va acumulando solo los abonos del ciclo activo
-                            lineas_recibo.append({
+                            historial_recuadro.append({
                                 'FECHA': fecha_factura,
                                 'TIPO': 'Abono',
                                 'MONTO($)': -monto, # Se muestra en negativo en tu recuadro
@@ -527,7 +527,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # =========================================================
                     # 2. INDICADORES EN PANTALLA (Cajas limpias sin duplicados)
                     # =========================================================
-                    total_creditos_ciclo = sum(float(n.get('original', 0.0)) for n in lineas_recibo)
+                    total_creditos_ciclo = sum(float(n.get('original', 0.0)) for n in historial_recuadro)
                     abonos_mostrar = total_creditos_ciclo - saldo_real_neto
                     abonos_mostrar = abonos_mostrar if abonos_mostrar > 0 else 0.0
 
@@ -540,9 +540,9 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # 3. EL RECUADRO CON EL HISTORIAL ACTUAL DE LA CUENTA
                     # =========================================================
                     st.markdown("### 📋 Historial Actual de la Cuenta")
-                    if lineas_recibo:
+                    if historial_recuadro:
                         import pandas as pd
-                        df_mostrar = pd.DataFrame(lineas_recibo)[['FECHA', 'TIPO', 'MONTO($)']]
+                        df_mostrar = pd.DataFrame(historial_recuadro)[['FECHA', 'TIPO', 'MONTO($)']]
                         st.table(df_mostrar)
                     else:
                         st.info("No hay movimientos activos en este ciclo.")
