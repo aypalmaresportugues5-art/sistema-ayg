@@ -477,13 +477,14 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                    recibo_texto = "El cliente se encuentra al día con sus cuentas."
                 else:
                     # =========================================================
-                    # 1. MOTOR CRONOLÓGICO ORIGINAL Y LIMPIO
+                    # 1. TU MOTOR INVERSO ORIGINAL (CORTE PERFECTO DE CICLO)
                     # =========================================================
                     historial_recuadro = []
-                    saldo_cronologico = 0.0
-                    total_abonos_ciclo = 0.0
+                    saldo_acumulado_inverso = 0.0
+                    movimientos_cliente = df_cli.to_dict('records')
 
-                    for mov in df_cli.to_dict('records'):
+                    # Recorremos de lo más nuevo a lo más viejo para aislar el ciclo activo
+                    for mov in reversed(movimientos_cliente):
                         tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                         monto = float(mov.get('MONTO($)', 0.0))
             
@@ -491,60 +492,58 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         fecha_completa = str(mov.get('FECHA', ''))
                         fecha_factura = fecha_completa[:10] if " " in fecha_completa or "T" in fecha_completa else fecha_completa
 
-                        # 🔄 REINICIO COMPLETO: Si la cuenta llega a cero, borrón y cuenta nueva
-                        if abs(saldo_cronologico) < 0.01 and monto > 0:
-                            historial_recuadro = []
-                            total_abonos_ciclo = 0.0
-
+                        # Guardamos los campos que el PDF y la tabla necesitan
+                        mov['fecha'] = fecha_factura
                         if tipo_mov in ['crédito', 'credito']:
-                            saldo_cronologico += monto
-                            historial_recuadro.append({
-                                'FECHA': fecha_factura,
-                                'TIPO': 'Crédito',
-                                'MONTO($)': monto,
-                                'fecha': fecha_factura,
-                                'original': monto,
-                                'abono': 0.0,
-                                'pendiente': saldo_cronologico
-                            })
+                            mov['original'] = abs(monto)
+                            mov['abono'] = 0.0
                         elif tipo_mov == 'abono':
-                            saldo_cronologico -= monto
-                            total_abonos_ciclo += monto
-                            historial_recuadro.append({
-                                'FECHA': fecha_factura,
-                                'TIPO': 'Abono',
-                                'MONTO($)': monto,
-                                'fecha': fecha_factura,
-                                'original': 0.0,
-                                'abono': monto,
-                                'pendiente': saldo_cronologico
-                            })
+                            mov['original'] = 0.0
+                            mov['abono'] = abs(monto)
 
-                        if abs(saldo_cronologico) < 0.01:
-                            saldo_cronologico = 0.0
+                        saldo_acumulado_inverso += monto
+                        historial_recuadro.append(mov)
 
-                    # =========================================================
-                    # 2. COLOCAR LAS MÉTRICAS EXACTAS EN PANTALLA
-                    # =========================================================
-                    c1, c2 = st.columns(2)
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${total_abonos_ciclo:.2f}")
-                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
-                    st.write("---")
+                       # 🔄 Si la suma inversa ya alcanzó o superó lo que debe hoy, ahí es el corte
+                       if saldo_acumulado_inverso >= saldo_real_neto:
+                           break
 
-                    # =========================================================
-                    # 3. EL RECUADRO INTERACTIVO EN PANTALLA
-                    # =========================================================
-                    st.markdown("### 📋 Historial Actual de la Cuenta")
-                    if historial_recuadro:
-                        import pandas as pd
-                        df_mostrar = pd.DataFrame(historial_recuadro)[['FECHA', 'TIPO', 'MONTO($)']]
-                        st.table(df_mostrar)
-                    else:
-                        st.info("No hay movimientos activos en este ciclo.")
+                   # Lo volteamos para que en pantalla e impresión se lea cronológicamente (viejo a nuevo)
+                   historial_recuadro = historial_recuadro[::-1]
 
+                  # Re-calculamos la columna 'pendiente' paso a paso para el PDF
+                  saldo_run = 0.0
+                  for item in historial_recuadro:
+                      if str(item.get('TIPO', '')).strip().lower() in ['crédito', 'credito']:
+                          saldo_run += float(item.get('MONTO($)', 0.0))
+                      else:
+                          saldo_run -= abs(float(item.get('MONTO($)', 0.0)))
+                      item['pendiente'] = saldo_run
 
+                  # Sumamos los abonos reales del ciclo activo (Dará $0.00 si no hay abonos nuevos)
+                  total_abonos_ciclo = sum(float(n['abono']) for n in historial_recuadro)
+                  abonos_mostrar = total_abonos_ciclo if total_abonos_ciclo > 0 else 0.0
 
-                
+                  # =========================================================
+             
+                  # 2. COLOCAR LAS MÉTRICAS EXACTAS EN PANTALLA
+                  # =========================================================
+                  c1, c2 = st.columns(2)
+                  c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
+                  c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                  st.write("---")
+
+                  # =========================================================
+                  # 3. EL RECUADRO INTERACTIVO EN PANTALLA
+                  # =========================================================
+                  st.markdown("### 📋 Historial Actual de la Cuenta")
+                  if historial_recuadro:
+                      import pandas as pd
+                      df_mostrar = pd.DataFrame(historial_recuadro)[['FECHA', 'TIPO', 'MONTO($)']]
+                      st.table(df_mostrar)
+                  else:
+                      st.info("No hay movimientos activos en este ciclo.")
+                 
                     # 📄 4. BOTÓN PARA GENERAR COMPROBANTE DE COBRO (Listo para imprimir)
                     st.write("---")
                     st.write("### 📥 Opciones de Exportación:")
