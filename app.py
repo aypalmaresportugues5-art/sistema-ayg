@@ -554,9 +554,9 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     # === FIN DEL REEMPLAZO OPTIMIZADO ===
 
                 
-                        # 🖨️ Despliegue del cuadro de texto
-                        st.write("### 🖨️ Recibo Listo para WhatsApp:")
-                        st.code(recibo_texto, language="text")
+                    # 🖨️ Despliegue del cuadro de texto
+                    st.write("### 🖨️ Recibo Listo para WhatsApp:")
+                    st.code(recibo_texto, language="text")
                 
                     # 📄 4. BOTÓN PARA GENERAR COMPROBANTE DE COBRO (Listo para imprimir)
                     st.write("---")
