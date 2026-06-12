@@ -651,16 +651,18 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         doc.build(story)
                         buffer.seek(0)
                         return buffer.getvalue()
-                    
-                pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, historial_recuadro, saldo_real_neto)
-                nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.pdf"
+                try:   
+                   pdf_data = crear_pdf_ayg(cliente_sel, fecha_hoy, historial_recuadro, saldo_real_neto)
+                   nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_hoy.replace('/', '-')}.pdf"
             
-                st.download_button(
-                    label="📥 Descargar Reporte en PDF Profesional",
-                    data=pdf_data,
-                    file_name=nombre_pdf,
-                    mime="application/pdf"
-                )
+                   st.download_button(
+                       label="📥 Descargar Reporte en PDF Profesional",
+                       data=pdf_data,
+                       file_name=nombre_pdf,
+                       mime="application/pdf"
+                   )
+                except Exception as e:
+                    st.warning(f"El reporte PDF estará disponible al actualizar la página: {e}")
    
 
 
