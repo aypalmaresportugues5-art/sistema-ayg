@@ -559,15 +559,15 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             else:
                                 recibo_texto += f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}\n"
 
-                     recibo_texto += "-----------------------------------------\n"
-                     recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${total_creditos_ciclo:.2f}\n"
-                     recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
-                     recibo_texto += "-----------------------------------------\n"
-                     recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
-                     recibo_texto += "========================================="
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += f"💵 TOTAL EN CRÉDITOS: ${total_creditos_ciclo:.2f}\n"
+                    recibo_texto += f"💵 TOTAL EN ABONOS: ${total_abonos_ciclo:.2f}\n"
+                    recibo_texto += "-----------------------------------------\n"
+                    recibo_texto += f"💵 SALDO NETO PENDIENTE: ${saldo_real_neto:.2f}\n"
+                    recibo_texto += "========================================="
 
                      # Una sola caja de texto limpia en la pantalla
-                     st.text_area("🖨️ Recibo Listo para WhatsApp:", value=recibo_texto, height=350)
+                    st.text_area("🖨️ Recibo Listo para WhatsApp:", value=recibo_texto, height=350)
 
 
                     # 🟢 TUS DOS CUADRITOS ORIGINALES RESTAURADOS AL 100%
