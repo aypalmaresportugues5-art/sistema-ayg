@@ -511,7 +511,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             })
                         elif tipo_mov == 'abono':
                             saldo_cronologico -= monto
-                            total_abonos_ciclo += monto
+                        #    total_abonos_ciclo += monto
                             lineas_recibo.append({
                                 'fecha': fecha_factura,
                                 'original': 0.0,
