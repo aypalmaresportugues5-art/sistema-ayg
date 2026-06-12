@@ -541,12 +541,12 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         for item in lineas_recibo:
                             if item['tipo'] == 'credito':
                                linea_formateada = f"📅 {item['fecha']} | Crédito Original: ${item['original']:.2f}"
-                               st.error(linea_formateada)
-                               recibo_texto += f"{linea_formateada}\n"
+                            #   st.error(linea_formateada)
+                             #  recibo_texto += f"{linea_formateada}\n"
                             else:
                                 linea_formateada = f"💰 {item['fecha']} | Abono Recibido: -${item['abono']:.2f}"
-                                st.success(linea_formateada)
-                                recibo_texto += f"{linea_formateada}\n"
+                               # st.success(linea_formateada)
+                                #recibo_texto += f"{linea_formateada}\n"
                     else:
                         recibo_texto += "Sin movimientos activos en este ciclo.\n"
             
