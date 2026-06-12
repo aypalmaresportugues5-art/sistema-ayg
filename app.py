@@ -525,7 +525,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         item['pendiente'] = saldo_run
 
                     # Sumamos los abonos reales del ciclo activo (Dará $0.00 si no hay abonos nuevos)
-                    total_abonos_ciclo = sum(float(n.['abono']) for n in historial_recuadro)
+                    total_abonos_ciclo = sum(float(n['abono']) for n in historial_recuadro)
                     abonos_mostrar = total_abonos_ciclo if total_abonos_ciclo > 0 else 0.0
 
                     # =========================================================
