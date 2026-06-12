@@ -477,7 +477,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                    recibo_texto = "El cliente se encuentra al día con sus cuentas."
                 else:
                     # RECORRIDO INVERSO PARA CALCULAR SOLO LOS ABONOS DEL CICLO ACTIVO
-                    movimientos_cliente = df_cl1.to_dict('records')
+                    movimientos_cliente = df_cli.to_dict('records')
                     saldo_acumulado_inverso = 0.0
                     total_abonos_ciclo = 0.0
                 
@@ -487,7 +487,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
            
         
                     # 1. Convertimos el historial a una lista de diccionarios cronológica (de la más vieja a la más nueva)
-                    movimientos_cliente = df_cl1.to_dict('records')
+                    movimientos_cliente = df_cli.to_dict('records')
         
                     saldo_cronologico = 0.0
                     lineas_pantalla_limpia = []
