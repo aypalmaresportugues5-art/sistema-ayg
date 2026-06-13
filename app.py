@@ -655,14 +655,16 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             textColor=colors.gray
                         )
                         story.append(Paragraph("<i>Gracias por su confianza y puntualidad.</i>", footer_style))
-                        # Pasamos el saldo neto a bolívares adentro del PDF
+                        # --- CÁLCULO Y AGREGADO DE DUAL MONEDA EN EL PDF ---
                         saldo_en_bs = saldo_real_neto * tasa_bcv
 
-                        # Creamos los textos decorados para el reporte impreso
-                        story.append(Paragraph(f"<b>Tasa de Cambio Aplicada (BCV):</b> {tasa_bcv:.2f} Bs./$", styles['Normal']))
-                        story.append(Spacer(1, 10))
-                        story.append(Paragraph(f"<b>TOTAL A PAGAR EN EN BOLÍVARES:</b> <font color='green'><b>{saldo_en_bs:.2f} Bs.</b></font>", styles['Heading2']))
+                        # Añadimos la tasa y el total en Bolívares al diseño del PDF
                         story.append(Spacer(1, 15))
+                        story.append(Paragraph(f"<b>Tasa de Cambio Oficial aplicada (BCV):</b> {tasa_bcv:.2f} Bs./$", styles['Normal']))
+                        story.append(Spacer(1, 8))
+                        story.append(Paragraph(f"<b>TOTAL NETO A PAGAR EN BOLÍVARES:</b> <font color='green'><b>{saldo_en_bs:.2f} Bs.</b></font>", styles['Heading2']))
+                        story.append(Spacer(1, 15))
+
 
                         doc.build(story)
                         buffer.seek(0)
