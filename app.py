@@ -568,7 +568,10 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                     from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
                     from reportlab.lib import colors
 
-                    def crear_pdf_ayg(cliente, fecha, lineas, saldo_neto):
+                    def crear_pdf_ayg(cliente, fecha, lineas, saldo_neto, *args, **kwargs):
+                        # Rescatamos la tasa que mandó el botón, si no viene usamos 45.0 por defecto
+                        tasa_bcv = kwargs.get('tasa_bcv', args[0] if args else 45.0)
+
                         buffer = io.BytesIO()
                         doc = SimpleDocTemplate(buffer, pagesize=letter, rightMargin=40, leftMargin=40, topMargin=40, bottomMargin=40)
                         story = []
