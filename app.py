@@ -440,6 +440,8 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
         
         # --- SECCIÓN DETALLE POR CLIENTE ---
         if clientes_lista:
+           # 🇻🇪 CONTROL MANUAL DE TASA BCV (8 ESPACIOS DE SANGRÍA)
+            tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=45.0, step=0.01)
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
             saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
@@ -532,10 +534,16 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
              
                     # 2. COLOCAR LAS MÉTRICAS EXACTAS EN PANTALLA
                     # =========================================================
-                    c1, c2 = st.columns(2)
-                    c1.metric("TOTAL ABONADO (CICLO ACTIVO)", f"${abonos_mostrar:.2f}")
-                    c2.metric("SALDO PENDIENTE NETO", f"${saldo_real_neto:.2f}")
+                    # 🎯 CALCULAMOS EL EQUIVALENTE EN BOLÍVARES AL MOMENTO
+                    saldo_en_bs = saldo_real_neto * tasa_bcv
+
+                    # Dibujamos las 3 columnas en pantalla (8 espacios de sangría)
+                    c1, c2, c3 = st.columns(3)
+                    c1.metric("TOTAL ABONADO (CICLO)", f"${abonos_mostrar:.2f}")
+                    c2.metric("SALDO PENDIENTE ($)", f"${saldo_real_neto:.2f}")
+                    c3.metric("EQUIVALENTE EN BS", f"{saldo_en_bs:.2f} Bs.")
                     st.write("---")
+
 
                     # =========================================================
                     # 3. EL RECUADRO INTERACTIVO EN PANTALLA
