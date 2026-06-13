@@ -655,7 +655,15 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                             textColor=colors.gray
                         )
                         story.append(Paragraph("<i>Gracias por su confianza y puntualidad.</i>", footer_style))
-                
+                        # Pasamos el saldo neto a bolívares adentro del PDF
+                        saldo_en_bs = saldo_real_neto * tasa_bcv
+
+                        # Creamos los textos decorados para el reporte impreso
+                        story.append(Paragraph(f"<b>Tasa de Cambio Aplicada (BCV):</b> {tasa_bcv:.2f} Bs./$", styles['Normal']))
+                        story.append(Spacer(1, 10))
+                        story.append(Paragraph(f"<b>TOTAL A PAGAR EN EN BOLÍVARES:</b> <font color='green'><b>{saldo_en_bs:.2f} Bs.</b></font>", styles['Heading2']))
+                        story.append(Spacer(1, 15))
+
                         doc.build(story)
                         buffer.seek(0)
                         return buffer.getvalue()
@@ -663,7 +671,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                    import datetime
                    fecha_pdf = datetime.datetime.now().strftime("%Y-%m-%d")
             
-                   pdf_data = crear_pdf_ayg(cliente_sel, fecha_pdf, historial_recuadro, saldo_real_neto)
+                   pdf_data = crear_pdf_ayg(cliente_sel, fecha_pdf, historial_recuadro, saldo_real_neto, tasa_bcv=45.0)
                    nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_pdf}.pdf"
 
                    st.download_button(
