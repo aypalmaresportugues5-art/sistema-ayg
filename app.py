@@ -673,7 +673,7 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                    import datetime
                    fecha_pdf = datetime.datetime.now().strftime("%Y-%m-%d")
             
-                   pdf_data = crear_pdf_ayg(cliente_sel, fecha_pdf, historial_recuadro, saldo_real_neto, tasa_bcv=45.0)
+                   pdf_data = crear_pdf_ayg(cliente_sel, fecha_pdf, historial_recuadro, saldo_real_neto, tasa_bcv)
                    nombre_pdf = f"Estado_Cuenta_{cliente_sel.replace(' ', '_')}_{fecha_pdf}.pdf"
 
                    st.download_button(
