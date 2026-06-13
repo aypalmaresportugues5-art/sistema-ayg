@@ -660,9 +660,9 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
 
                         # Añadimos la tasa y el total en Bolívares al diseño del PDF
                         story.append(Spacer(1, 15))
-                        story.append(Paragraph(f"<b>Tasa de Cambio Oficial aplicada (BCV):</b> {tasa_bcv:.2f} Bs./$", styles['Normal']))
+                        story.append(Paragraph(f"<b>Tasa de Cambio Oficial aplicada (BCV):</b> {tasa_bcv:.2f} Bs./$", total_style)) 
                         story.append(Spacer(1, 8))
-                        story.append(Paragraph(f"<b>TOTAL NETO A PAGAR EN BOLÍVARES:</b> <font color='green'><b>{saldo_en_bs:.2f} Bs.</b></font>", styles['Heading2']))
+                        story.append(Paragraph(f"<b>TOTAL NETO A PAGAR EN BOLÍVARES:</b> <font color='green'><b>{saldo_en_bs:.2f} Bs.</b></font>", total_style))
                         story.append(Spacer(1, 15))
 
 
