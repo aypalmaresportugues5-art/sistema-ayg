@@ -667,6 +667,15 @@ def formulario_cuentas_por_cobrar(clientes_lista, URL_GOOGLE):
                         story.append(Spacer(1, 8))
                         story.append(Paragraph(f"<b>TOTAL NETO A PAGAR EN BOLÍVARES:</b> <font color='green'><b>{saldo_en_bs:.2f} Bs.</b></font>", total_style))
                         story.append(Spacer(1, 15))
+                        # 📌 NOTA DE CONCIENTIZACIÓN Y HORARIO DE COBRO
+                        nota_bcv = (
+                            "<b>⚠️⚠️ NOTA DE PAGO⚠️⚠️ :</b> Los pagos en bolívares se reciben estrictamente a la tasa oficial "
+                            "BCV vigente al momento de la transacción. Todo pago realizado <b>después de las 5:00 pm</b> "
+                            "(o durante el fin de semana) se calculará obligatoriamente a la <b>tasa actualizada</b> emitida por "
+                            "el BCV para el día hábil siguiente. Evite recargos en su saldo manteniendo sus cuentas al día antes de la hora señalada."
+                        )
+                        story.append(Paragraph(nota_bcv, footer_style))
+                        story.append(Spacer(1, 15))
 
 
                         doc.build(story)
