@@ -88,23 +88,44 @@ clientes_lista = datos['clientes']
 productos_dict = datos['productos']
 
 # --- FUNCIÓN GENERADORA DE PDF SEGURO ---
-def crear_pdf(cliente, pedido, total):
+def crear_pdf(cliente, pedido, total, *args, **kwargs):
+    # Rescatamos las variables que vienen del botón de abajo
+    fecha_vencimiento = kwargs.get('fecha_vencimiento', 'A consultar')
+    tasa_bcv = kwargs.get('tasa_bcv', 45.0)
+    
     pdf = FPDF()
     pdf.add_page()
+    
+    # Membrete principal de la empresa
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "INVERSIONES AYG 2017 C.A.", ln=True, align='C')
     pdf.set_font("Arial", '', 10)
     pdf.cell(0, 7, "RIF: J-40982649-7 | Barquisimeto, Edo. Lara", ln=True, align='C')
     pdf.ln(10)
+    
+    # Sección de Encabezados con Vencimiento
     pdf.set_font("Arial", 'B', 12)
-    pdf.cell(0, 10, f"FACTURA DE VENTA - {datetime.now().strftime('%d/%m/%Y')}", ln=True)
-    pdf.cell(0, 10, f"CLIENTE: {cliente}", ln=True)
+    pdf.cell(0, 8, f"FACTURA DE VENTA - {datetime.now().strftime('%d/%m/%Y')}", ln=True)
+    
+    # 📆 IMPRIMIMOS EL VENCIMIENTO EN EL PDF
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(45, 8, "FECHA DE VENCIMIENTO: ")
+    pdf.set_text_color(255, 0, 0) # Color Rojo para alertar
+    pdf.cell(0, 8, f"{fecha_vencimiento}", ln=True)
+    pdf.set_text_color(0, 0, 0) # Regresamos el texto a color negro
+    
+    pdf.set_font("Arial", 'B', 12)
+    pdf.cell(0, 8, f"CLIENTE: {cliente}", ln=True)
     pdf.ln(5)
+    
+    # Encabezados de la Tabla de Productos
     pdf.set_fill_color(230, 230, 230)
     pdf.cell(80, 10, "PRODUCTO", 1, 0, 'C', True)
     pdf.cell(30, 10, "CANT", 1, 0, 'C', True)
     pdf.cell(40, 10, "PRECIO U.", 1, 0, 'C', True)
     pdf.cell(40, 10, "SUBTOTAL", 1, 1, 'C', True)
+    
+    # Listado de productos comprados
     pdf.set_font("Arial", '', 11)
     for item in pedido:
         pdf.cell(80, 10, item['Producto'], 1)
@@ -112,10 +133,37 @@ def crear_pdf(cliente, pedido, total):
         pdf.cell(40, 10, f"{item['Precio']:.2f}$", 1, 0, 'C')
         pdf.cell(40, 10, f"{item['Subtotal']:.2f}$", 1, 1, 'C')
     pdf.ln(5)
+    
+    # Totales en Dólares
     pdf.set_font("Arial", 'B', 13)
     pdf.cell(150, 10, "TOTAL A PAGAR:", 0, 0, 'R')
     pdf.cell(40, 10, f"{total:.2f}$", 1, 1, 'C')
+    pdf.ln(5)
+    
+    # 📊 CÁLCULO EN BS. Y MENSAJE DE CONCIENTIZACIÓN (FPDF NUEVO)
+    total_en_bs = total * tasa_bcv
+    
+    pdf.set_font("Arial", 'B', 11)
+    pdf.cell(0, 7, f"Tasa de Cambio Oficial aplicada (BCV): {tasa_bcv:.2f} Bs./$", ln=True)
+    
+    pdf.set_font("Arial", 'B', 12)
+    pdf.set_text_color(0, 128, 0) # Color Verde para los Bolívares
+    pdf.cell(0, 8, f"TOTAL NETO A PAGAR EN BOLIVARES: {total_en_bs:.2f} Bs.", ln=True)
+    pdf.set_text_color(0, 0, 0) # Volvemos a negro
+    pdf.ln(5)
+    
+    # Párrafo legal del horario (MultiCell maneja saltos de línea automáticos)
+    pdf.set_font("Arial", '', 9)
+    nota_bcv = (
+        "NOTA DE PAGO: Los pagos en bolivares se reciben estrictamente a la tasa oficial "
+        "BCV vigente al momento de la transaccion. Todo pago realizado despues de las 5:00 pm "
+        "(o fines de semana) se calculara obligatoriamente a la tasa actualizada emitida por "
+        "el BCV para el dia habil siguiente. Evite recargos pagando antes de su vencimiento."
+    )
+    pdf.multi_cell(0, 5, nota_bcv, 1) # El 1 le hace un recuadro de advertencia
+    
     return pdf.output(dest='S').encode('latin-1')
+
 
 @st.dialog("🛒 Registrar Venta Detal")
 def formulario_venta_detal(clientes_lista, URL_GOOGLE):
@@ -215,7 +263,10 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
                 res = requests.post(URL_GOOGLE, json=payload, timeout=10)
                 
                 # Generamos el archivo PDF de la factura (Llamando a tu función crear_pdf)
-                pdf_b = crear_pdf(cli_m, st.session_state.carro_mayor, t_final)
+                
+                pdf_b = crear_pdf(cli_m, st.session_state.carro_mayor, t_final, fecha_vencimiento=fecha_vencimiento, tasa_bcv=tasa_bcv)
+
+                #pdf_b = crear_pdf(cli_m, st.session_state.carro_mayor, t_final)
                 b64 = base64.b64encode(pdf_b).decode()
                 
                 st.success("🟢 ¡Venta registrada en Google Sheets!")
