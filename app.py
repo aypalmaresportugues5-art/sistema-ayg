@@ -198,7 +198,8 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
             ahora_ve = datetime.now(zona_ve)
             fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
             # Calculamos 3 días de crédito para el vencimiento
-            vencimiento_dt = ahora_ve + dt_lib.timedelta(days=5)
+            timestamp_vencimiento = ahora_ve.timestamp() + (5 * 24 * 3600)
+            vencimiento_dt = datetime.fromtimestamp(timestamp_vencimiento, zona_ve)
             fecha_vencimiento = vencimiento_dt.strftime("%d/%m/%Y")
             # Preparamos el paquete para Google Sheets
             payload = {
