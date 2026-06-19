@@ -257,7 +257,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
                 if item["Producto"] == prod_a_eliminar:
                     st.session_state.carro_mayor.remove(item)
                     st.toast(f"🛑 {prod_a_eliminar} eliminado del carrito")
-                    st.rerun()
+                    #st.rerun()
         st.write("---")
 
         c_btn1, c_btn2 = st.columns(2)
