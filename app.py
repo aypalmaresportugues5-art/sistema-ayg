@@ -195,6 +195,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
         # 3. PROCESAR Y ENVIAR LA VENTA
         if c_btn2.button("💾 CONSOLIDAR Y CREAR PDF", type="primary", use_container_width=True):
             zona_ve = pytz.timezone('America/Caracas')
+            ahora_ve = datetime.now(zona_ve)
             fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
             # Calculamos 3 días de crédito para el vencimiento
             vencimiento_dt = ahora_ve + dt_lib.timedelta(days=5)
