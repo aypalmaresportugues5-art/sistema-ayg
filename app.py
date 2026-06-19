@@ -201,6 +201,9 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
         st.session_state.carro_mayor = []
         
     cli_m = st.selectbox("Seleccionar Cliente:", clientes_lista, key="mayor_cli_sel")
+    # 💵 CONTROL MANUAL DE TASA BCV EN VENTA AL MAYOR
+    tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$):", min_value=1.0, value=45.0, step=0.01, key="mayor_tasa_bcv")
+
     
     # 1. AGREGAR PRODUCTOS (Fuera de un formulario para que actualice el stock dinámico)
     c1, c2 = st.columns(2)
