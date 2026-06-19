@@ -109,7 +109,7 @@ def crear_pdf(cliente, pedido, total, *args, **kwargs):
     
     # 📆 IMPRIMIMOS EL VENCIMIENTO EN EL PDF
     pdf.set_font("Arial", 'B', 11)
-    pdf.cell(60, 8, "FECHA DE VENCIMIENTO: ")
+    pdf.cell(55, 8, "FECHA DE VENCIMIENTO: ")
     pdf.set_text_color(255, 0, 0) # Color Rojo para alertar
     pdf.cell(0, 8, f"{fecha_vencimiento}", ln=True)
     pdf.set_text_color(0, 0, 0) # Regresamos el texto a color negro
