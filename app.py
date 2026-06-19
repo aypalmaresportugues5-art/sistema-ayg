@@ -236,7 +236,30 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
         
         t_final = sum(item['Subtotal'] for item in st.session_state.carro_mayor)
         st.markdown(f"### 🧾 Total a Facturar: **${t_final:.2f}**")
+                # ❌ ELIMINAR UN PRODUCTO ESPECÍFICO DEL CARRITO
+        st.write("---")
+        st.markdown("**🛠️ Modificar Contenido del Carrito:**")
         
+        # Sacamos la lista de nombres de productos que están adentro actualmente
+        productos_en_carro = [item["Producto"] for item in st.session_state.carro_mayor]
+        
+        col_borrar1, col_borrar2 = st.columns([2, 1])
+        
+        prod_a_eliminar = col_borrar1.selectbox(
+            "Selecciona el producto que deseas sacar del pedido:", 
+            productos_en_carro, 
+            key="prod_borrar_mayor"
+        )
+        
+        if col_borrar2.button("❌ Eliminar Producto", use_container_width=True):
+            # Buscamos el producto en la lista y lo removemos
+            for item in st.session_state.carro_mayor:
+                if item["Producto"] == prod_a_eliminar:
+                    st.session_state.carro_mayor.remove(item)
+                    st.toast(f"🛑 {prod_a_eliminar} eliminado del carrito")
+                    st.rerun()
+        st.write("---")
+
         c_btn1, c_btn2 = st.columns(2)
         
         if c_btn1.button("🗑️ Vaciar Carrito", use_container_width=True):
