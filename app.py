@@ -196,10 +196,13 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
         if c_btn2.button("💾 CONSOLIDAR Y CREAR PDF", type="primary", use_container_width=True):
             zona_ve = pytz.timezone('America/Caracas')
             fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
-            
+            # Calculamos 3 días de crédito para el vencimiento
+            vencimiento_dt = ahora_ve + timedelta(days=5)
+            fecha_vencimiento = vencimiento_dt.strftime("%d/%m/%Y")
             # Preparamos el paquete para Google Sheets
             payload = {
                 "fecha": fecha_ve,
+                "vencimiento": fecha_vencimiento,
                 "tipo": "Crédito",
                 "cliente": cli_m,
                 "monto": t_final
