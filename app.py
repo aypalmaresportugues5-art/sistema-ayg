@@ -273,7 +273,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
             zona_ve = pytz.timezone('America/Caracas')
             ahora_ve = datetime.now(zona_ve)
             fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
-
+        fecha_vencimiento = ""
         if condicion_pago == "Contado":
             # Si es de contado, vence el mismo día de hoy
             fecha_vencimiento = fecha_ve
