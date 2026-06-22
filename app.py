@@ -283,8 +283,8 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
                 # Si es de contado, vence hoy mismo
                 fecha_vencimiento = fecha_ve
             else:
-                # Si es crédito, le sumamos los 3 días usando el timestamp directo
-                ts_vencimiento = ts_actual + (3 * 24 * 3600)
+                # Si es crédito, le sumamos los 5 días usando el timestamp directo
+                ts_vencimiento = ts_actual + (5 * 24 * 3600)
                 vencimiento_dt = datetime.fromtimestamp(ts_vencimiento, zona_ve)
                 fecha_vencimiento = vencimiento_dt.strftime("%d/%m/%Y")
 
