@@ -203,6 +203,8 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
     cli_m = st.selectbox("Seleccionar Cliente:", clientes_lista, key="mayor_cli_sel")
     # 💵 CONTROL MANUAL DE TASA BCV EN VENTA AL MAYOR
     tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$):", min_value=1.0, value=45.0, step=0.01, key="mayor_tasa_bcv")
+    # 💳 SELECTOR DE CONDICIÓN DE PAGO
+    condicion_pago = st.selectbox("💳 Condición de Pago:", ["Crédito", "Contado"], key="mayor_condicion_pago")
 
     
     # 1. AGREGAR PRODUCTOS (Fuera de un formulario para que actualice el stock dinámico)
@@ -271,10 +273,16 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
             zona_ve = pytz.timezone('America/Caracas')
             ahora_ve = datetime.now(zona_ve)
             fecha_ve = datetime.now(zona_ve).strftime("%d/%m/%Y")
-            # Calculamos 3 días de crédito para el vencimiento
+
+        if condicion_pago == "Contado":
+            # Si es de contado, vence el mismo día de hoy
+            fecha_vencimiento = fecha_ve
+        else:
+            # Si es crédito, se le suman los 3 días correspondientes
             timestamp_vencimiento = ahora_ve.timestamp() + (5 * 24 * 3600)
             vencimiento_dt = datetime.fromtimestamp(timestamp_vencimiento, zona_ve)
             fecha_vencimiento = vencimiento_dt.strftime("%d/%m/%Y")
+            
             # Preparamos el paquete para Google Sheets
             payload = {
                 "fecha": fecha_ve,
