@@ -270,32 +270,32 @@ def formulario_venta_mayor(clientes_lista, productos_dict, URL_GOOGLE):
             
         # 3. PROCESAR Y ENVIAR LA VENTA
         if c_btn2.button("💾 CONSOLIDAR Y CREAR PDF", type="primary", use_container_width=True):
-        # 📆 CÁLCULO DE FECHAS DINÁMICO (BLINDADO CONTRA UNBOUNDLOCALERROR)
-        zona_ve = pytz.timezone('America/Caracas')
-        ahora_ve = datetime.now(zona_ve)
-        fecha_ve = ahora_ve.strftime("%d/%m/%Y")
+            # 📆 CÁLCULO DE FECHAS DINÁMICO (BLINDADO CONTRA UNBOUNDLOCALERROR)
+            zona_ve = pytz.timezone('America/Caracas')
+            ahora_ve = datetime.now(zona_ve)
+            fecha_ve = ahora_ve.strftime("%d/%m/%Y")
         
-        # Sacamos el timestamp arriba para que Python no se confunda
-        ts_actual = ahora_ve.timestamp()
-        fecha_vencimiento = ""
+            # Sacamos el timestamp arriba para que Python no se confunda
+            ts_actual = ahora_ve.timestamp()
+            fecha_vencimiento = ""
         
-        if condicion_pago == "Contado":
-            # Si es de contado, vence hoy mismo
-            fecha_vencimiento = fecha_ve
-        else:
-            # Si es crédito, le sumamos los 3 días usando el timestamp directo
-            ts_vencimiento = ts_actual + (3 * 24 * 3600)
-            vencimiento_dt = datetime.fromtimestamp(ts_vencimiento, zona_ve)
-            fecha_vencimiento = vencimiento_dt.strftime("%d/%m/%Y")
+            if condicion_pago == "Contado":
+                # Si es de contado, vence hoy mismo
+                fecha_vencimiento = fecha_ve
+            else:
+                # Si es crédito, le sumamos los 3 días usando el timestamp directo
+                ts_vencimiento = ts_actual + (3 * 24 * 3600)
+                vencimiento_dt = datetime.fromtimestamp(ts_vencimiento, zona_ve)
+                fecha_vencimiento = vencimiento_dt.strftime("%d/%m/%Y")
 
-        # Preparamos el paquete para Google Sheets con los datos limpios
-        payload = {
-            "fecha": fecha_ve,
-            "vencimiento": fecha_vencimiento,
-            "tipo": condicion_pago,
-            "cliente": cli_m,
-            "monto": t_final
-        }
+            # Preparamos el paquete para Google Sheets con los datos limpios
+            payload = {
+                "fecha": fecha_ve,
+                "vencimiento": fecha_vencimiento,
+                "tipo": condicion_pago,
+                "cliente": cli_m,
+                "monto": t_final
+           }
 
             
             try:
