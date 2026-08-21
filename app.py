@@ -1124,45 +1124,42 @@ else:
                 }).execute()
                 st.success("✅ Venta guardada correctamente en Supabase")
 
-    # 2. VENTA MAYOR
-    elif st.session_state.pantalla == "Venta Mayor (SAYG)":
-        st.header("📦 Pedido al Mayor")
-        cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
+    # 2. VENTA MAYOR (SAYG)
+elif st.session_state.pantalla == "Venta Mayor (SAYG)":
+    st.header("📦 Pedido al Mayor")
+    cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
+    
+    col1, col2 = st.columns(2)
+    
+    # 1. Validar que existan productos en el diccionario
+    if productos_dict:
+        prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
         
-        col1, col2 = st.columns(2)
-        prod_nom = col1.selectbox("Producto", list(productos_dict.keys())) if productos_dict else None
-        
-        if prod_nom:
-            stock_actual = productos_dict[prod_nom]['stock']
-            precio_u = productos_dict[prod_nom]['precio']
+        # 2. Validar que prod_nom exista en el diccionario antes de consultar sus claves
+        if prod_nom in productos_dict:
+            stock_actual = productos_dict[prod_nom].get('stock', 0)
+            precio_u = productos_dict[prod_nom].get('precio', 0.0)
+            
             st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock: {stock_actual}")
-            cant = col2.number_input("Cantidad", min_value=0.0, max_value=float(stock_actual) if stock_actual > 0 else 1.0, step=0.001, format="%.3f")
+            cant = col2.number_input(
+                "Cantidad", 
+                min_value=0.0, 
+                max_value=float(stock_actual) if stock_actual > 0 else 1.0, 
+                step=0.001, 
+                format="%.3f"
+            )
 
             if st.button("➕ Agregar al Carrito"):
                 if 'carro' not in st.session_state: 
                     st.session_state.carro = []
-                st.session_state.carro.append({"Producto": prod_nom, "Cant": cant, "Precio": precio_u, "Subtotal": cant * precio_u})
-
-        if 'carro' in st.session_state and st.session_state.carro:
-            st.table(pd.DataFrame(st.session_state.carro))
-            t_final = sum(i['Subtotal'] for i in st.session_state.carro)
-            st.subheader(f"Total: ${t_final:.2f}")
-
-            if st.button("🗑️ Vaciar Carrito"):
-                st.session_state.carro = []
-                st.rerun()
-
-            if st.button("🔒 FINALIZAR VENTA"):
-                zona_ve = pytz.timezone('America/Caracas')
-                fecha_ve = datetime.now(zona_ve).strftime("%Y-%m-%d")
-                supabase.table("ventas").insert({
-                    "fecha": fecha_ve,
-                    "tipo": "Crédito",
-                    "cliente": cli_m,
-                    "monto": t_final
-                }).execute()
-                st.success("✅ Venta registrada")
-                st.session_state.carro = []
+                st.session_state.carro.append({
+                    "Producto": prod_nom, 
+                    "Cant": cant, 
+                    "Precio": precio_u, 
+                    "Subtotal": cant * precio_u
+                })
+    else:
+        st.warning("⚠️ No hay productos registrados en Supabase o la lista está vacía.")
 
     # 3. CUENTAS Y ABONOS
     elif st.session_state.pantalla == "Cuentas y Abonos":
