@@ -463,9 +463,10 @@ def formulario_inventario(productos_dict, clientes_lista):
             if nuevo_prod and p_mayor > 0:
                 try:
                     payload = {
-                        "nombre": nuevo_prod,
-                        "precio": float(p_mayor),
-                        "stock": int(cant_inicial)
+                        "NOMBRE": nuevo_prod,
+                        "PRECIO": float(p_mayor),
+                        "ENTRADA": int(cant_inicial)
+                        "SALIDA": 0.0
                     }
                     supabase.table("productos").insert(payload).execute()
                     st.cache_data.clear()
