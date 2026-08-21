@@ -1093,7 +1093,7 @@ if st.session_state.pantalla == "Menu Principal":
 
     with col2:
         if st.button("🚗\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
-            formulario_venta_mayor(clientes_lista, productos_dict)
+            formulario_venta_mayor(clientes_lista)
 
     # 💰 Fila 2: Gestión e Inventario
     st.info("💰 GESTIÓN E INVENTARIO")
