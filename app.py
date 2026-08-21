@@ -236,7 +236,7 @@ def formulario_venta_detal(clientes_lista):
             time.sleep(1)
             st.rerun()
 
-        
+@st.dialog("📦 Registro de Venta al Mayor")       
 def formulario_venta_mayor(clientes_lista):
     # Cargamos los datos aquí mismo de forma autónoma
     productos_dict = cargar_productos_dict()
@@ -244,6 +244,16 @@ def formulario_venta_mayor(clientes_lista):
     # Inicializar carrito
     if 'carro_mayor' not in st.session_state:
         st.session_state.carro_mayor = []
+     # === AGREGAR ESTO PARA SELECCIONAR AL CLIENTE ===
+    st.subheader("📦 Registro de Venta al Mayor")
+    
+    if clientes_lista:
+        cliente_seleccionado = st.selectbox("Seleccione el Cliente o Bodega:", clientes_lista, key="select_cliente_mayor")
+    else:
+        st.warning("⚠️ No hay clientes registrados en el sistema.")
+        cliente_seleccionado = None
+
+    
 
     # Blindaje: Si la carga falla, avisar
     if not productos_dict:
@@ -1092,9 +1102,14 @@ if st.session_state.pantalla == "Menu Principal":
             formulario_venta_detal(clientes_lista)
 
     with col2:
-        if st.button("🚗\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
-            formulario_venta_mayor(clientes_lista)
+        if st.button("Venta Mayor", key="btn_mayor", use_container_width=True):
+            st.session_state.abrir_venta_mayor = True # Activamos el interruptor
+            st.rerun()
 
+    # --- AQUÍ ABAJO AÑADE ESTO ---
+    if st.session_state.get("abrir_venta_mayor", False):
+        formulario_venta_mayor(clientes_lista)
+ 
     # 💰 Fila 2: Gestión e Inventario
     st.info("💰 GESTIÓN E INVENTARIO")
     col3, col4 = st.columns(2)
