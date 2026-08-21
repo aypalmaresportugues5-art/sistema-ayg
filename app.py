@@ -99,25 +99,29 @@ def cargar_clientes():
     except Exception:
         return ["CLIENTE DETAL"]
 
-@st.cache_data(ttl=0)
 def cargar_productos_dict():
-    res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
-    
-    if not res.data:
+    try:
+        # Forzamos la consulta directa a Supabase sin caché para evitar bloqueos
+        res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
+        
+        if not res or not hasattr(res, 'data') or not res.data:
+            return {}
+        
+        diccionario = {}
+        for p in res.data:
+            nombre = str(p.get("NOMBRE", "")).strip()
+            if nombre:
+                entrada = float(p.get("ENTRADA") or 0.0)
+                salida = float(p.get("SALIDA") or 0.0)
+                diccionario[nombre] = {
+                    "precio": float(p.get("PRECIO") or 0.0),
+                    "stock": entrada - salida
+                }
+        return diccionario
+    except Exception as e:
+        st.error(f"Error al leer productos: {e}")
         return {}
-    
-    diccionario = {}
-    for p in res.data:
-        nombre = str(p.get("NOMBRE", ""))
-        if nombre:
-            entrada = float(p.get("ENTRADA") or 0.0)
-            salida = float(p.get("SALIDA") or 0.0)
-            # Aseguramos que las llaves internas queden estandarizadas
-            diccionario[nombre] = {
-                "precio": float(p.get("PRECIO") or 0.0),
-                "stock": entrada - salida
-            }
-    return diccionario
+
 
    
 # Obtener las variables para los selectores del sistema
