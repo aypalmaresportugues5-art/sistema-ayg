@@ -101,24 +101,27 @@ def cargar_clientes():
 
 @st.cache_data(ttl=0)
 def cargar_productos_dict():
-    try:
-        # Nota: Asegúrate de que el nombre de la tabla sea 'productos' en minúsculas
-        res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
-        if not res.data:
-            return {} # Retorna vacío si no hay datos
-            
-        diccionario = {}
-        for p in res.data:
-            nombre = str(p.get("NOMBRE", ""))
-            if nombre:
-                # Calculamos el stock como ENTRADA - SALIDA (considerando SALIDA puede ser None)
-                entrada = float(p.get("ENTRADA") or 0.0)
-                salida = float(p.get("SALIDA") or 0.0)
-                diccionario[nombre] = {
-                    "precio": float(p.get("PRECIO") or 0.0),
-                    "stock": entrada - salida
-                }
-        return diccionario
+    # Quitamos el try/except temporalmente para que el sistema grite el error real si falla
+    res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
+    
+    # Mostramos en pantalla qué trajo Supabase para diagnosticar
+    st.write("Respuesta cruda de Supabase:", res)
+    
+    if not res.data:
+        return {}
+    
+    diccionario = {}
+    for p in res.data:
+        nombre = str(p.get("NOMBRE", ""))
+        if nombre:
+            entrada = float(p.get("ENTRADA") or 0.0)
+            salida = float(p.get("SALIDA") or 0.0)
+            diccionario[nombre] = {
+                "precio": float(p.get("PRECIO") or 0.0),
+                "stock": entrada - salida
+            }
+    return diccionario
+
     except Exception as e:
         st.error(f"Error de Supabase: {e}")
         return {}
