@@ -232,8 +232,10 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
-if st.session_state.pantalla == "Venta Mayor (SAYG)":
-    st.info("Módulo en mantenimiento temporal.")
+def formulario_venta_mayor(clientes_lista, productos_dict):
+    # Inicializar el carrito obligatoriamente aquí adentro
+    if 'carro_mayor' not in st.session_state:
+        st.session_state.carro_mayor = []
 
     
     # CONTROL MANUAL DE TASA BCV EN VENTA AL MAYOR
