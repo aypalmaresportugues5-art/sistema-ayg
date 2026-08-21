@@ -401,24 +401,28 @@ def formulario_inventario(productos_dict, clientes_lista):
         "📄 Imprimir Lista"
     ])
 
-    # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
-    with tab_almacen:
-        st.subheader("📦 Estado del Almacén")
-        if productos_dict:
-            import pandas as pd
-            filas_inv = []
-            for k, v in productos_dict.items():
-                precio_v = v.get('precio', 0.0) if isinstance(v, dict) else v
-                stock_v = v.get('stock', 0) if isinstance(v, dict) else 0
-                filas_inv.append({
-                    "Producto": k,
-                    "Precio": f"${precio_v:.2f}",
-                    "Stock": stock_v
-                })
-            df_inv = pd.DataFrame(filas_inv)
-            st.table(df_inv)
-        else:
-            st.info("Cargando datos del almacén...")
+   # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
+with tab_almacen:
+    st.subheader("📦 Estado del Almacén")
+    
+    # Imprimimos para ver qué contiene exactamente productos_dict
+    st.write("DEBUG actual:", productos_dict)
+    
+    if productos_dict:
+        import pandas as pd
+        filas_inv = []
+        for k, v in productos_dict.items():
+            precio_v = v.get('precio', 0.0) if isinstance(v, dict) else v
+            stock_v = v.get('stock', 0) if isinstance(v, dict) else 0
+            filas_inv.append({
+                "Producto": k,
+                "Precio": f"${precio_v:.2f}",
+                "Stock": stock_v
+            })
+        df_inv = pd.DataFrame(filas_inv)
+        st.table(df_inv)
+    else:
+        st.warning("⚠️ El diccionario de productos llegó vacío a esta pantalla.")
 
     # === PESTAÑA 2: REGISTRO DE MATERIA PRIMA (COSTOS) ===
     with tab_insumos:
