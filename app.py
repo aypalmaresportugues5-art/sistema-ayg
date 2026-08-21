@@ -465,7 +465,7 @@ def formulario_inventario(productos_dict, clientes_lista):
                     payload = {
                         "NOMBRE": nuevo_prod,
                         "PRECIO": float(p_mayor),
-                        "ENTRADA": int(cant_inicial)
+                        "ENTRADA": int(cant_inicial),
                         "SALIDA": 0.0
                     }
                     supabase.table("productos").insert(payload).execute()
