@@ -99,7 +99,7 @@ def cargar_clientes():
     except Exception:
         return ["CLIENTE DETAL"]
 
-@st.cache_data(ttl=10)
+@st.cache_data(ttl=0)
 def cargar_productos_dict():
     try:
         # Nota: Asegúrate de que el nombre de la tabla sea 'productos' en minúsculas
