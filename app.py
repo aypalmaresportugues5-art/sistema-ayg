@@ -232,7 +232,7 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
-elif st.session_state.pantalla == "Venta Mayor (SAYG)":
+if st.session_state.pantalla == "Venta Mayor (SAYG)":
     st.info("Módulo en mantenimiento temporal.")
 
     
