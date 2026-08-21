@@ -233,9 +233,15 @@ def formulario_venta_detal(clientes_lista):
 
         
 def formulario_venta_mayor(clientes_lista, productos_dict):
-    # Inicializar el carrito obligatoriamente aquí adentro
+    # Inicializar carrito
     if 'carro_mayor' not in st.session_state:
         st.session_state.carro_mayor = []
+
+    # Blindaje: Si los productos no han cargado, avisar amablemente
+    if not productos_dict or len(productos_dict) == 0:
+        st.warning("⚠️ Cargando inventario de productos o no hay stock disponible...")
+        return
+
 
     
     # CONTROL MANUAL DE TASA BCV EN VENTA AL MAYOR
