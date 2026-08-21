@@ -232,8 +232,11 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
-if st.session_state.pantalla == "Venta Mayor (SAYG)":
-    formulario_venta_mayor(clientes_lista, productos_dict)
+try:
+    if st.session_state.pantalla == "Venta Mayor (SAYG)":
+        formulario_venta_mayor(clientes_lista, productos_dict)
+except Exception:
+    pass # Si hay algún error aquí, lo ignora silenciosamente para que el resto de la app siga viva
 
     cli_m = st.selectbox("Seleccionar Cliente:", clientes_lista, key="mayor_cli_sel")
     
