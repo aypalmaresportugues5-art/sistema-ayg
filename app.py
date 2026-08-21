@@ -1021,7 +1021,7 @@ col_b1, col_b2 = st.columns(2)
 
 with col_b1:
     if st.button("🛍️ Registrar Venta / Abono", use_container_width=True):
-        formulario_venta_detal(lista_clientes)
+        formulario_venta_detal(clientes_lista)
 
 with col_b2:
     if st.button("📋 Resumen Cuentas por Cobrar", use_container_width=True):
