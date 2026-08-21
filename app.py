@@ -215,7 +215,7 @@ def formulario_venta_detal(clientes_lista):
 @st.dialog("🛒 Registro de Venta al Mayor")
 def formulario_venta_mayor(clientes_lista, productos_dict):
     import pytz
-    from datetime datetime
+    from datetime import datetime
     import base64
 
     st.subheader("🛒 Selector de Pedido al Mayor")
