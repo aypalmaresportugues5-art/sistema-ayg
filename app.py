@@ -909,7 +909,7 @@ def formulario_simulador_costos():
 
     # 🟢 1. CÓDIGO SUPABASE: Cargar tabla de insumos desde la base de datos
     try:
-        res = supabase.table("insumos").select("*").execute()
+        res = supabase.table("costos").select("*").execute()
         datos_recibidos = res.data if res.data else []
         df_costos_real = pd.DataFrame(datos_recibidos)
     except Exception as e:
