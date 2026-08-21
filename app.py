@@ -232,12 +232,11 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
-@st.dialog("🛒 Registro de Venta al Mayor")
-def formulario_venta_mayor(clientes_lista, productos_dict):
-    import pytz
-    from datetime import datetime
-    import base64
-
+ elif st.session_state.pantalla == "Venta Mayor (SAYG)":
+        # Simplemente llama a tu función, ya no es un diálogo
+     formulario_venta_mayor(clientes_lista, productos_dict)
+    
+   
     st.subheader("🛒 Selector de Pedido al Mayor")
 
     # Inicializamos el carrito en la sesión si no existe para que no se borre
@@ -257,7 +256,8 @@ def formulario_venta_mayor(clientes_lista, productos_dict):
     prod_nom = c1.selectbox("Producto:", list(productos_dict.keys()), key="mayor_prod_sel")
     
     # Manejo seguro si productos_dict solo tiene el precio directo
-    precio_u = productos_dict[prod_nom] if isinstance(productos_dict[prod_nom], (int, float)) else productos_dict[prod_nom].get('precio', 0.0)
+    producto_info = productos_dict.get(prod_nom, {})
+    precio_u = float(producto_info.get('precio', 0.0)) if isinstance(producto_info, dict) else float(producto_info or 0.0)
 
     st.info(f"💵 Precio: ${precio_u:.2f}")
 
