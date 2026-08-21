@@ -248,10 +248,10 @@ def formulario_venta_mayor(clientes_lista):
     st.subheader("📦 Registro de Venta al Mayor")
     
     if clientes_lista:
-        cliente_seleccionado = st.selectbox("Seleccione el Cliente o Bodega:", clientes_lista, key="select_cliente_mayor")
+        cli_m = st.selectbox("Seleccione el Cliente o Bodega:", clientes_lista, key="select_cliente_mayor")
     else:
         st.warning("⚠️ No hay clientes registrados en el sistema.")
-        cliente_seleccionado = None
+        cli_m = None
 
     
 
