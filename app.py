@@ -6,6 +6,8 @@ import pytz
 from fpdf import FPDF
 import base64
 
+if "abrir_inventario" not in st.session_state:
+    st.session_state.abrir_inventario = False
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
@@ -536,6 +538,10 @@ def formulario_inventario(productos_dict, clientes_lista):
                 )
             except Exception as e:
                 st.error(f"🚨 Error al generar PDF: {e}")
+# 2. JUSTO AQUÍ, AL FINAL DE LA FUNCIÓN, pon el botón de cierre:
+    st.divider() # Una línea horizontal para separar
+    if st.button("❌ Cerrar Inventario", use_container_width=True):
+        st.session_state.abrir_inventario = False
 
 @st.dialog("📋 Resumen de Deudas Activas")
 def formulario_cuentas_por_cobrar(clientes_lista):
@@ -1094,9 +1100,14 @@ if st.session_state.pantalla == "Menu Principal":
             formulario_cuentas_abonos(clientes_lista)
 
     with col4:
-        if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-            formulario_inventario(productos_dict, clientes_lista)
+            if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+                st.session_state.abrir_inventario = True
+                st.rerun()
 
+    # Luego, fuera de las columnas, abajo en tu código principal:
+    if st.session_state.get("abrir_inventario", False):
+        formulario_inventario(productos_dict, clientes_lista)
+      
     # 🗂️ Fila 3: Reportes y Cierre
     st.warning("🗂️ REPORTES Y CIERRE")
     col5, col6 = st.columns(2)
