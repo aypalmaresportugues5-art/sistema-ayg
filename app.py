@@ -233,7 +233,7 @@ def formulario_venta_detal(clientes_lista):
 
         
 @st.dialog("🛒 Registro de venta_mayor")
-def formulario_venta_mayor(clientes_lista):":
+def formulario_venta_mayor(clientes_lista):
         formulario_venta_mayor(clientes_lista, productos_dict)
 except Exception:
     pass # Si hay algún error aquí, lo ignora silenciosamente para que el resto de la app siga viva
