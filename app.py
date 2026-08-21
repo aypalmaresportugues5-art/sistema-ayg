@@ -238,7 +238,7 @@ try:
 except Exception:
     pass # Si hay algún error aquí, lo ignora silenciosamente para que el resto de la app siga viva
 
-    cli_m = st.selectbox("Seleccionar Cliente:", clientes_lista, key="mayor_cli_sel")
+    
     
     # CONTROL MANUAL DE TASA BCV EN VENTA AL MAYOR
     tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$):", min_value=1.0, value=45.0, step=0.01, key="mayor_tasa_bcv")
@@ -1140,6 +1140,8 @@ else:
                     "monto": m
                 }).execute()
                 st.success("✅ Venta guardada correctamente en Supabase")
+    if 'carro_mayor' not in st.session_state:
+        st.session_state.carro_mayor = []
 
     # 2. VENTA MAYOR (SAYG)
     elif st.session_state.pantalla == "Venta Mayor (SAYG)":
