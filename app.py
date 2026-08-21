@@ -184,7 +184,7 @@ def crear_pdf(cliente, pedido, total, *args, **kwargs):
     return pdf.output(dest='S').encode('latin-1')
 
 
-@st.dialog("🛒 Registrar Venta Detal")
+
 @st.dialog("🛒 Registro de Venta al Detal")
 def formulario_venta_detal(clientes_lista):
     with st.form("detal_flotante"):
@@ -1013,47 +1013,31 @@ def formulario_simulador_costos():
 
 
 # =========================================================
-# INICIO DE SESIÓN Y MENÚ EN PAREJAS (AL FINAL DEL ARCHIVO)
+# MENÚ EN PAREJAS DE BOTONES
 # =========================================================
 
-if not check_password():
-    st.stop()
+# Pareja 1: Ventas y Cuentas por Cobrar
+col_b1, col_b2 = st.columns(2)
 
-# Carga rápida de lista de clientes desde Supabase
-try:
-    res_cli = supabase.table("clientes").select("nombre").execute()
-    lista_clientes = [c['nombre'] for c in res_cli.data] if res_cli.data else []
-except Exception:
-    lista_clientes = []
+with col_b1:
+    if st.button("🛍️ Registrar Venta / Abono", use_container_width=True):
+        formulario_venta_detal(lista_clientes)
 
-# Layout en Pareja (Logo a la izquierda, Selector a la derecha)
-col_logo, col_control = st.columns([1, 1], vertical_alignment="center")
-
-with col_logo:
-    st.image("1000317144.jpg.png", use_container_width=True)
-
-with col_control:
-    st.subheader("⚙️ Panel de Operaciones")
-    
-    opcion = st.selectbox(
-        "Selecciona la acción a realizar:",
-        [
-            "-- Selecciona una opción --",
-            "🛍️ Registrar Venta / Abono",
-            "📋 Resumen Cuentas por Cobrar",
-            "🍞 Simulador de Costos",
-            "🔒 Cierre de Caja Diario"
-        ],
-        key="menu_operaciones_principal"
-    )
-
-    if opcion == "🛍️ Registrar Venta / Abono":
-        formulario_registro_ventas()
-    elif opcion == "📋 Resumen Cuentas por Cobrar":
+with col_b2:
+    if st.button("📋 Resumen Cuentas por Cobrar", use_container_width=True):
         formulario_cuentas_por_cobrar(lista_clientes)
-    elif opcion == "🍞 Simulador de Costos":
+
+st.write("") 
+
+# Pareja 2: Simulador y Cierre de Caja
+col_b3, col_b4 = st.columns(2)
+
+with col_b3:
+    if st.button("🍞 Simulador de Costos", use_container_width=True):
         formulario_simulador_costos()
-    elif opcion == "🔒 Cierre de Caja Diario":
+
+with col_b4:
+    if st.button("🔒 Cierre de Caja Diario", use_container_width=True):
         formulario_cierre_de_caja()
 
 st.markdown("---")
