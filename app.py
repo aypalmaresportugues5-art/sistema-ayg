@@ -1183,19 +1183,28 @@ else:
                 }).execute()
                 st.success("✅ Venta guardada correctamente en Supabase")
 
-    # 2. VENTA MAYOR (SAYG)
+     # 2. VENTA MAYOR (SAYG)
     elif st.session_state.pantalla == "Venta Mayor (SAYG)":
         st.header("📦 Pedido al Mayor")
         cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
         
         col1, col2 = st.columns(2)
         
+        # Validar que productos_dict no esté vacío antes de mostrar el selector
         if productos_dict:
             prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
             
+            # Verificar que el producto exista en el diccionario antes de acceder a sus claves
             if prod_nom in productos_dict:
-                stock_actual = productos_dict[prod_nom].get('stock', 0)
-                precio_u = productos_dict[prod_nom].get('precio', 0.0)
+                datos_prod = productos_dict[prod_nom]
+                
+                # Manejar de forma segura si el producto es un diccionario o un valor simple
+                if isinstance(datos_prod, dict):
+                    stock_actual = datos_prod.get('stock', 0)
+                    precio_u = datos_prod.get('precio', 0.0)
+                else:
+                    stock_actual = 0
+                    precio_u = float(datos_prod)
                 
                 st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock: {stock_actual}")
                 cant = col2.number_input(
@@ -1216,7 +1225,7 @@ else:
                         "Subtotal": cant * precio_u
                     })
         else:
-            st.warning("⚠️ No hay productos registrados en Supabase.")
+            st.warning("⚠️ No hay productos disponibles en el inventario o la consulta no trajo registros.")
 
         if 'carro' in st.session_state and st.session_state.carro:
             st.table(pd.DataFrame(st.session_state.carro))
