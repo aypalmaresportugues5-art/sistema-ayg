@@ -1098,7 +1098,66 @@ if st.session_state.pantalla == "Menu Principal":
         st.rerun()
 
 # =========================================================
-# 📲 CONTROL DE VENTANAS Y NAVEGACIÓN SECUNDARIA
+# 🔲 PANTALLA PRINCIPAL: TABLERO DE BOTONES
+# =========================================================
+if st.session_state.pantalla == "Menu Principal":
+
+    st.subheader("🎛️ SISTEMA AYG2017")
+    
+    # 🏪 Fila 1: Ventas
+    st.success("🏪 SECCIÓN DE VENTAS")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
+            st.session_state.pantalla = "Venta Detal"
+            st.rerun()
+
+    with col2:
+        if st.button("🚗\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+            st.session_state.pantalla = "Venta Mayor (SAYG)"
+            st.rerun()
+
+    # 💰 Fila 2: Gestión e Inventario
+    st.info("💰 GESTIÓN E INVENTARIO")
+    col3, col4 = st.columns(2)
+    with col3:
+        if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+            st.session_state.pantalla = "Cuentas y Abonos"
+            st.rerun()
+
+    with col4:
+        if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+            st.session_state.pantalla = "Inventario"
+            st.rerun()
+
+    # 🗂️ Fila 3: Reportes y Cierre
+    st.warning("🗂️ REPORTES Y CIERRE")
+    col5, col6 = st.columns(2)
+    with col5:
+        if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
+            st.session_state.pantalla = "Cuentas por Cobrar"
+            st.rerun()
+
+    with col6:
+        if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+            st.session_state.pantalla = "Cierre de Caja"
+            st.rerun()
+
+    # 🛠️ Fila 4: Herramientas
+    st.error("🛠️ HERRAMIENTAS ADICIONALES")
+    if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
+        st.session_state.pantalla = "Simulador Costos"
+        st.rerun()
+
+    st.markdown("---")
+    
+    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
+        st.session_state["password_correct"] = False
+        st.query_params.clear()
+        st.rerun()
+
+# =========================================================
+# 📲 NAVEGACIÓN SECUNDARIA (PANTALLAS INTERNAS)
 # =========================================================
 else:
     if st.button("⬅️ Volver al Menú Principal", key="btn_volver"):
@@ -1125,41 +1184,60 @@ else:
                 st.success("✅ Venta guardada correctamente en Supabase")
 
     # 2. VENTA MAYOR (SAYG)
-elif st.session_state.pantalla == "Venta Mayor (SAYG)":
-    st.header("📦 Pedido al Mayor")
-    cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
-    
-    col1, col2 = st.columns(2)
-    
-    # 1. Validar que existan productos en el diccionario
-    if productos_dict:
-        prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
+    elif st.session_state.pantalla == "Venta Mayor (SAYG)":
+        st.header("📦 Pedido al Mayor")
+        cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
         
-        # 2. Validar que prod_nom exista en el diccionario antes de consultar sus claves
-        if prod_nom in productos_dict:
-            stock_actual = productos_dict[prod_nom].get('stock', 0)
-            precio_u = productos_dict[prod_nom].get('precio', 0.0)
+        col1, col2 = st.columns(2)
+        
+        if productos_dict:
+            prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
             
-            st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock: {stock_actual}")
-            cant = col2.number_input(
-                "Cantidad", 
-                min_value=0.0, 
-                max_value=float(stock_actual) if stock_actual > 0 else 1.0, 
-                step=0.001, 
-                format="%.3f"
-            )
+            if prod_nom in productos_dict:
+                stock_actual = productos_dict[prod_nom].get('stock', 0)
+                precio_u = productos_dict[prod_nom].get('precio', 0.0)
+                
+                st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock: {stock_actual}")
+                cant = col2.number_input(
+                    "Cantidad", 
+                    min_value=0.0, 
+                    max_value=float(stock_actual) if stock_actual > 0 else 1.0, 
+                    step=0.001, 
+                    format="%.3f"
+                )
 
-            if st.button("➕ Agregar al Carrito"):
-                if 'carro' not in st.session_state: 
-                    st.session_state.carro = []
-                st.session_state.carro.append({
-                    "Producto": prod_nom, 
-                    "Cant": cant, 
-                    "Precio": precio_u, 
-                    "Subtotal": cant * precio_u
-                })
-    else:
-        st.warning("⚠️ No hay productos registrados en Supabase o la lista está vacía.")
+                if st.button("➕ Agregar al Carrito"):
+                    if 'carro' not in st.session_state: 
+                        st.session_state.carro = []
+                    st.session_state.carro.append({
+                        "Producto": prod_nom, 
+                        "Cant": cant, 
+                        "Precio": precio_u, 
+                        "Subtotal": cant * precio_u
+                    })
+        else:
+            st.warning("⚠️ No hay productos registrados en Supabase.")
+
+        if 'carro' in st.session_state and st.session_state.carro:
+            st.table(pd.DataFrame(st.session_state.carro))
+            t_final = sum(i['Subtotal'] for i in st.session_state.carro)
+            st.subheader(f"Total: ${t_final:.2f}")
+
+            if st.button("🗑️ Vaciar Carrito"):
+                st.session_state.carro = []
+                st.rerun()
+
+            if st.button("🔒 FINALIZAR VENTA"):
+                zona_ve = pytz.timezone('America/Caracas')
+                fecha_ve = datetime.now(zona_ve).strftime("%Y-%m-%d")
+                supabase.table("ventas").insert({
+                    "fecha": fecha_ve,
+                    "tipo": "Crédito",
+                    "cliente": cli_m,
+                    "monto": t_final
+                }).execute()
+                st.success("✅ Venta registrada")
+                st.session_state.carro = []
 
     # 3. CUENTAS Y ABONOS
     elif st.session_state.pantalla == "Cuentas y Abonos":
@@ -1223,4 +1301,3 @@ elif st.session_state.pantalla == "Venta Mayor (SAYG)":
             st.markdown(f"### 💵 Total Efectivo Esperado: **${total_liquido:.2f}**")
         else:
             st.info("No hay ventas ni abonos registrados el día de hoy.")
-
