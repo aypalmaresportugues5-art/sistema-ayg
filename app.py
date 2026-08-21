@@ -267,7 +267,8 @@ except Exception:
             "Subtotal": subtotal
         })
         st.toast(f"✅ {prod_nom} agregado!")
-
+    if 'carro_mayor' not in st.session_state:
+        st.session_state.carro_mayor 
     # 2. MOSTRAR EL CARRITO ACTUAL
     if st.session_state.carro_mayor:
         st.write("---")
