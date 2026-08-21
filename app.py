@@ -101,10 +101,7 @@ def cargar_clientes():
 
 @st.cache_data(ttl=0)
 def cargar_productos_dict():
-    # Quitamos el try/except temporalmente para que el sistema grite el error real si falla
     res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
-    
-  
     
     if not res.data:
         return {}
@@ -115,6 +112,7 @@ def cargar_productos_dict():
         if nombre:
             entrada = float(p.get("ENTRADA") or 0.0)
             salida = float(p.get("SALIDA") or 0.0)
+            # Aseguramos que las llaves internas queden estandarizadas
             diccionario[nombre] = {
                 "precio": float(p.get("PRECIO") or 0.0),
                 "stock": entrada - salida
