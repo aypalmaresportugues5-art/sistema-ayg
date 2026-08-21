@@ -52,8 +52,7 @@ def init_supabase():
 
 supabase = init_supabase()
 
-# --- CONEXIÓN CON TU EXCEL (URL QUE ME PASASTE) ---
-#URL_GOOGLE = "https://script.google.com/macros/s/AKfycbxoXYuo0IkMCmEHKKWEnecUfQs7dZlm7604eaVV3ep0GrgxInveg_Me-AyjJjxYhfVR/exec"
+
 
 # --- SISTEMA DE SEGURIDAD ---
 def check_password():
@@ -86,21 +85,50 @@ def check_password():
 
 
 # --- CARGA DE DATOS DESDE SUPABASE ---
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=10)
 def cargar_clientes():
-    res = supabase.table("clientes").select("nombre").execute()
-    df = pd.DataFrame(res.data)
-    if not df.empty and "nombre" in df.columns:
-        return df["nombre"].tolist()
-    return ["CLIENTE DETAL"]
+    try:
+        res = supabase.table("clientes").select("NOMBRE").execute()
+        df = pd.DataFrame(res.data) if res.data else pd.DataFrame()
+        if not df.empty:
+            # Buscar la columna sin importar si está en mayúsculas o minúsculas
+            col_nombre = "NOMBRE" if "NOMBRE" in df.columns else "nombre"
+            if col_nombre in df.columns:
+                return df[col_nombre].dropna().tolist()
+        return ["CLIENTE DETAL"]
+    except Exception:
+        return ["CLIENTE DETAL"]
 
-@st.cache_data(ttl=60)
+@st.cache_data(ttl=10)
 def cargar_productos_dict():
-    res = supabase.table("productos").select("NOMBRE, PRECIO").execute()
-    df = pd.DataFrame(res.data)
-    if not df.empty:
-        return dict(zip(df["NOMBRE"], df["PRECIO"]))
-    return {}
+    try:
+        # Traemos las columnas exactas observadas en Supabase
+        res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
+        df = pd.DataFrame(res.data) if res.data else pd.DataFrame()
+        
+        diccionario = {}
+        if not df.empty:
+            # Normalizar nombres de columnas
+            df.columns = [c.upper() for c in df.columns]
+            
+            if "NOMBRE" in df.columns:
+                for _, row in df.iterrows():
+                    nombre = str(row["NOMBRE"])
+                    if nombre and nombre.strip() != "" and nombre != "nan":
+                        precio = float(row.get("PRECIO", 0.0) if pd.notnull(row.get("PRECIO")) else 0.0)
+                        entrada = float(row.get("ENTRADA", 0.0) if pd.notnull(row.get("ENTRADA")) else 0.0)
+                        salida = float(row.get("SALIDA", 0.0) if pd.notnull(row.get("SALIDA")) else 0.0)
+                        
+                        # Cálculo de existencia real
+                        stock = entrada - salida
+                        
+                        diccionario[nombre] = {
+                            "precio": precio,
+                            "stock": stock
+                        }
+        return diccionario
+    except Exception as e:
+        return {}
 
 # Obtener las variables para los selectores del sistema
 clientes_lista = cargar_clientes()
