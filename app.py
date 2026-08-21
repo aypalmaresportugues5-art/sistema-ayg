@@ -1097,64 +1097,7 @@ if st.session_state.pantalla == "Menu Principal":
         st.query_params.clear()
         st.rerun()
 
-# =========================================================
-# 🔲 PANTALLA PRINCIPAL: TABLERO DE BOTONES
-# =========================================================
-if st.session_state.pantalla == "Menu Principal":
 
-    st.subheader("🎛️ SISTEMA AYG2017")
-    
-    # 🏪 Fila 1: Ventas
-    st.success("🏪 SECCIÓN DE VENTAS")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
-            st.session_state.pantalla = "Venta Detal"
-            st.rerun()
-
-    with col2:
-        if st.button("🚗\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
-            st.session_state.pantalla = "Venta Mayor (SAYG)"
-            st.rerun()
-
-    # 💰 Fila 2: Gestión e Inventario
-    st.info("💰 GESTIÓN E INVENTARIO")
-    col3, col4 = st.columns(2)
-    with col3:
-        if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
-            st.session_state.pantalla = "Cuentas y Abonos"
-            st.rerun()
-
-    with col4:
-        if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-            st.session_state.pantalla = "Inventario"
-            st.rerun()
-
-    # 🗂️ Fila 3: Reportes y Cierre
-    st.warning("🗂️ REPORTES Y CIERRE")
-    col5, col6 = st.columns(2)
-    with col5:
-        if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
-            st.session_state.pantalla = "Cuentas por Cobrar"
-            st.rerun()
-
-    with col6:
-        if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
-            st.session_state.pantalla = "Cierre de Caja"
-            st.rerun()
-
-    # 🛠️ Fila 4: Herramientas
-    st.error("🛠️ HERRAMIENTAS ADICIONALES")
-    if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
-        st.session_state.pantalla = "Simulador Costos"
-        st.rerun()
-
-    st.markdown("---")
-    
-    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
-        st.session_state["password_correct"] = False
-        st.query_params.clear()
-        st.rerun()
 
 # =========================================================
 # 📲 NAVEGACIÓN SECUNDARIA (PANTALLAS INTERNAS)
@@ -1169,7 +1112,7 @@ else:
     if st.session_state.pantalla == "Venta Detal":
         st.header("🏪 Venta Rápida (Detal)")
         with st.form("detal"):
-            c = st.selectbox("Cliente", clientes_lista)
+            c = st.selectbox("Cliente", clientes_lista) if clientes_lista else st.selectbox("Cliente", ["CLIENTE DETAL"])
             m = st.number_input("Monto Total $", min_value=0.0)
             cond = st.selectbox("Condición", ["Contado", "Crédito"])
             if st.form_submit_button("REGISTRAR VENTA"):
@@ -1183,34 +1126,32 @@ else:
                 }).execute()
                 st.success("✅ Venta guardada correctamente en Supabase")
 
-     # 2. VENTA MAYOR (SAYG)
+    # 2. VENTA MAYOR (SAYG)
     elif st.session_state.pantalla == "Venta Mayor (SAYG)":
         st.header("📦 Pedido al Mayor")
-        cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
+        cli_m = st.selectbox("Seleccionar Cliente", clientes_lista) if clientes_lista else st.selectbox("Seleccionar Cliente", ["CLIENTE GENERAL"])
         
         col1, col2 = st.columns(2)
         
-        # Validar que productos_dict no esté vacío antes de mostrar el selector
-        if productos_dict:
+        if isinstance(productos_dict, dict) and len(productos_dict) > 0:
             prod_nom = col1.selectbox("Producto", list(productos_dict.keys()))
             
-            # Verificar que el producto exista en el diccionario antes de acceder a sus claves
-            if prod_nom in productos_dict:
-                datos_prod = productos_dict[prod_nom]
+            if prod_nom and prod_nom in productos_dict:
+                val = productos_dict[prod_nom]
                 
-                # Manejar de forma segura si el producto es un diccionario o un valor simple
-                if isinstance(datos_prod, dict):
-                    stock_actual = datos_prod.get('stock', 0)
-                    precio_u = datos_prod.get('precio', 0.0)
+                if isinstance(val, dict):
+                    precio_u = float(val.get('precio', 0.0))
+                    stock_actual = float(val.get('stock', 0.0))
                 else:
-                    stock_actual = 0
-                    precio_u = float(datos_prod)
+                    precio_u = float(val) if val is not None else 0.0
+                    stock_actual = 0.0
+
+                st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock: {stock_actual:.2f}")
                 
-                st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock: {stock_actual}")
                 cant = col2.number_input(
                     "Cantidad", 
                     min_value=0.0, 
-                    max_value=float(stock_actual) if stock_actual > 0 else 1.0, 
+                    max_value=max(stock_actual, 1.0), 
                     step=0.001, 
                     format="%.3f"
                 )
@@ -1225,7 +1166,7 @@ else:
                         "Subtotal": cant * precio_u
                     })
         else:
-            st.warning("⚠️ No hay productos disponibles en el inventario o la consulta no trajo registros.")
+            st.warning("⚠️ No hay productos registrados en la base de datos de Supabase.")
 
         if 'carro' in st.session_state and st.session_state.carro:
             st.table(pd.DataFrame(st.session_state.carro))
@@ -1245,13 +1186,13 @@ else:
                     "cliente": cli_m,
                     "monto": t_final
                 }).execute()
-                st.success("✅ Venta registrada")
+                st.success("✅ Venta registrada con éxito")
                 st.session_state.carro = []
 
     # 3. CUENTAS Y ABONOS
     elif st.session_state.pantalla == "Cuentas y Abonos":
         st.header("💰 Registro de Abonos")
-        cli_a = st.selectbox("Cliente", clientes_lista)
+        cli_a = st.selectbox("Cliente", clientes_lista) if clientes_lista else st.selectbox("Cliente", ["CLIENTE GENERAL"])
         monto_a = st.number_input("Monto del Abono $", min_value=0.0)
         if st.button("REGISTRAR ABONO"):
             zona_ve = pytz.timezone('America/Caracas')
