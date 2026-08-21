@@ -101,7 +101,7 @@ def cargar_clientes():
     except Exception:
         return ["CLIENTE DETAL"]
 
-d@st.cache_data
+@st.cache_data
 def cargar_productos_dict():
     try:
         res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
