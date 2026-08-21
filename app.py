@@ -232,9 +232,9 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
- elif st.session_state.pantalla == "Venta Mayor (SAYG)":
+elif st.session_state.pantalla == "Venta Mayor (SAYG)":
         # Simplemente llama a tu función, ya no es un diálogo
-     formulario_venta_mayor(clientes_lista, productos_dict)
+    formulario_venta_mayor(clientes_lista, productos_dict)
     
    
     st.subheader("🛒 Selector de Pedido al Mayor")
