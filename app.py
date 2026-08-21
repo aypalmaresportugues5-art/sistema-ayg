@@ -232,16 +232,8 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
-elif st.session_state.pantalla == "Venta Mayor (SAYG)":
-        # Simplemente llama a tu función, ya no es un diálogo
+if st.session_state.pantalla == "Venta Mayor (SAYG)":
     formulario_venta_mayor(clientes_lista, productos_dict)
-    
-   
-    st.subheader("🛒 Selector de Pedido al Mayor")
-
-    # Inicializamos el carrito en la sesión si no existe para que no se borre
-    if 'carro_mayor' not in st.session_state:
-        st.session_state.carro_mayor = []
 
     cli_m = st.selectbox("Seleccionar Cliente:", clientes_lista, key="mayor_cli_sel")
     
