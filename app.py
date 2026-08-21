@@ -99,27 +99,28 @@ def cargar_clientes():
     except Exception:
         return ["CLIENTE DETAL"]
 
+d@st.cache_data
 def cargar_productos_dict():
     try:
-        # Forzamos la consulta directa a Supabase sin caché para evitar bloqueos
         res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
-        
-        if not res or not hasattr(res, 'data') or not res.data:
+        if not res or not res.data:
             return {}
         
         diccionario = {}
         for p in res.data:
             nombre = str(p.get("NOMBRE", "")).strip()
             if nombre:
+                precio = float(p.get("PRECIO") or 0.0)
                 entrada = float(p.get("ENTRADA") or 0.0)
                 salida = float(p.get("SALIDA") or 0.0)
+                
                 diccionario[nombre] = {
-                    "precio": float(p.get("PRECIO") or 0.0),
+                    "precio": precio,
                     "stock": entrada - salida
                 }
         return diccionario
     except Exception as e:
-        st.error(f"Error al leer productos: {e}")
+        st.error(f"Error al cargar productos: {e}")
         return {}
 
 
@@ -535,7 +536,6 @@ def formulario_inventario(productos_dict, clientes_lista):
                 )
             except Exception as e:
                 st.error(f"🚨 Error al generar PDF: {e}")
-
 
 @st.dialog("📋 Resumen de Deudas Activas")
 def formulario_cuentas_por_cobrar(clientes_lista):
