@@ -102,34 +102,26 @@ def cargar_clientes():
 @st.cache_data(ttl=10)
 def cargar_productos_dict():
     try:
-        # Traemos las columnas exactas observadas en Supabase
+        # Nota: Asegúrate de que el nombre de la tabla sea 'productos' en minúsculas
         res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
-        df = pd.DataFrame(res.data) if res.data else pd.DataFrame()
-        
-        diccionario = {}
-        if not df.empty:
-            # Normalizar nombres de columnas
-            df.columns = [c.upper() for c in df.columns]
+        if not res.data:
+            return {} # Retorna vacío si no hay datos
             
-            if "NOMBRE" in df.columns:
-                for _, row in df.iterrows():
-                    nombre = str(row["NOMBRE"])
-                    if nombre and nombre.strip() != "" and nombre != "nan":
-                        precio = float(row.get("PRECIO", 0.0) if pd.notnull(row.get("PRECIO")) else 0.0)
-                        entrada = float(row.get("ENTRADA", 0.0) if pd.notnull(row.get("ENTRADA")) else 0.0)
-                        salida = float(row.get("SALIDA", 0.0) if pd.notnull(row.get("SALIDA")) else 0.0)
-                        
-                        # Cálculo de existencia real
-                        stock = entrada - salida
-                        
-                        diccionario[nombre] = {
-                            "precio": precio,
-                            "stock": stock
-                        }
+        diccionario = {}
+        for p in res.data:
+            nombre = str(p.get("NOMBRE", ""))
+            if nombre:
+                # Calculamos el stock como ENTRADA - SALIDA (considerando SALIDA puede ser None)
+                entrada = float(p.get("ENTRADA") or 0.0)
+                salida = float(p.get("SALIDA") or 0.0)
+                diccionario[nombre] = {
+                    "precio": float(p.get("PRECIO") or 0.0),
+                    "stock": entrada - salida
+                }
         return diccionario
     except Exception as e:
+        st.error(f"Error de Supabase: {e}")
         return {}
-
 # Obtener las variables para los selectores del sistema
 clientes_lista = cargar_clientes()
 productos_dict = cargar_productos_dict()
