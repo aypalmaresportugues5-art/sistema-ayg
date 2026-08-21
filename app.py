@@ -1025,7 +1025,7 @@ with col_b1:
 
 with col_b2:
     if st.button("📋 Resumen Cuentas por Cobrar", use_container_width=True):
-        formulario_cuentas_por_cobrar(lista_clientes)
+        formulario_cuentas_por_cobrar(clientes_lista)
 
 st.write("") 
 
