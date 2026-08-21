@@ -232,13 +232,9 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
-@st.dialog("🛒 Registro de venta_mayor")
-def formulario_venta_mayor(clientes_lista):
-        formulario_venta_mayor(clientes_lista, productos_dict)
-except Exception:
-    pass # Si hay algún error aquí, lo ignora silenciosamente para que el resto de la app siga viva
+elif st.session_state.pantalla == "Venta Mayor (SAYG)":
+    st.info("Módulo en mantenimiento temporal.")
 
-    
     
     # CONTROL MANUAL DE TASA BCV EN VENTA AL MAYOR
     tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$):", min_value=1.0, value=45.0, step=0.01, key="mayor_tasa_bcv")
