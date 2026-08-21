@@ -394,14 +394,12 @@ def formulario_cuentas_abonos(clientes_lista):
             st.warning("⚠️ Escribe un monto mayor a cero.")
 
 @st.dialog("📦 Gestión Integral de Inventario")
-def formulario_inventario(productos_dict, clientes_lista):
-    # Creamos las 5 pestañas organizadas
+def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
+    # Cargamos los datos aquí mismo dentro del diálogo
+    productos_dict = cargar_productos_dict() 
+    
     tab_almacen, tab_insumos, tab_productos, tab_clientes, tab_imprimir = st.tabs([
-        "📦 Estado del Almacén",
-        "📦 Materia Prima",
-        "➕ Nuevos Productos",
-        "👤 Nuevos Clientes",
-        "📄 Imprimir Lista"
+        "📦 Estado del Almacén", "📦 Materia Prima", "➕ Nuevos Productos", "👤 Nuevos Clientes", "📄 Imprimir Lista"
     ])
 
     # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
@@ -411,8 +409,9 @@ def formulario_inventario(productos_dict, clientes_lista):
             import pandas as pd
             filas_inv = []
             for k, v in productos_dict.items():
-                precio_v = v.get('precio', 0.0) if isinstance(v, dict) else v
-                stock_v = v.get('stock', 0) if isinstance(v, dict) else 0
+                # Aseguramos el acceso a las llaves 'precio' y 'stock'
+                precio_v = v.get('precio', 0.0)
+                stock_v = v.get('stock', 0)
                 filas_inv.append({
                     "Producto": k,
                     "Precio": f"${precio_v:.2f}",
@@ -421,8 +420,9 @@ def formulario_inventario(productos_dict, clientes_lista):
             df_inv = pd.DataFrame(filas_inv)
             st.table(df_inv)
         else:
-            st.warning("⚠️ No se encontraron datos de productos en la memoria.")
-
+            st.warning("⚠️ No se encontraron productos en la base de datos.")
+            
+    # ... (el resto del código de tus otras pestañas sigue igual) ...
     # === PESTAÑA 2: REGISTRO DE MATERIA PRIMA (COSTOS) ===
     with tab_insumos:
         st.subheader("📦 Registro de Costo de Insumos")
@@ -1104,9 +1104,9 @@ if st.session_state.pantalla == "Menu Principal":
                 st.session_state.abrir_inventario = True
                 st.rerun()
 
-    # Luego, fuera de las columnas, abajo en tu código principal:
+    # Y en el flujo principal:
     if st.session_state.get("abrir_inventario", False):
-        formulario_inventario(productos_dict, clientes_lista)
+        formulario_inventario(clientes_lista) # Ya no pasamos productos_dict aquí
       
     # 🗂️ Fila 3: Reportes y Cierre
     st.warning("🗂️ REPORTES Y CIERRE")
