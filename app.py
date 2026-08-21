@@ -1012,32 +1012,218 @@ def formulario_simulador_costos():
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
 
 
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+import pytz
+
 # =========================================================
-# MENÚ EN PAREJAS DE BOTONES
+# 🔒 VALIDACIÓN DE SESIÓN Y LOGO
 # =========================================================
+if not check_password():
+    st.stop()
 
-# Pareja 1: Ventas y Cuentas por Cobrar
-col_b1, col_b2 = st.columns(2)
+st.image("1000317144.jpg.png", use_container_width=True)
 
-with col_b1:
-    if st.button("🛍️ Registrar Venta / Abono", use_container_width=True):
-        formulario_venta_detal(clientes_lista)
-
-with col_b2:
-    if st.button("📋 Resumen Cuentas por Cobrar", use_container_width=True):
-        formulario_cuentas_por_cobrar(clientes_lista)
-
-st.write("") 
-
-# Pareja 2: Simulador y Cierre de Caja
-col_b3, col_b4 = st.columns(2)
-
-with col_b3:
-    if st.button("🍞 Simulador de Costos", use_container_width=True):
-        formulario_simulador_costos()
-
-with col_b4:
-    if st.button("🔒 Cierre de Caja Diario", use_container_width=True):
-        formulario_cierre_de_caja()
+if "pantalla" not in st.session_state:
+    st.session_state.pantalla = "Menu Principal"
 
 st.markdown("---")
+
+# =========================================================
+# 🔄 CARGA GLOBAL DE DATOS DESDE SUPABASE
+# =========================================================
+try:
+    res_cli = supabase.table("clientes").select("nombre").execute()
+    clientes_lista = [c['nombre'] for c in res_cli.data] if res_cli.data else []
+except Exception:
+    clientes_lista = []
+
+try:
+    res_prod = supabase.table("productos").select("nombre, precio, stock").execute()
+    productos_dict = {p['nombre']: {'precio': p['precio'], 'stock': p['stock']} for p in res_prod.data} if res_prod.data else {}
+except Exception:
+    productos_dict = {}
+
+# =========================================================
+# 🔲 PANTALLA PRINCIPAL: TABLERO DE BOTONES
+# =========================================================
+if st.session_state.pantalla == "Menu Principal":
+
+    st.subheader("🎛️ SISTEMA AYG2017")
+    
+    # 🏪 Fila 1: Ventas
+    st.success("🏪 SECCIÓN DE VENTAS")
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
+            formulario_venta_detal(clientes_lista)
+
+    with col2:
+        if st.button("🚗\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+            formulario_venta_mayor(clientes_lista, productos_dict)
+
+    # 💰 Fila 2: Gestión e Inventario
+    st.info("💰 GESTIÓN E INVENTARIO")
+    col3, col4 = st.columns(2)
+    with col3:
+        if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+            formulario_cuentas_abonos(clientes_lista)
+
+    with col4:
+        if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+            formulario_inventario(productos_dict, clientes_lista)
+
+    # 🗂️ Fila 3: Reportes y Cierre
+    st.warning("🗂️ REPORTES Y CIERRE")
+    col5, col6 = st.columns(2)
+    with col5:
+        if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
+            formulario_cuentas_por_cobrar(clientes_lista)
+
+    with col6:
+        if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+            formulario_cierre_de_caja()
+
+    # 🛠️ Fila 4: Herramientas
+    st.error("🛠️ HERRAMIENTAS ADICIONALES")
+    if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
+        formulario_simulador_costos()
+
+    st.markdown("---")
+    
+    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
+        st.session_state["password_correct"] = False
+        st.query_params.clear()
+        st.rerun()
+
+# =========================================================
+# 📲 CONTROL DE VENTANAS Y NAVEGACIÓN SECUNDARIA
+# =========================================================
+else:
+    if st.button("⬅️ Volver al Menú Principal", key="btn_volver"):
+        st.session_state.pantalla = "Menu Principal"
+        st.rerun()
+    st.markdown("---")
+
+    # 1. VENTA DETAL
+    if st.session_state.pantalla == "Venta Detal":
+        st.header("🏪 Venta Rápida (Detal)")
+        with st.form("detal"):
+            c = st.selectbox("Cliente", clientes_lista)
+            m = st.number_input("Monto Total $", min_value=0.0)
+            cond = st.selectbox("Condición", ["Contado", "Crédito"])
+            if st.form_submit_button("REGISTRAR VENTA"):
+                zona_ve = pytz.timezone('America/Caracas')
+                fecha_ve = datetime.now(zona_ve).strftime("%Y-%m-%d")
+                supabase.table("ventas").insert({
+                    "fecha": fecha_ve,
+                    "tipo": cond,
+                    "cliente": c,
+                    "monto": m
+                }).execute()
+                st.success("✅ Venta guardada correctamente en Supabase")
+
+    # 2. VENTA MAYOR
+    elif st.session_state.pantalla == "Venta Mayor (SAYG)":
+        st.header("📦 Pedido al Mayor")
+        cli_m = st.selectbox("Seleccionar Cliente", clientes_lista)
+        
+        col1, col2 = st.columns(2)
+        prod_nom = col1.selectbox("Producto", list(productos_dict.keys())) if productos_dict else None
+        
+        if prod_nom:
+            stock_actual = productos_dict[prod_nom]['stock']
+            precio_u = productos_dict[prod_nom]['precio']
+            st.info(f"💰 Precio: ${precio_u:.2f} | 📦 Stock: {stock_actual}")
+            cant = col2.number_input("Cantidad", min_value=0.0, max_value=float(stock_actual) if stock_actual > 0 else 1.0, step=0.001, format="%.3f")
+
+            if st.button("➕ Agregar al Carrito"):
+                if 'carro' not in st.session_state: 
+                    st.session_state.carro = []
+                st.session_state.carro.append({"Producto": prod_nom, "Cant": cant, "Precio": precio_u, "Subtotal": cant * precio_u})
+
+        if 'carro' in st.session_state and st.session_state.carro:
+            st.table(pd.DataFrame(st.session_state.carro))
+            t_final = sum(i['Subtotal'] for i in st.session_state.carro)
+            st.subheader(f"Total: ${t_final:.2f}")
+
+            if st.button("🗑️ Vaciar Carrito"):
+                st.session_state.carro = []
+                st.rerun()
+
+            if st.button("🔒 FINALIZAR VENTA"):
+                zona_ve = pytz.timezone('America/Caracas')
+                fecha_ve = datetime.now(zona_ve).strftime("%Y-%m-%d")
+                supabase.table("ventas").insert({
+                    "fecha": fecha_ve,
+                    "tipo": "Crédito",
+                    "cliente": cli_m,
+                    "monto": t_final
+                }).execute()
+                st.success("✅ Venta registrada")
+                st.session_state.carro = []
+
+    # 3. CUENTAS Y ABONOS
+    elif st.session_state.pantalla == "Cuentas y Abonos":
+        st.header("💰 Registro de Abonos")
+        cli_a = st.selectbox("Cliente", clientes_lista)
+        monto_a = st.number_input("Monto del Abono $", min_value=0.0)
+        if st.button("REGISTRAR ABONO"):
+            zona_ve = pytz.timezone('America/Caracas')
+            fecha_ve = datetime.now(zona_ve).strftime("%Y-%m-%d")
+            supabase.table("ventas").insert({
+                "fecha": fecha_ve,
+                "tipo": "Abono",
+                "cliente": cli_a,
+                "monto": -monto_a
+            }).execute()
+            st.success(f"✅ Abono de ${monto_a:.2f} registrado")
+
+    # 4. INVENTARIO
+    elif st.session_state.pantalla == "Inventario":
+        st.header("📦 Gestión de Almacén, Costos y Registros")
+        tab_almacen, tab_insumos, tab_productos, tab_clientes = st.tabs([
+            "📋 Estado del Almacén", "🍎 Materia Prima", "🥖 Nuevos Productos", "🤝 Nuevos Clientes"
+        ])
+        
+        with tab_almacen:
+            res = supabase.table("productos").select("nombre, precio, stock").execute()
+            if res.data:
+                st.table(pd.DataFrame(res.data))
+            else:
+                st.info("Sin productos registrados.")
+
+        with tab_clientes:
+            with st.form("form_cli", clear_on_submit=True):
+                nom_c = st.text_input("Nombre de la Bodega o Cliente:")
+                if st.form_submit_button("Guardar Cliente") and nom_c:
+                    supabase.table("clientes").insert({"nombre": nom_c}).execute()
+                    st.success("🟢 Cliente guardado")
+
+    # 5. CIERRE DE CAJA
+    elif st.session_state.pantalla == "Cierre de Caja":
+        st.header("🗄️ Control y Cierre de Caja Diario")
+        zona_ve = pytz.timezone('America/Caracas')
+        fecha_hoy = datetime.now(zona_ve).strftime('%Y-%m-%d')
+        
+        res_v = supabase.table("ventas").select("*").eq("fecha", fecha_hoy).execute()
+        df_hoy = pd.DataFrame(res_v.data) if res_v.data else pd.DataFrame()
+
+        if not df_hoy.empty:
+            total_detal = df_hoy[(df_hoy['tipo'] == 'Contado') & (df_hoy['cliente'] == 'CLIENTE DETAL')]['monto'].sum()
+            total_mayor_contado = df_hoy[(df_hoy['tipo'] == 'Contado') & (df_hoy['cliente'] != 'CLIENTE DETAL')]['monto'].sum()
+            total_mayor_credito = df_hoy[(df_hoy['tipo'] == 'Crédito') & (df_hoy['cliente'] != 'CLIENTE DETAL')]['monto'].sum()
+            total_abonos = abs(df_hoy[df_hoy['tipo'] == 'Abono']['monto'].sum())
+
+            total_liquido = total_detal + total_mayor_contado + total_abonos
+
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Venta Detal Hoy", f"${total_detal:.2f}")
+            c2.metric("Venta Mayor Hoy", f"${(total_mayor_contado + total_mayor_credito):.2f}")
+            c3.metric("Abonos Recibidos", f"${total_abonos:.2f}")
+
+            st.markdown(f"### 💵 Total Efectivo Esperado: **${total_liquido:.2f}**")
+        else:
+            st.info("No hay ventas ni abonos registrados el día de hoy.")
+
