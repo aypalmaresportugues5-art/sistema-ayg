@@ -392,7 +392,7 @@ def formulario_cuentas_abonos(clientes_lista):
 
 @st.dialog("📦 Gestión Integral de Inventario")
 def formulario_inventario(productos_dict, clientes_lista):
-    # Creamos las 5 pestañas organizadas para el teléfono
+    # Creamos las 5 pestañas organizadas
     tab_almacen, tab_insumos, tab_productos, tab_clientes, tab_imprimir = st.tabs([
         "📦 Estado del Almacén",
         "📦 Materia Prima",
@@ -401,25 +401,24 @@ def formulario_inventario(productos_dict, clientes_lista):
         "📄 Imprimir Lista"
     ])
 
-  # === ESTADO DEL ALMACÉN ===
-st.subheader("📦 Estado del Almacén")
-
-# Verificamos qué contiene productos_dict de forma directa
-if 'productos_dict' in locals() and productos_dict:
-    import pandas as pd
-    filas_inv = []
-    for k, v in productos_dict.items():
-        precio_v = v.get('precio', 0.0) if isinstance(v, dict) else v
-        stock_v = v.get('stock', 0) if isinstance(v, dict) else 0
-        filas_inv.append({
-            "Producto": k,
-            "Precio": f"${precio_v:.2f}",
-            "Stock": stock_v
-        })
-    df_inv = pd.DataFrame(filas_inv)
-    st.table(df_inv)
-else:
-    st.warning("⚠️ No se encontraron datos de productos en la memoria. Verificando carga...")
+    # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
+    with tab_almacen:
+        st.subheader("📦 Estado del Almacén")
+        if productos_dict:
+            import pandas as pd
+            filas_inv = []
+            for k, v in productos_dict.items():
+                precio_v = v.get('precio', 0.0) if isinstance(v, dict) else v
+                stock_v = v.get('stock', 0) if isinstance(v, dict) else 0
+                filas_inv.append({
+                    "Producto": k,
+                    "Precio": f"${precio_v:.2f}",
+                    "Stock": stock_v
+                })
+            df_inv = pd.DataFrame(filas_inv)
+            st.table(df_inv)
+        else:
+            st.warning("⚠️ No se encontraron datos de productos en la memoria.")
 
     # === PESTAÑA 2: REGISTRO DE MATERIA PRIMA (COSTOS) ===
     with tab_insumos:
@@ -473,11 +472,11 @@ else:
                     supabase.table("productos").insert(payload).execute()
                     st.cache_data.clear()
                     st.success(f"✅ ¡Producto '{nuevo_prod}' registrado con éxito!")
-                    st.info("🔄 Reinicia o refresca la app para que aparezca en tus listas de venta.")
+                    st.info("🔄 Refresca la app para que aparezca en tus listas.")
                 except Exception as e:
                     st.error(f"🚨 Error al registrar producto: {e}")
             else:
-                st.warning("⚠️ Ingresa el nombre del producto y sus precios válidos.")
+                st.warning("⚠️ Ingresa el nombre del producto y precios válidos.")
 
     # === PESTAÑA 4: REGISTRO DE NUEVOS CLIENTES ===
     with tab_clientes:
@@ -493,7 +492,6 @@ else:
                     supabase.table("clientes").insert(payload).execute()
                     st.cache_data.clear()
                     st.success(f"✅ ¡Cliente '{nuevo_cliente}' guardado correctamente!")
-                    st.info("🔄 Refresca la app para que figure en la lista de deudores.")
                 except Exception as e:
                     st.error(f"🚨 Error al registrar cliente: {e}")
             else:
@@ -537,6 +535,7 @@ else:
                 )
             except Exception as e:
                 st.error(f"🚨 Error al generar PDF: {e}")
+
 
 @st.dialog("📋 Resumen de Deudas Activas")
 def formulario_cuentas_por_cobrar(clientes_lista):
