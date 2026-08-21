@@ -122,9 +122,7 @@ def cargar_productos_dict():
             }
     return diccionario
 
-    except Exception as e:
-        st.error(f"Error de Supabase: {e}")
-        return {}
+   
 # Obtener las variables para los selectores del sistema
 clientes_lista = cargar_clientes()
 productos_dict = cargar_productos_dict()
