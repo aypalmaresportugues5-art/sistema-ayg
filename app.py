@@ -237,14 +237,17 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
         
-def formulario_venta_mayor(clientes_lista, productos_dict):
+def formulario_venta_mayor(clientes_lista):
+    # Cargamos los datos aquí mismo de forma autónoma
+    productos_dict = cargar_productos_dict()
+    
     # Inicializar carrito
     if 'carro_mayor' not in st.session_state:
         st.session_state.carro_mayor = []
 
-    # Blindaje: Si los productos no han cargado, avisar amablemente
-    if not productos_dict or len(productos_dict) == 0:
-        st.warning("⚠️ Cargando inventario de productos o no hay stock disponible...")
+    # Blindaje: Si la carga falla, avisar
+    if not productos_dict:
+        st.warning("⚠️ No se pudo cargar el inventario. Verifica la conexión a Supabase.")
         return
 
 
