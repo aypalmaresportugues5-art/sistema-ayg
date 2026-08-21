@@ -104,8 +104,7 @@ def cargar_productos_dict():
     # Quitamos el try/except temporalmente para que el sistema grite el error real si falla
     res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
     
-    # Mostramos en pantalla qué trajo Supabase para diagnosticar
-    st.write("Respuesta cruda de Supabase:", res)
+  
     
     if not res.data:
         return {}
