@@ -5,3 +5,4 @@ fpdf
 streamlit-option-menu
 pytz
 reportlab
+supabase
