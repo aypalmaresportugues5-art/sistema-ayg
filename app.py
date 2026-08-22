@@ -124,7 +124,13 @@ def cargar_productos_dict():
     except Exception as e:
         st.error(f"Error al cargar productos: {e}")
         return {}
-
+def actualizar_precio_producto(nombre_producto, nuevo_precio):
+    try:
+        supabase.table("productos").update({"PRECIO": nuevo_precio}).eq("NOMBRE", nombre_producto).execute()
+        return True
+    except Exception as e:
+        st.error(f"Error al actualizar el precio: {e}")
+        return False
 
    
 # Obtener las variables para los selectores del sistema
@@ -432,6 +438,23 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
                 })
             df_inv = pd.DataFrame(filas_inv)
             st.table(df_inv)
+            # === SECCIÓN PARA EDITAR PRECIOS ===
+            st.divider()
+            st.subheader("✏️ Modificar Precio de Producto")
+    
+            col_edit1, col_edit2 = st.columns(2)
+            with col_edit1:
+                prod_a_editar = st.selectbox("Selecciona producto:", list(productos_dict.keys()), key="select_prod_editar_inv")
+            with col_edit2:
+                # Obtenemos el precio actual del producto seleccionado
+                precio_actual_num = float(productos_dict[prod_a_editar].get('precio', 0.0))
+                nuevo_precio = st.number_input("Nuevo precio ($):", value=precio_actual_num, format="%.2f", key="input_nuevo_precio_inv")
+    
+            if st.button("💾 Guardar Cambios de Precio", type="primary", key="btn_guardar_precio_inv"):
+                if actualizar_precio_producto(prod_a_editar, nuevo_precio):
+                    st.success(f"¡Precio de {prod_a_editar} actualizado a ${nuevo_precio:.2f} con éxito!")
+                    st.cache_data.clear()  # Limpiamos la caché para que la app lea de inmediato el cambio
+                    st.rerun()             # Recargamos para refrescar la tabla
         else:
             st.warning("⚠️ No se encontraron productos en la base de datos.")
             
