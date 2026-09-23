@@ -628,26 +628,26 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                 except:
                     df_cli = pd.DataFrame()
 
-           # Paginación dinámica en memoria (Soporta página 11 en adelante sin errores de API)
-           if not df_cli.empty:
-               total_registros = len(df_cli)
-               registros_por_pagina = 10
-               total_paginas = max(1, (total_registros + registros_por_pagina - 1) // registros_por_pagina)
+            # Paginación dinámica en memoria (Soporta página 11 en adelante sin errores de API)
+            if not df_cli.empty:
+                total_registros = len(df_cli)
+                registros_por_pagina = 10
+                total_paginas = max(1, (total_registros + registros_por_pagina - 1) // registros_por_pagina)
     
-               if total_paginas > 1:
-                   pagina_actual = st.selectbox(
-                       f"📄 Página de registros (Total: {total_paginas}):", 
-                       range(1, total_paginas + 1),
-                       key="select_pagina_dinamica_cobrar"
-                   )
-               else:
-                   pagina_actual = 1
+                if total_paginas > 1:
+                    pagina_actual = st.selectbox(
+                        f"📄 Página de registros (Total: {total_paginas}):", 
+                        range(1, total_paginas + 1),
+                        key="select_pagina_dinamica_cobrar"
+                    )
+                else:
+                    pagina_actual = 1
         
-               start = (pagina_actual - 1) * registros_por_pagina
-               end = start + registros_por_pagina
-               df_cli = df_cli.iloc[start:end]
-           else:
-               saldo_real_neto = 0.0
+                start = (pagina_actual - 1) * registros_por_pagina
+                end = start + registros_por_pagina
+                df_cli = df_cli.iloc[start:end]
+            else:
+                saldo_real_neto = 0.0
 
 
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
