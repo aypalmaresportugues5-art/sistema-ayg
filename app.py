@@ -615,36 +615,40 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         if clientes_lista:
             tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=45.0, step=0.01)
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
-            # --- PAGINACIÓN DINÁMICA PARA SUPABASE ---
-            # 1. Contamos cuántos registros totales tiene este cliente en la base de datos
-            # Contamos los registros consultando solo los IDs (súper seguro y sin errores de API)
-            res_all = supabase.table("transacciones").select("id").eq("CLIENTE", cliente_sel).execute()
-            total_registros = len(res_all.data) if res_all.data else 0
+            #cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
 
-            registros_por_pagina = 10
-            total_paginas = max(1, (total_registros + registros_por_pagina - 1) // registros_por_pagina)
+            # --- CONSULTA SEGURA A LA TABLA 'ventas' ---
+            try:
+                res_trans = supabase.table("ventas").select("*").eq("CLIENTE", cliente_sel).order("id", desc=True).execute()
+                df_cli = pd.DataFrame(res_trans.data) if res_trans.data else pd.DataFrame()
+            except Exception as e:
+                try:
+                    res_trans = supabase.table("ventas").select("*").eq("cliente", cliente_sel).order("id", desc=True).execute()
+                    df_cli = pd.DataFrame(res_trans.data) if res_trans.data else pd.DataFrame()
+                except:
+                    df_cli = pd.DataFrame()
 
-            # 2. Selector de página que se adapta automáticamente (Página 11, 12, etc.)
-            pagina_actual = st.selectbox(
-                f"📄 Seleccione la página de registros (Total de páginas: {total_paginas}):", 
-                range(1, total_paginas + 1),
-                key="select_pagina_dinamica_cobrar"
-            )
+           # Paginación dinámica en memoria (Soporta página 11 en adelante sin errores de API)
+           if not df_cli.empty:
+               total_registros = len(df_cli)
+               registros_por_pagina = 10
+               total_paginas = max(1, (total_registros + registros_por_pagina - 1) // registros_por_pagina)
+    
+               if total_paginas > 1:
+                   pagina_actual = st.selectbox(
+                       f"📄 Página de registros (Total: {total_paginas}):", 
+                       range(1, total_paginas + 1),
+                       key="select_pagina_dinamica_cobrar"
+                   )
+               else:
+                   pagina_actual = 1
+        
+               start = (pagina_actual - 1) * registros_por_pagina
+               end = start + registros_por_pagina
+               df_cli = df_cli.iloc[start:end]
+           else:
+               saldo_real_neto = 0.0
 
-            # 3. Calculamos los rangos para la consulta
-            start = (pagina_actual - 1) * registros_por_pagina
-            end = start + registros_por_pagina - 1
-
-            # 4. Consultamos a Supabase trayendo solo el bloque de la página actual, ordenado del más nuevo al más viejo
-            res_pag = supabase.table("transacciones") \
-                .select("*") \
-                .eq("CLIENTE", cliente_sel) \
-                .order("id", desc=True) \
-                .range(start, end) \
-                .execute()
-
-            # Actualizamos df_cli con los datos de esta página específica
-            df_cli = pd.DataFrame(res_pag.data) if res_pag.data else pd.DataFrame()
 
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
             saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
