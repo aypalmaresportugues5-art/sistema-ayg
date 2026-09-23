@@ -615,6 +615,36 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         if clientes_lista:
             tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=45.0, step=0.01)
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
+            # --- PAGINACIÓN DINÁMICA PARA SUPABASE ---
+            # 1. Contamos cuántos registros totales tiene este cliente en la base de datos
+            res_count = supabase.table("transacciones").select("id", count="exact").eq("CLIENTE", cliente_sel).execute()
+            total_registros = res_count.count if hasattr(res_count, 'count') and res_count.count is not None else len(res__count.data) if hasattr(res_count, 'data') else 50
+
+            registros_por_pagina = 10
+            total_paginas = max(1, (total_registros + registros_por_pagina - 1) // registros_por_pagina)
+
+            # 2. Selector de página que se adapta automáticamente (Página 11, 12, etc.)
+            pagina_actual = st.selectbox(
+                f"📄 Seleccione la página de registros (Total de páginas: {total_paginas}):", 
+                range(1, total_paginas + 1),
+                key="select_pagina_dinamica_cobrar"
+            )
+
+            # 3. Calculamos los rangos para la consulta
+            start = (pagina_actual - 1) * registros_por_pagina
+            end = start + registros_por_pagina - 1
+
+            # 4. Consultamos a Supabase trayendo solo el bloque de la página actual, ordenado del más nuevo al más viejo
+            res_pag = supabase.table("transacciones") \
+                .select("*") \
+                .eq("CLIENTE", cliente_sel) \
+                .order("id", desc=True) \
+                .range(start, end) \
+                .execute()
+
+            # Actualizamos df_cli con los datos de esta página específica
+            df_cli = pd.DataFrame(res_pag.data) if res_pag.data else pd.DataFrame()
+
             df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
             saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
             
