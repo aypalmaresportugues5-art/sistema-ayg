@@ -617,8 +617,9 @@ def formulario_cuentas_por_cobrar(clientes_lista):
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
             # --- PAGINACIÓN DINÁMICA PARA SUPABASE ---
             # 1. Contamos cuántos registros totales tiene este cliente en la base de datos
-            res_count = supabase.table("transacciones").select("id", count="exact").eq("CLIENTE", cliente_sel).execute()
-            total_registros = res_count.count if hasattr(res_count, 'count') and res_count.count is not None else len(res__count.data) if hasattr(res_count, 'data') else 50
+            # Contamos los registros consultando solo los IDs (súper seguro y sin errores de API)
+            res_all = supabase.table("transacciones").select("id").eq("CLIENTE", cliente_sel).execute()
+            total_registros = len(res_all.data) if res_all.data else 0
 
             registros_por_pagina = 10
             total_paginas = max(1, (total_registros + registros_por_pagina - 1) // registros_por_pagina)
