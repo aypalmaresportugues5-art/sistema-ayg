@@ -615,8 +615,12 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         # --- SECCIÓN DETALLE POR CLIENTE ---
         if clientes_lista:
             tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=45.0, step=0.01)
+         #   cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
-            
+
+            df_cli = df_v[df_v['CLIENTE'] == cliente_sel].copy()
+            saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2)
+
             
             # --- EVALUAMOS SI DEBE O ESTÁ AL DÍA ---
             if 0.00 <= saldo_real_neto <= 0.01:
