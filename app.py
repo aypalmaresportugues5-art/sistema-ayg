@@ -668,58 +668,52 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                 st.write("---")
                 st.info(f"🔵 El cliente tiene un saldo a favor de ${abs(saldo_real_neto):.2f}")
             else:
-                # Totales históricos de la base de datos
-                movimientos_dict = df_cli.to_dict('records')
-                total_creditos = sum(float(m['MONTO($)']) for m in movimientos_dict if str(m.get('TIPO', '')).strip().lower() in ['credito', 'crédito'])
-                total_abonos_historicos = abs(sum(float(m['MONTO($)']) for m in movimientos_dict if str(m.get('TIPO', '')).strip().lower() in ['abono']))
+                # Usamos UNICAMENTE el ciclo actual aislado para el recuadro
+                if 'df_ciclo_actual' in locals() and not df_ciclo_actual.empty:
+                    df_para_recuadro = df_ciclo_actual.sort_values(by="id", ascending=True).copy()
+                else:
+                    df_para_recuadro = df_cli.sort_values(by="id", ascending=True).copy()
 
-                # =========================================================
-                # 1. MOTOR INVERSO (CORTE PERFECTO DE CICLO)
-                # =========================================================
+                # Aplicamos el filtro de tiempo del selector visual si está activo
+                if not df_para_recuadro.empty and 'FECHA' in df_para_recuadro.columns and filtro_tiempo != "Todo el historial":
+                    dias_map = {"Últimos 30 días": 30, "Últimos 60 días": 60, "Últimos 90 días": 90}
+                    dias_limite = dias_map.get(filtro_tiempo, 30)
+                    df_para_recuadro['temp_date'] = pd.to_datetime(df_para_recuadro['FECHA'], errors='coerce')
+                    fecha_corte = pd.Timestamp.now() - pd.Timedelta(days=dias_limite)
+                    df_para_recuadro = df_para_recuadro[df_para_recuadro['temp_date'] >= fecha_corte].copy()
+
+                movimientos_dict = df_para_recuadro.to_dict('records')
                 historial_recuadro = []
-                saldo_acumulado_inverso = 0.0
+                saldo_run = 0.0
 
-                # Recorremos de lo más nuevo a lo más viejo para aislar el ciclo activo
-                for mov in reversed(movimientos_dict):
+                for mov in movimientos_dict:
                     tipo_mov = str(mov.get('TIPO', '')).strip().lower()
                     monto = float(mov.get('MONTO($)', 0.0))
 
-                    # Formatear fecha corta
                     fecha_completa = str(mov.get('FECHA', ''))
-                    fecha_factura = fecha_completa[:10] if " " in fecha_completa or "T" in fecha_completa else fecha_completa
+                    fecha_factura = fecha_completa[:10] if '/' in fecha_completa or '-' in fecha_completa else fecha_completa
 
-                    mov['fecha'] = fecha_factura
+                    mov_f = mov.copy()
+                    mov_f['FECHA'] = fecha_factura
                     if tipo_mov in ['crédito', 'credito']:
-                        mov['original'] = abs(monto)
-                        mov['abono'] = 0.0
+                        mov_f['original'] = abs(monto)
+                        mov_f['abono'] = 0.0
+                        saldo_run += monto
                     elif tipo_mov == 'abono':
-                        mov['original'] = 0.0
-                        mov['abono'] = abs(monto)
+                        mov_f['original'] = 0.0
+                        mov_f['abono'] = abs(monto)
+                        saldo_run -= abs(monto)
                     else:
-                        mov['original'] = 0.0
-                        mov['abono'] = 0.0
+                        mov_f['original'] = abs(monto)
+                        mov_f['abono'] = 0.0
+                        saldo_run += monto
 
-                    saldo_acumulado_inverso += monto
-                    historial_recuadro.append(mov)
-
-                    # Si la suma inversa alcanza o supera la deuda actual, realizamos el corte
-                    if saldo_acumulado_inverso >= saldo_real_neto:
-                        break
-
-                # Orden cronológico (de más viejo a más nuevo)
-                historial_recuadro = historial_recuadro[::-1]
-
-                # Recálculo de la columna 'pendiente'
-                saldo_run = 0.0
-                for item in historial_recuadro:
-                    if str(item.get('TIPO', '')).strip().lower() in ['crédito', 'credito']:
-                        saldo_run += float(item.get('MONTO($)', 0.0))
-                    else:
-                        saldo_run -= abs(float(item.get('MONTO($)', 0.0)))
-                    item['pendiente'] = saldo_run
+                    mov_f['pendiente'] = round(saldo_run, 2)
+                    historial_recuadro.append(mov_f)
 
                 total_abonos_ciclo = sum(float(n['abono']) for n in historial_recuadro)
                 abonos_mostrar = total_abonos_ciclo if total_abonos_ciclo > 0 else 0.0
+
 
                 # =========================================================
                 # 2. MÉTRICAS EN PANTALLA
