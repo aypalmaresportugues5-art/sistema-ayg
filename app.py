@@ -615,9 +615,14 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         # --- SECCIÓN DETALLE POR CLIENTE ---
         if clientes_lista:
             tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=1.0, step=0.01)
-         #   cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
-       # --- CONSULTA DIRECTA AL CLIENTE (Ordenada por ID descendente para el motor inverso) ---
+        
+            filtro_tiempo = st.selectbox(
+                "⏱️ Filtrar visualización de la tabla:", 
+                ["Todo el historial", "Últimos 30 días", "Últimos 60 días", "Últimos 90 días"], 
+                key="cxc_filtro_tiempo"
+            )
+
             try:
                 res_cli = supabase.table("ventas").select("*").eq("CLIENTE", cliente_sel).order("id", desc=True).limit(2000).execute()
                 df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
