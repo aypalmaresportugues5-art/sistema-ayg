@@ -617,8 +617,7 @@ def formulario_cuentas_por_cobrar(clientes_lista):
             tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=45.0, step=0.01)
          #   cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
-
-        # --- CONSULTA DIRECTA AL CLIENTE (Historial completo sin límite global) ---
+       # --- CONSULTA DIRECTA AL CLIENTE (Ordenada por ID descendente para el motor inverso) ---
             try:
                 res_cli = supabase.table("ventas").select("*").eq("CLIENTE", cliente_sel).order("id", desc=True).limit(2000).execute()
                 df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
@@ -629,11 +628,12 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                 except:
                     df_cli = pd.DataFrame()
 
-            # Aseguramos formato numérico para que la suma de los montos sea exacta ($12.70)
+            # Aseguramos formato numérico para que las sumas del motor inverso den exactas
             if not df_cli.empty and 'MONTO($)' in df_cli.columns:
                 df_cli['MONTO($)'] = pd.to_numeric(df_cli['MONTO($)'], errors='coerce').fillna(0.0)
 
             saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2) if not df_cli.empty else 0.0
+
 
             
             # --- EVALUAMOS SI DEBE O ESTÁ AL DÍA ---
