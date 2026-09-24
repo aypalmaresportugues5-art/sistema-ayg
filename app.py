@@ -614,7 +614,7 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         
         # --- SECCIÓN DETALLE POR CLIENTE ---
         if clientes_lista:
-            tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=45.0, step=0.01)
+            tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=1.0, step=0.01)
          #   cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
        # --- CONSULTA DIRECTA AL CLIENTE (Ordenada por ID descendente para el motor inverso) ---
@@ -628,11 +628,24 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                 except:
                     df_cli = pd.DataFrame()
 
-            # Aseguramos formato numérico para que las sumas del motor inverso den exactas
+            # Aseguramos formato numérico y calculamos el saldo real del ciclo actual
             if not df_cli.empty and 'MONTO($)' in df_cli.columns:
                 df_cli['MONTO($)'] = pd.to_numeric(df_cli['MONTO($)'], errors='coerce').fillna(0.0)
-
-            saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2) if not df_cli.empty else 0.0
+            
+                # Calculamos el saldo real buscando el corte del ciclo actual (de más viejo a más nuevo)
+                temp_totales = df_cli.sort_values(by="id", ascending=True).copy()
+                temp_totales['acumulado'] = temp_totales['MONTO($)'].cumsum()
+            
+                ceros = temp_totales[temp_totales['acumulado'].round(2) == 0.0]
+                if not ceros.empty:
+                    ultimo_cero_id = ceros.iloc[-1]['id']
+                    df_ciclo_actual = temp_totales[temp_totales['id'] > ultimo_cero_id]
+                else:
+                    df_ciclo_actual = temp_totales
+                
+                saldo_real_neto = round(df_ciclo_actual['MONTO($)'].sum(), 2)
+           else:
+                saldo_real_neto = 0.0
 
 
             
