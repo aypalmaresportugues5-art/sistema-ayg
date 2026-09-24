@@ -644,7 +644,7 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                     df_ciclo_actual = temp_totales
                 
                 saldo_real_neto = round(df_ciclo_actual['MONTO($)'].sum(), 2)
-           else:
+            else:
                 saldo_real_neto = 0.0
 
 
