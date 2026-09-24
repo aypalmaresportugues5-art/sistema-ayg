@@ -587,7 +587,8 @@ def formulario_cuentas_por_cobrar(clientes_lista):
     
     # 1. Consulta directa a la tabla 'ventas' de Supabase
     try:
-        res = supabase.table("ventas").select("*").execute()
+        res = supabase.table("ventas").select("*").limit(2000).execute()
+
         datos_recibidos = res.data if res.data else []
         df_v = pd.DataFrame(datos_recibidos)
     except Exception as e:
