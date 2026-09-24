@@ -687,29 +687,39 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                 saldo_run = 0.0
 
                 for mov in movimientos_dict:
-                    tipo_mov = str(mov.get('TIPO', '')).strip().lower()
-                    monto = float(mov.get('MONTO($)', 0.0))
+                    tipo_mov = str(mov.get('TIPO', mov.get('tipo', ''))).strip().lower()
+                    monto = float(mov.get('MONTO($)', mov.get('monto', 0.0)))
 
-                    fecha_completa = str(mov.get('FECHA', ''))
+                    fecha_completa = str(mov.get('FECHA', mov.get('fecha', '')))
                     fecha_factura = fecha_completa[:10] if '/' in fecha_completa or '-' in fecha_completa else fecha_completa
 
                     mov_f = mov.copy()
+                    # Guardamos ambas versiones (mayúscula y minúscula) para evitar cualquier error de impresión o lectura
                     mov_f['FECHA'] = fecha_factura
-                    if tipo_mov in ['crédito', 'credito']:
-                        mov_f['original'] = abs(monto)
-                        mov_f['abono'] = 0.0
-                        saldo_run += monto
-                    elif tipo_mov == 'abono':
-                        mov_f['original'] = 0.0
-                        mov_f['abono'] = abs(monto)
-                        saldo_run -= abs(monto)
-                    else:
-                        mov_f['original'] = abs(monto)
-                        mov_f['abono'] = 0.0
-                        saldo_run += monto
+                    mov_f['fecha'] = fecha_factura
+             
+                   if tipo_mov in ['crédito', 'credito']:
+                       mov_f['original'] = abs(monto)
+                       mov_f['abono'] = 0.0
+                       mov_f['TIPO'] = 'Crédito'
+                       mov_f['tipo'] = 'Crédito'
+                       saldo_run += monto
+                   elif tipo_mov == 'abono':
+                       mov_f['original'] = 0.0
+                       mov_f['abono'] = abs(monto)
+                       mov_f['TIPO'] = 'Abono'
+                       mov_f['tipo'] = 'Abono'
+                       saldo_run -= abs(monto)
+                   else:
+                       mov_f['original'] = abs(monto)
+                       mov_f['abono'] = 0.0
+                       mov_f['TIPO'] = tipo_mov.capitalize()
+                       mov_f['tipo'] = tipo_mov.capitalize()
+                       saldo_run += monto
 
-                    mov_f['pendiente'] = round(saldo_run, 2)
-                    historial_recuadro.append(mov_f)
+                   mov_f['pendiente'] = round(saldo_run, 2)
+                   historial_recuadro.append(mov_f)
+
 
                 total_abonos_ciclo = sum(float(n['abono']) for n in historial_recuadro)
                 abonos_mostrar = total_abonos_ciclo if total_abonos_ciclo > 0 else 0.0
