@@ -619,21 +619,21 @@ def formulario_cuentas_por_cobrar(clientes_lista):
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
 
         # --- CONSULTA DIRECTA AL CLIENTE (Historial completo sin límite global) ---
-        try:
-            res_cli = supabase.table("ventas").select("*").eq("CLIENTE", cliente_sel).order("id", desc=True).limit(2000).execute()
-            df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
-        except Exception as e:
             try:
-                res_cli = supabase.table("ventas").select("*").eq("cliente", cliente_sel).order("id", desc=True).limit(2000).execute()
+                res_cli = supabase.table("ventas").select("*").eq("CLIENTE", cliente_sel).order("id", desc=True).limit(2000).execute()
                 df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
-            except:
-                df_cli = pd.DataFrame()
+            except Exception as e:
+                try:
+                    res_cli = supabase.table("ventas").select("*").eq("cliente", cliente_sel).order("id", desc=True).limit(2000).execute()
+                    df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
+                except:
+                    df_cli = pd.DataFrame()
 
-        # Aseguramos formato numérico para que la suma de los montos sea exacta ($12.70)
-        if not df_cli.empty and 'MONTO($)' in df_cli.columns:
-            df_cli['MONTO($)'] = pd.to_numeric(df_cli['MONTO($)'], errors='coerce').fillna(0.0)
+            # Aseguramos formato numérico para que la suma de los montos sea exacta ($12.70)
+            if not df_cli.empty and 'MONTO($)' in df_cli.columns:
+                df_cli['MONTO($)'] = pd.to_numeric(df_cli['MONTO($)'], errors='coerce').fillna(0.0)
 
-        saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2) if not df_cli.empty else 0.0
+            saldo_real_neto = round(df_cli['MONTO($)'].sum(), 2) if not df_cli.empty else 0.0
 
             
             # --- EVALUAMOS SI DEBE O ESTÁ AL DÍA ---
