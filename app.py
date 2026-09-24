@@ -698,27 +698,27 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                     mov_f['FECHA'] = fecha_factura
                     mov_f['fecha'] = fecha_factura
              
-                   if tipo_mov in ['crédito', 'credito']:
-                       mov_f['original'] = abs(monto)
-                       mov_f['abono'] = 0.0
-                       mov_f['TIPO'] = 'Crédito'
-                       mov_f['tipo'] = 'Crédito'
-                       saldo_run += monto
-                   elif tipo_mov == 'abono':
-                       mov_f['original'] = 0.0
-                       mov_f['abono'] = abs(monto)
-                       mov_f['TIPO'] = 'Abono'
-                       mov_f['tipo'] = 'Abono'
-                       saldo_run -= abs(monto)
-                   else:
-                       mov_f['original'] = abs(monto)
-                       mov_f['abono'] = 0.0
-                       mov_f['TIPO'] = tipo_mov.capitalize()
-                       mov_f['tipo'] = tipo_mov.capitalize()
-                       saldo_run += monto
+                    if tipo_mov in ['crédito', 'credito']:
+                        mov_f['original'] = abs(monto)
+                        mov_f['abono'] = 0.0
+                        mov_f['TIPO'] = 'Crédito'
+                        mov_f['tipo'] = 'Crédito'
+                        saldo_run += monto
+                    elif tipo_mov == 'abono':
+                        mov_f['original'] = 0.0
+                        mov_f['abono'] = abs(monto)
+                        mov_f['TIPO'] = 'Abono'
+                        mov_f['tipo'] = 'Abono'
+                        saldo_run -= abs(monto)
+                    else:
+                        mov_f['original'] = abs(monto)
+                        mov_f['abono'] = 0.0
+                        mov_f['TIPO'] = tipo_mov.capitalize()
+                        mov_f['tipo'] = tipo_mov.capitalize()
+                        saldo_run += monto
 
-                   mov_f['pendiente'] = round(saldo_run, 2)
-                   historial_recuadro.append(mov_f)
+                    mov_f['pendiente'] = round(saldo_run, 2)
+                    historial_recuadro.append(mov_f)
 
 
                 total_abonos_ciclo = sum(float(n['abono']) for n in historial_recuadro)
