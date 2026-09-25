@@ -1138,64 +1138,59 @@ except Exception:
 # =========================================================
 # 🔲 PANTALLA PRINCIPAL: TABLERO DE BOTONES
 # =========================================================
-if st.session_state.pantalla == "Menu Principal":
+# --- VALIDACIÓN DE ACCESO ---
+if not check_password():
+    st.stop()
 
-    st.subheader("🎛️ SISTEMA AYG2017")
-    
-    # 🏪 Fila 1: Ventas
-    st.success("🏪 SECCIÓN DE VENTAS")
-    col1, col2 = st.columns(2)
-    with col1:
-        if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
-            formulario_venta_detal(clientes_lista)
+st.image("1000317144.jpg.png", use_container_width=True)
+st.markdown("---")
 
-    with col2:
-        if st.button("Venta Mayor", key="btn_mayor", use_container_width=True):
-            st.session_state.abrir_venta_mayor = True # Activamos el interruptor
-            st.rerun()
+clientes_lista = cargar_clientes()
 
-    # --- AQUÍ ABAJO AÑADE ESTO ---
-    if st.session_state.get("abrir_venta_mayor", False):
-        formulario_venta_mayor(clientes_lista)
- 
-    # 💰 Fila 2: Gestión e Inventario
-    st.info("💰 GESTIÓN E INVENTARIO")
-    col3, col4 = st.columns(2)
-    with col3:
-        if st.button("💰\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
-            formulario_cuentas_abonos(clientes_lista)
+# --- MENÚ PRINCIPAL ---
+st.subheader("🎛️ SISTEMA AYG2017")
 
-    with col4:
-            if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
-                st.session_state.abrir_inventario = True
-                st.rerun()
-
-    # Y en el flujo principal:
-    if st.session_state.get("abrir_inventario", False):
-        formulario_inventario(clientes_lista) # Ya no pasamos productos_dict aquí
-      
-    # 🗂️ Fila 3: Reportes y Cierre
-    st.warning("🗂️ REPORTES Y CIERRE")
-    col5, col6 = st.columns(2)
-    with col5:
-        if st.button("📝\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
-            formulario_cuentas_por_cobrar(clientes_lista)
-
-    with col6:
-        if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
-            formulario_cierre_de_caja()
-
-    # 🛠️ Fila 4: Herramientas
-    st.error("🛠️ HERRAMIENTAS ADICIONALES")
-    if st.button("📊\n\nSimulador Costos", key="btn_simulador", use_container_width=True):
-        formulario_simulador_costos()
-
-    st.markdown("---")
-    
-    if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
-        st.session_state["password_correct"] = False
-        st.query_params.clear()
+st.success("🏪 SECCIÓN DE VENTAS")
+col1, col2 = st.columns(2)
+with col1:
+    if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
+        formulario_venta_detal(clientes_lista)
+with col2:
+    if st.button("📦\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+        st.session_state.abrir_venta_mayor = True
         st.rerun()
 
+if st.session_state.get("abrir_venta_mayor", False):
+    formulario_venta_mayor(clientes_lista)
 
+st.info("💰 GESTIÓN E INVENTARIO")
+col3, col4 = st.columns(2)
+with col3:
+    if st.button("💵\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+        formulario_cuentas_abonos(clientes_lista)
+with col4:
+    if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+        st.session_state.abrir_inventario = True
+        st.rerun()
 
+if st.session_state.get("abrir_inventario", False):
+    formulario_inventario(clientes_lista)
+  
+st.warning("🗂️ REPORTES Y CIERRE")
+col5, col6 = st.columns(2)
+with col5:
+    if st.button("📋\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
+        formulario_cuentas_por_cobrar(clientes_lista)
+with col6:
+    if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+        st.session_state.abrir_cierre_caja = True
+        st.rerun()
+
+if st.session_state.get("abrir_cierre_caja", False):
+    formulario_cierre_de_caja()
+
+st.markdown("---")
+if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
+    st.session_state["password_correct"] = False
+    st.query_params.clear()
+    st.rerun()
