@@ -614,73 +614,59 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         
         # --- SECCIÓN DETALLE POR CLIENTE ---
         if clientes_lista:
-            tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=1.0, step=0.01)
+            tasa_bcv = st.number_input("🇻🇪 Especificar Tasa Oficial BCV (Bs./$)", min_value=1.0, value=1.0, step=0.01)
             cliente_sel = st.selectbox("Ver deudor específico:", clientes_lista, key="cobrar_cliente_sel")
         
-            filtro_tiempo = st.selectbox(
-                "⏱️ Filtrar visualización de la tabla:", 
-                ["Todo el historial", "Últimos 30 días", "Últimos 60 días", "Últimos 90 días"], 
-                key="cxc_filtro_tiempo"
-            )
-
+            # --- CONSULTA DIRECTA AL CLIENTE ---
             try:
                 res_cli = supabase.table("ventas").select("*").eq("CLIENTE", cliente_sel).order("id", desc=True).limit(2000).execute()
                 df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
             except Exception as e:
-                try:
-                    res_cli = supabase.table("ventas").select("*").eq("cliente", cliente_sel).order("id", desc=True).limit(2000).execute()
-                    df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
-                except:
-                    df_cli = pd.DataFrame()
+               try:
+                   res_cli = supabase.table("ventas").select("*").eq("CLIENTE", cliente_sel).execute()
+                   df_cli = pd.DataFrame(res_cli.data) if res_cli.data else pd.DataFrame()
+               except:
+                   df_cli = pd.DataFrame()
 
-            # Aseguramos formato numérico y calculamos el saldo real del ciclo actual
+            # Aseguramos formato numérico y calculamos el saldo real por ciclos de cero
             if not df_cli.empty and 'MONTO($)' in df_cli.columns:
                 df_cli['MONTO($)'] = pd.to_numeric(df_cli['MONTO($)'], errors='coerce').fillna(0.0)
             
-                # Calculamos el saldo real buscando el corte del ciclo actual (de más viejo a más nuevo)
+                # Ordenamos cronológicamente para calcular el acumulado correctamente
                 temp_totales = df_cli.sort_values(by="id", ascending=True).copy()
                 temp_totales['acumulado'] = temp_totales['MONTO($)'].cumsum()
-            
+
+                # Buscamos los puntos donde la cuenta quedó en cero para aislar el ciclo activo actual
                 ceros = temp_totales[temp_totales['acumulado'].round(2) == 0.0]
                 if not ceros.empty:
                     ultimo_cero_id = ceros.iloc[-1]['id']
                     df_ciclo_actual = temp_totales[temp_totales['id'] > ultimo_cero_id]
                 else:
                     df_ciclo_actual = temp_totales
-                
+
                 saldo_real_neto = round(df_ciclo_actual['MONTO($)'].sum(), 2)
             else:
                 saldo_real_neto = 0.0
 
-
-            
             # --- EVALUAMOS SI DEBE O ESTÁ AL DÍA ---
-            if 0.00 <= saldo_real_neto <= 0.01:
+            if 0.00 >= saldo_real_neto >= -0.01:
                 c1, c2 = st.columns(2)
                 c1.metric("TOTAL ABONADO (DEUDA ACTUAL)", "$0.00")
                 c2.metric("SALDO PENDIENTE NETO", "$0.00")
                 st.write("---")
-                st.success("🟢 Este cliente está al día. Ambos marcadores están en $0.00")
-            elif saldo_real_neto < 0.00:
+                st.success("✅ Este cliente está al día. Ambos marcadores están en $0.00")
+           elif saldo_real_neto < 0.00:
                 c1, c2 = st.columns(2)
                 c1.metric("TOTAL ABONADO", f"${abs(saldo_real_neto):.2f}")
                 c2.metric("SALDO A FAVOR NETO", f"${abs(saldo_real_neto):.2f}")
                 st.write("---")
                 st.info(f"🔵 El cliente tiene un saldo a favor de ${abs(saldo_real_neto):.2f}")
-            else:
-                # Usamos UNICAMENTE el ciclo actual aislado para el recuadro
+           else:
+                # Usamos UNICAMENTE el ciclo actual aislado para el recuadro y métricas exactas
                 if 'df_ciclo_actual' in locals() and not df_ciclo_actual.empty:
                     df_para_recuadro = df_ciclo_actual.sort_values(by="id", ascending=True).copy()
                 else:
                     df_para_recuadro = df_cli.sort_values(by="id", ascending=True).copy()
-
-                # Aplicamos el filtro de tiempo del selector visual si está activo
-                if not df_para_recuadro.empty and 'FECHA' in df_para_recuadro.columns and filtro_tiempo != "Todo el historial":
-                    dias_map = {"Últimos 30 días": 30, "Últimos 60 días": 60, "Últimos 90 días": 90}
-                    dias_limite = dias_map.get(filtro_tiempo, 30)
-                    df_para_recuadro['temp_date'] = pd.to_datetime(df_para_recuadro['FECHA'], errors='coerce')
-                    fecha_corte = pd.Timestamp.now() - pd.Timedelta(days=dias_limite)
-                    df_para_recuadro = df_para_recuadro[df_para_recuadro['temp_date'] >= fecha_corte].copy()
 
                 movimientos_dict = df_para_recuadro.to_dict('records')
                 historial_recuadro = []
@@ -694,10 +680,9 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                     fecha_factura = fecha_completa[:10] if '/' in fecha_completa or '-' in fecha_completa else fecha_completa
 
                     mov_f = mov.copy()
-                    # Guardamos ambas versiones (mayúscula y minúscula) para evitar cualquier error de impresión o lectura
                     mov_f['FECHA'] = fecha_factura
                     mov_f['fecha'] = fecha_factura
-             
+                
                     if tipo_mov in ['crédito', 'credito']:
                         mov_f['original'] = abs(monto)
                         mov_f['abono'] = 0.0
@@ -720,9 +705,9 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                     mov_f['pendiente'] = round(saldo_run, 2)
                     historial_recuadro.append(mov_f)
 
-
                 total_abonos_ciclo = sum(float(n['abono']) for n in historial_recuadro)
                 abonos_mostrar = total_abonos_ciclo if total_abonos_ciclo > 0 else 0.0
+
 
 
                 # =========================================================
