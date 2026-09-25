@@ -1102,30 +1102,30 @@ def formulario_simulador_costos():
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
 
 
-#import streamlit as st
-#import pandas as pd
-#from datetime import datetime
-#import pytz
+import streamlit as st
+import pandas as pd
+from datetime import datetime
+import pytz
 
 # =========================================================
 # 🔒 VALIDACIÓN DE SESIÓN Y LOGO
 # =========================================================
-#if not check_password():
-  #  st.stop()
+if not check_password():
+    st.stop()
 
-#st.image("1000317144.jpg.png", use_container_width=True)
+st.image("1000317144.jpg.png", use_container_width=True)
 
-#if "pantalla" not in st.session_state:
-   # st.session_state.pantalla = "Menu Principal"
+if "pantalla" not in st.session_state:
+    st.session_state.pantalla = "Menu Principal"
 
-#st.markdown("---")
+st.markdown("---")
 
-# =========================================================
-# 🔄 CARGA GLOBAL DE DATOS DESDE SUPABASE
-# =========================================================
-#try:
- #   res_cli = supabase.table("clientes").select("nombre").execute()
-  #  clientes_lista = [c['nombre'] for c in res_cli.data] if res_cli.data else []
+=========================================================
+ 🔄 CARGA GLOBAL DE DATOS DESDE SUPABASE
+ =========================================================
+try:
+    res_cli = supabase.table("clientes").select("nombre").execute()
+    clientes_lista = [c['nombre'] for c in res_cli.data] if res_cli.data else []
 except Exception:
     clientes_lista = []
 
