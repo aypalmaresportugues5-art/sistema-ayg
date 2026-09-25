@@ -1120,21 +1120,7 @@ if "pantalla" not in st.session_state:
 
 st.markdown("---")
 
- #=========================================================
- # CARGA GLOBAL DE DATOS DESDE SUPABASE
-# =========================================================
-try:
-    res_cli = supabase.table("clientes").select("nombre").execute()
-    clientes_lista = [c['nombre'] for c in res_cli.data] if res_cli.data else []
-except Exception:
-    clientes_lista = []
-
-try:
-    res_prod = supabase.table("productos").select("nombre, precio, stock").execute()
-    productos_dict = {p['nombre']: {'precio': p['precio'], 'stock': p['stock']} for p in res_prod.data} if res_prod.data else {}
-except Exception:
-    productos_dict = {}
-
+ 
 # =========================================================
 # 🔲 PANTALLA PRINCIPAL: TABLERO DE BOTONES
 # =========================================================
