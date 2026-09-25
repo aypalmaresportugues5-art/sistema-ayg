@@ -90,7 +90,7 @@ def check_password():
 @st.cache_data(ttl=10)
 def cargar_clientes():
     try:
-        res = supabase.table("clientes").select("NOMBRE").execute()
+        res = supabase.table("clientes").select("nombre").execute()
         df = pd.DataFrame(res.data) if res.data else pd.DataFrame()
         if not df.empty:
             # Buscar la columna sin importar si está en mayúsculas o minúsculas
