@@ -655,13 +655,13 @@ def formulario_cuentas_por_cobrar(clientes_lista):
                 c2.metric("SALDO PENDIENTE NETO", "$0.00")
                 st.write("---")
                 st.success("✅ Este cliente está al día. Ambos marcadores están en $0.00")
-           elif saldo_real_neto < 0.00:
+            elif saldo_real_neto < 0.00:
                 c1, c2 = st.columns(2)
                 c1.metric("TOTAL ABONADO", f"${abs(saldo_real_neto):.2f}")
                 c2.metric("SALDO A FAVOR NETO", f"${abs(saldo_real_neto):.2f}")
                 st.write("---")
                 st.info(f"🔵 El cliente tiene un saldo a favor de ${abs(saldo_real_neto):.2f}")
-           else:
+            else:
                 # Usamos UNICAMENTE el ciclo actual aislado para el recuadro y métricas exactas
                 if 'df_ciclo_actual' in locals() and not df_ciclo_actual.empty:
                     df_para_recuadro = df_ciclo_actual.sort_values(by="id", ascending=True).copy()
