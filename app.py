@@ -1120,9 +1120,9 @@ if "pantalla" not in st.session_state:
 
 st.markdown("---")
 
-=========================================================
-  CARGA GLOBAL DE DATOS DESDE SUPABASE
- =========================================================
+ #=========================================================
+ # CARGA GLOBAL DE DATOS DESDE SUPABASE
+# =========================================================
 try:
     res_cli = supabase.table("clientes").select("nombre").execute()
     clientes_lista = [c['nombre'] for c in res_cli.data] if res_cli.data else []
