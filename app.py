@@ -1142,8 +1142,8 @@ except Exception:
 if not check_password():
     st.stop()
 
-st.image("1000317144.jpg.png", use_container_width=True)
-st.markdown("---")
+#st.image("1000317144.jpg.png", use_container_width=True)
+#st.markdown("---")
 
 clientes_lista = cargar_clientes()
 
