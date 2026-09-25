@@ -269,7 +269,7 @@ def formulario_venta_mayor(clientes_lista):
 
     
     # CONTROL MANUAL DE TASA BCV EN VENTA AL MAYOR
-    tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$):", min_value=1.0, value=45.0, step=0.01, key="mayor_tasa_bcv")
+    tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$):", min_value=1.0, value=1.0, step=0.01, key="mayor_tasa_bcv")
     
     # SELECTOR DE CONDICIÓN DE PAGO
     condicion_pago = st.selectbox("💳 Condición de Pago:", ["Crédito", "Contado"], key="mayor_condicion_pago")
