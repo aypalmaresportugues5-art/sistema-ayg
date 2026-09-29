@@ -584,16 +584,24 @@ def formulario_cuentas_por_cobrar(clientes_lista):
     import pandas as pd
     
     st.subheader("💰 Resumen de Deudas Activas")
-    
-    # 1. Consulta directa a la tabla 'ventas' de Supabase
     try:
-        res = supabase.table("ventas").select("*").limit(2000).execute()
-
+        # Ampliamos el rango hasta 2000 filas y ordenamos para traer todo lo nuevo sin cortes
+        res = supabase.table("ventas").select("*").order("id", desc=True).range(0, 1999).execute()
         datos_recibidos = res.data if res.data else []
         df_v = pd.DataFrame(datos_recibidos)
     except Exception as e:
-        st.error(f"🚨 Error al cargar datos de Supabase: {e}")
+        st.error(f"Error al cargar datos de Supabase: {e}")
         df_v = pd.DataFrame()
+
+    # 1. Consulta directa a la tabla 'ventas' de Supabase
+ #   try:
+  #      res = supabase.table("ventas").select("*").limit(2000).execute()
+
+  #      datos_recibidos = res.data if res.data else []
+  #      df_v = pd.DataFrame(datos_recibidos)
+  #  except Exception as e:
+ #       st.error(f"🚨 Error al cargar datos de Supabase: {e}")
+   #     df_v = pd.DataFrame()
         
     if not df_v.empty:
         # Limpiamos los nombres de los clientes para que espacios de más no los dupliquen
