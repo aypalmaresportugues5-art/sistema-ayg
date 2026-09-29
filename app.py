@@ -582,8 +582,14 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
 @st.dialog("📋 Resumen de Deudas Activas")
 def formulario_cuentas_por_cobrar(clientes_lista):
     import pandas as pd
-    
-    st.subheader("💰 Resumen de Deudas Activas")
+# Creamos columnas para el título a la izquierda y el botón a la derecha col_tit, col_btn = st.columns([3, 1])
+with col_tit:
+    st.subheader("📋 Resumen de Deudas Activas")
+with col_btn:
+    if st.button("💵 Abonar", use_container_width=True, key="btn_abono_rapido"):
+        formulario_cuentas_abonos(clientes_lista)
+
+   # st.subheader("💰 Resumen de Deudas Activas")
     try:
         # Ampliamos el rango hasta 2000 filas y ordenamos para traer todo lo nuevo sin cortes
         res = supabase.table("ventas").select("*").order("id", desc=True).range(0, 1999).execute()
@@ -592,16 +598,6 @@ def formulario_cuentas_por_cobrar(clientes_lista):
     except Exception as e:
         st.error(f"Error al cargar datos de Supabase: {e}")
         df_v = pd.DataFrame()
-
-    # 1. Consulta directa a la tabla 'ventas' de Supabase
- #   try:
-  #      res = supabase.table("ventas").select("*").limit(2000).execute()
-
-  #      datos_recibidos = res.data if res.data else []
-  #      df_v = pd.DataFrame(datos_recibidos)
-  #  except Exception as e:
- #       st.error(f"🚨 Error al cargar datos de Supabase: {e}")
-   #     df_v = pd.DataFrame()
         
     if not df_v.empty:
         # Limpiamos los nombres de los clientes para que espacios de más no los dupliquen
