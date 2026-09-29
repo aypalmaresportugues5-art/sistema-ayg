@@ -582,23 +582,9 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
 @st.dialog("📋 Resumen de Deudas Activas")
 def formulario_cuentas_por_cobrar(clientes_lista):
     import pandas as pd
-    # Creamos columnas para el título a la izquierda y el botón a la derecha 
-    col_tit, col_btn = st.columns([3, 1])
-    with col_tit:
-        st.subheader("📋 Resumen de Deudas Activas")
-    with col_btn:
-        if st.button("💵 Abonar", use_container_width=True, key="btn_abono_rapido"):
-            # Marcamos que queremos ir a abonos y cerramos las deudas activas
-            st.session_state.mostrar_abono_desde_deudas = True
-            st.formulario_deudas_activo = False  # O la bandera que uses para abrir este modal
-            st.rerun()
-
-# Manejador global limpio para abrir el diálogo de abonos sin anidarlo
-if st.session_state.get("mostrar_abono_desde_deudas", False):
-    st.session_state.mostrar_abono_desde_deudas = False
-    formulario_cuentas_abonos(clientes_lista)
-
-    st.divider()
+    
+    st.subheader("📋 Resumen de Deudas Activas")
+    
 
    # st.subheader("💰 Resumen de Deudas Activas")
     try:
