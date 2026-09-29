@@ -588,7 +588,13 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         st.subheader("📋 Resumen de Deudas Activas")
     with col_btn:
         if st.button("💵 Abonar", use_container_width=True, key="btn_abono_rapido"):
-            formulario_cuentas_abonos(clientes_lista)
+            st.session_state.mostrar_abono_desde_deudas = True
+            st.rerun()
+# Si se presionó el botón de abonar, abrimos el formulario correspondiente de forma segura
+    if st.session_state.get("mostrar_abono_desde_deudas", False):
+        st.session_state.mostrar_abono_desde_deudas = False
+        formulario_cuentas_abonos(clientes_lista)
+    st.divider()
 
    # st.subheader("💰 Resumen de Deudas Activas")
     try:
