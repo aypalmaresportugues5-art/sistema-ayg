@@ -582,12 +582,12 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
 @st.dialog("📋 Resumen de Deudas Activas")
 def formulario_cuentas_por_cobrar(clientes_lista):
     import pandas as pd
-# Creamos columnas para el título a la izquierda y el botón a la derecha col_tit, col_btn = st.columns([3, 1])
-with col_tit:
-    st.subheader("📋 Resumen de Deudas Activas")
-with col_btn:
-    if st.button("💵 Abonar", use_container_width=True, key="btn_abono_rapido"):
-        formulario_cuentas_abonos(clientes_lista)
+    # Creamos columnas para el título a la izquierda y el botón a la derecha col_tit, col_btn = st.columns([3, 1])
+    with col_tit:
+        st.subheader("📋 Resumen de Deudas Activas")
+    with col_btn:
+        if st.button("💵 Abonar", use_container_width=True, key="btn_abono_rapido"):
+            formulario_cuentas_abonos(clientes_lista)
 
    # st.subheader("💰 Resumen de Deudas Activas")
     try:
