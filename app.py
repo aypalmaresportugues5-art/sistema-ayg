@@ -596,10 +596,13 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         df_v = pd.DataFrame()
         
     if not df_v.empty:
-        # Aseguramos el tipo numérico en MONTO($)
+        # Limpiamos los nombres de los clientes para que espacios de más no los dupliquen
+        df_v['CLIENTE'] = df_v['CLIENTE'].astype(str).str.strip()
+        
+        # Aseguramos formato numérico estricto
         df_v['MONTO($)'] = pd.to_numeric(df_v['MONTO($)'], errors='coerce').fillna(0.0)
         
-        # --- CALCULO DEL DINERO TOTAL REAL EN LA CALLE ---
+        # Fórmula matemática de suma y filtrado de deudas vigentes
         saldos_por_cliente = df_v.groupby('CLIENTE')['MONTO($)'].sum()
         gran_total_en_calle = saldos_por_cliente[saldos_por_cliente > 0].sum()
 
