@@ -599,14 +599,10 @@ def formulario_cuentas_por_cobrar(clientes_lista):
         # Aseguramos el tipo numérico en MONTO($)
         df_v['MONTO($)'] = pd.to_numeric(df_v['MONTO($)'], errors='coerce').fillna(0.0)
         
-        # --- CÁLCULO DEL DINERO TOTAL REAL EN LA CALLE ---
-        gran_total_en_calle = 0.0
-        if clientes_lista:
-            for c in clientes_lista:
-                df_c = df_v[df_v['CLIENTE'] == c]
-                saldo_historico = df_c['MONTO($)'].sum()
-                if saldo_historico > 0:
-                    gran_total_en_calle += saldo_historico
+        # --- CALCULO DEL DINERO TOTAL REAL EN LA CALLE ---
+        saldos_por_cliente = df_v.groupby('CLIENTE')['MONTO($)'].sum()
+        gran_total_en_calle = saldos_por_cliente[saldos_por_cliente > 0].sum()
+
                     
         st.subheader("💰 Capital Total por Cobrar")
         st.info(f"Actualmente tienes un total de **${gran_total_en_calle:.2f}** en la calle (solo deudas vigentes).")
