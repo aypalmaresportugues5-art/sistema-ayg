@@ -582,8 +582,49 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
 @st.dialog("📋 Resumen de Deudas Activas")
 def formulario_cuentas_por_cobrar(clientes_lista):
     import pandas as pd
-    
-    st.subheader("📋 Resumen de Deudas Activas")
+    # 1. Creamos las columnas para el título y el botón de abonar
+    col_tit, col_btn = st.columns([3, 1])
+    with col_tit:
+        st.subheader("Deudas Activas")
+    with col_btn:
+        # Al hacer clic, alternamos el estado para mostrar u ocultar el formulario de abono aquí mismo
+        if st.button("💵 Abonar", use_container_width=True, key="btn_abono_rapido"):
+            st.session_state.ver_formulario_abono_inline = not st.session_state.get("ver_formulario_abono_inline", False)
+
+    # 2. Si el botón está activo, mostramos el formulario de abono DIRECTAMENTE AQUÍ adentro
+    if st.session_state.get("ver_formulario_abono_inline", False):
+        with st.container(border=True):
+            st.subheader("💵 Registro Rápido de Abono")
+            
+            c_cli = st.selectbox("Seleccionar Cliente", clientes_lista, key="abono_cli_sel_inline")
+            c_monto = st.number_input("Monto $", min_value=0.0, step=0.01, key="abono_monto_inline")
+            
+            if st.button("Guardar Operación", use_container_width=True, type="primary", key="btn_guardar_abono_inline"):
+                if c_monto > 0:
+                    try:
+                        import pytz
+                        from datetime import datetime
+                        zona_ve = pytz.timezone('America/Caracas')
+                        fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
+                        
+                        payload = {
+                            "FECHA": fecha_ve,
+                            "TIPO": "Abono",
+                            "CLIENTE": c_cli,
+                            "MONTO($)": -float(c_monto)
+                        }
+                        
+                        supabase.table("ventas").insert(payload).execute()
+                        st.success(f"¡Abono de ${c_monto:.2f} registrado con éxito!")
+                        st.session_state.ver_formulario_abono_inline = False
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al registrar abono: {e}")
+                else:
+                    st.warning("⚠️ Escribe un monto mayor a cero.")
+
+    st.divider()
+    #st.subheader("📋 Resumen de Deudas Activas")
     
 
    # st.subheader("💰 Resumen de Deudas Activas")
