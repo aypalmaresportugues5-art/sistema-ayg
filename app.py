@@ -1179,9 +1179,17 @@ st.success("🏪 SECCIÓN DE VENTAS")
 col1, col2 = st.columns(2)
 with col1:
     if st.button("🏪\n\nVenta Detal", key="btn_detal", use_container_width=True):
+        # Apagamos todas las demás banderas y abrimos esta
+        st.session_state.abrir_venta_mayor = False
+        st.session_state.abrir_inventario = False
+        st.session_state.abrir_cuentas_por_cobrar = False
+        st.session_state.abrir_cierre_caja = False
         formulario_venta_detal(clientes_lista)
 with col2:
     if st.button("📦\n\nVenta Mayor", key="btn_mayor", use_container_width=True):
+        st.session_state.abrir_inventario = False
+        st.session_state.abrir_cuentas_por_cobrar = False
+        st.session_state.abrir_cierre_caja = False
         st.session_state.abrir_venta_mayor = True
         st.rerun()
 
@@ -1192,9 +1200,16 @@ st.info("💰 GESTIÓN E INVENTARIO")
 col3, col4 = st.columns(2)
 with col3:
     if st.button("💵\n\nCuentas y Abonos", key="btn_abonos", use_container_width=True):
+        st.session_state.abrir_venta_mayor = False
+        st.session_state.abrir_inventario = False
+        st.session_state.abrir_cuentas_por_cobrar = False
+        st.session_state.abrir_cierre_caja = False
         formulario_cuentas_abonos(clientes_lista)
 with col4:
     if st.button("📦\n\nInventario", key="btn_inventario", use_container_width=True):
+        st.session_state.abrir_venta_mayor = False
+        st.session_state.abrir_cuentas_por_cobrar = False
+        st.session_state.abrir_cierre_caja = False
         st.session_state.abrir_inventario = True
         st.rerun()
 
@@ -1205,6 +1220,9 @@ st.warning("🗂️ REPORTES Y CIERRE")
 col5, col6 = st.columns(2)
 with col5:
     if st.button("📋\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
+        st.session_state.abrir_venta_mayor = False
+        st.session_state.abrir_inventario = False
+        st.session_state.abrir_cierre_caja = False
         st.session_state.abrir_cuentas_por_cobrar = True
         st.rerun()
 
@@ -1213,6 +1231,9 @@ if st.session_state.get("abrir_cuentas_por_cobrar", False):
 
 with col6:
     if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
+        st.session_state.abrir_venta_mayor = False
+        st.session_state.abrir_inventario = False
+        st.session_state.abrir_cuentas_por_cobrar = False
         st.session_state.abrir_cierre_caja = True
         st.rerun()
 
@@ -1221,6 +1242,6 @@ if st.session_state.get("abrir_cierre_caja", False):
 
 st.markdown("---")
 if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
-    st.session_state["password_correct"] = False
+    st.session_state.clear()
     st.query_params.clear()
     st.rerun()
