@@ -1153,43 +1153,8 @@ import pytz
 if not check_password():
     st.stop()
 
-with st.container(border=True):
-    # --- TARJETA CON EFECTO NEÓN PARA EL LOGO ---
-    st.markdown("""
-        <style>
-        .neon-container {
-            position: relative;
-            padding: 5px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #d4af37, #ff8c00, #1e293b);
-            box-shadow: 0 0 15px rgba(212, 175, 55, 0.4), 0 0 30px rgba(255, 140, 0, 0.2);
-            margin-bottom: 25px;
-            transition: all 0.3s ease-in-out;
-        }
-    
-        .neon-container:hover {
-            box-shadow: 0 0 25px rgba(212, 175, 55, 0.8), 0 0 50px rgba(255, 140, 0, 0.4);
-        }
+st.image("1000317144.jpg.png", use_container_width=True)
 
-        .neon-inner {
-            background-color: #0f172a;
-            border-radius: 17px;
-            padding: 10px;
-            text-align: center;
-        }
-        </style>
-
-        <div class="neon-container">
-           <div class="neon-inner">
-   """, unsafe_allow_html=True)
-
-  # Mostramos tu imagen dentro del contenedor con neón
-  st.image("1000317144.jpg.png", use_container_width=True)
-
-  st.markdown("""
-          </div>
-      </div>
-  """, unsafe_allow_html=True)
 
 if "pantalla" not in st.session_state:
     st.session_state.pantalla = "Menu Principal"
