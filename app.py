@@ -55,7 +55,6 @@ def init_supabase():
 supabase = init_supabase()
 
 
-
 # --- SISTEMA DE SEGURIDAD ---
 def check_password():
  # 1. Verificamos si la URL del navegador ya tiene guardado el acceso exitoso
@@ -1206,7 +1205,12 @@ st.warning("🗂️ REPORTES Y CIERRE")
 col5, col6 = st.columns(2)
 with col5:
     if st.button("📋\n\nCuentas por Cobrar", key="btn_cobrar", use_container_width=True):
-        formulario_cuentas_por_cobrar(clientes_lista)
+        st.session_state.abrir_cuentas_por_cobrar = True
+        st.rerun()
+
+if st.session_state.get("abrir_cuentas_por_cobrar", False):
+    formulario_cuentas_por_cobrar(clientes_lista)
+
 with col6:
     if st.button("🔒\n\nCierre de Caja", key="btn_cierre", use_container_width=True):
         st.session_state.abrir_cierre_caja = True
