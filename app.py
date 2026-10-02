@@ -1153,7 +1153,8 @@ import pytz
 if not check_password():
     st.stop()
 
-st.image("1000317144.jpg.png", use_container_width=True)
+with st.container(border=True):
+    st.image("1000317144.jpg.png", use_container_width=True)
 
 if "pantalla" not in st.session_state:
     st.session_state.pantalla = "Menu Principal"
