@@ -41,6 +41,18 @@ st.markdown("""
     color: white !important;
     height: 50px !important;
   }
+  /* ✨ EFECTO NEÓN DORADO PARA LA IMAGEN DEL LOGO */
+  [data-testid="stImage"] img {
+      border-radius: 20px !important;
+      border: 3px solid #d4af37 !important;
+      box-shadow: 0 0 20px rgba(212, 175, 55, 0.6), 0 0 40px rgba(255, 140, 0, 0.3) !important;
+      transition: all 0.3s ease-in-out !important;
+  }
+
+  [data-testid="stImage"] img:hover {
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.9), 0 0 60px rgba(255, 140, 0, 0.6) !important;
+      transform: scale(1.02);
+  }
 
   </style>
 """, unsafe_allow_html=True)
