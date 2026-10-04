@@ -1153,6 +1153,98 @@ def formulario_simulador_costos():
     with col_pvp2:
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
 
+@st.dialog("📚 Módulo Contable - Libros Oficiales")
+def formulario_modulo_contable():
+    import pandas as pd
+    import pytz
+    from datetime import datetime
+
+    tab_resumen, tab_diario, tab_gastos, tab_mayor = st.tabs([
+        "💼 Balance / Flujo de Caja", "📖 Libro Diario", "🧾 Libro de Gastos", "📊 Libro Mayor"
+    ])
+
+    # 1. CARGAMOS DATOS GENERALES DE SUPABASE
+    try:
+        res_v = supabase.table("ventas").select("*").order("id", desc=True).execute()
+        df_ventas = pd.DataFrame(res_v.data) if res_v.data else pd.DataFrame()
+        
+        res_i = supabase.table("insumos").select("*").execute()
+        df_insumos = pd.DataFrame(res_i.data) if res_i.data else pd.DataFrame()
+    except Exception as e:
+        st.error(f"Error al conectar con Supabase: {e}")
+        df_ventas = pd.DataFrame()
+        df_insumos = pd.DataFrame()
+
+    # Preparación de datos numéricos seguros
+    if not df_ventas.empty and 'MONTO($)' in df_ventas.columns:
+        df_ventas['MONTO($)'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
+        total_ingresos = df_ventas['MONTO($)'].sum()
+    else:
+        total_ingresos = 0.0
+
+    if not df_insumos.empty and 'costo_compra' in df_insumos.columns:
+        df_insumos['costo_compra'] = pd.to_numeric(df_insumos['costo_compra'], errors='coerce').fillna(0.0)
+        total_egresos = df_insumos['costo_compra'].sum()
+    else:
+        total_egresos = 0.0
+
+    capital_neto = total_ingresos - total_egresos
+
+    # === PESTAÑA 0: BALANCE GENERAL / FLUJO DE CAJA ===
+    with tab_resumen:
+        st.subheader("💼 Resumen Gerencial y Capital Actual")
+        st.write("Vista general consolidada del flujo de efectivo y capital neto del negocio.")
+
+        # Métricas principales en tarjetas visuales
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("💵 Total Ingresos (Ventas)", f"${total_ingresos:.2f}", delta="Entradas")
+            st.metric("📉 Total Egresos (Insumos)", f"${total_egresos:.2f}", delta="Salidas", delta_value="inverse")
+        with col2:
+            st.metric("💎 Capital Neto en Caja", f"${capital_neto:.2f}", delta="Balance Actual")
+
+        st.info("💡 Este balance se actualiza automáticamente sumando todas tus ventas registradas y restando las inversiones en materia prima.")
+
+    # === PESTAÑA 1: LIBRO DIARIO (CRONOLÓGICO) ===
+    with tab_diario:
+        st.subheader("📖 Libro Diario de Operaciones")
+        st.write("Registro cronológico unificado de entradas y salidas de efectivo.")
+
+        if not df_ventas.empty:
+            df_diario = df_ventas[['FECHA', 'TIPO', 'CLIENTE', 'MONTO($)']].copy()
+            df_diario.columns = ['Fecha', 'Tipo de Operación', 'Cliente / Concepto', 'Monto ($)']
+            st.dataframe(df_diario, use_container_width=True)
+        else:
+            st.info("No hay registros en el diario todavía.")
+
+    # === PESTAÑA 2: LIBRO DE GASTOS E INSUMOS ===
+    with tab_gastos:
+        st.subheader("🧾 Control de Gastos y Compras de Insumos")
+        st.write("Inversiones realizadas en materia prima y costos de producción.")
+
+        if not df_insumos.empty:
+            cols_mostrar = [c for c in ['insumo', 'costo_compra', 'presentacion', 'unidad_medida', 'costo_unidad'] if c in df_insumos.columns]
+            st.dataframe(df_insumos[cols_mostrar], use_container_width=True)
+            st.metric("Total Histórico Invertido en Insumos", f"${total_egresos:.2f}")
+        else:
+            st.info("No hay insumos registrados en la base de datos.")
+
+    # === PESTAÑA 3: LIBRO MAYOR (RESUMEN POR CUENTAS) ===
+    with tab_mayor:
+        st.subheader("📊 Libro Mayor - Consolidado por Cliente / Cuenta")
+        st.write("Acumulado neto de transacciones agrupadas por cliente o tipo.")
+
+        if not df_ventas.empty:
+            df_ventas['CLIENTE'] = df_ventas['CLIENTE'].astype(str).str.strip()
+            libro_mayor = df_ventas.groupby('CLIENTE')['MONTO($)'].agg(['count', 'sum']).reset_index()
+            libro_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Neto ($)']
+            st.dataframe(libro_mayor, use_container_width=True)
+        else:
+            st.info("No hay datos suficientes para calcular el Libro Mayor.")
+
+    st.divider()
+    if st.button("❌ Cerrar Módulo Contable", use_container_width=True):
+        st.rerun()
 
 import streamlit as st
 import pandas as pd
