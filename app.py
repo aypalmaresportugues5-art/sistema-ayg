@@ -9,6 +9,14 @@ import base64
 if "abrir_inventario" not in st.session_state:
     st.session_state.abrir_inventario = False
 
+# Agregamos aquí las nuevas banderas para que el sistema las recuerde siempre:
+if "formulario_simulador_costos" not in st.session_state:
+    st.session_state.formulario_simulador_costos = False
+
+if "formulario_modulo_contable" not in st.session_state:
+    st.session_state.formulario_modulo_contable = False
+
+
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(page_title="Inversiones AYG 2017", page_icon="🥖", layout="centered")
 
@@ -1344,6 +1352,35 @@ with col6:
 
 if st.session_state.get("abrir_cierre_caja", False):
     formulario_cierre_de_caja()
+# --- CUARTA FILA: SIMULADOR DE COSTOS Y MÓDULO CONTABLE ---
+col7, col8 = st.columns(2)
+
+with col7:
+    if st.button("🧮\n\nSimulador de Costos", key="btn_simulador", use_container_width=True):
+        st.session_state.abrir_venta_mayor = False
+        st.session_state.abrir_inventario = False
+        st.session_state.abrir_cuentas_por_cobrar = False
+        st.session_state.abrir_cierre_caja = False
+        st.session_state.formulario_modulo_contable = False
+        st.session_state.formulario_simulador_costos = True
+        st.rerun()
+
+with col8:
+    if st.button("📚\n\nMódulo Contable", key="btn_contable", use_container_width=True):
+        st.session_state.abrir_venta_mayor = False
+        st.session_state.abrir_inventario = False
+        st.session_state.abrir_cuentas_por_cobrar = False
+        st.session_state.abrir_cierre_caja = False
+        st.session_state.formulario_simulador_costos = False
+        st.session_state.formulario_modulo_contable = True
+        st.rerun()
+
+# --- LLAMADAS A LOS DIÁLOGOS NUEVOS ---
+if st.session_state.get("formulario_simulador_costos", False):
+    formulario_simulador_costos()
+
+if st.session_state.get("formulario_modulo_contable", False):
+    formulario_modulo_contable()
 
 st.markdown("---")
 if st.button("🚪 Cerrar Sesión / Salir", key="btn_salir", use_container_width=True, type="primary"):
