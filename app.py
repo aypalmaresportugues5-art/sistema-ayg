@@ -1161,7 +1161,7 @@ def formulario_simulador_costos():
     with col_pvp2:
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
 
-@st.dialog("📚 Módulo Contable - Libros y Balance")
+
 @st.dialog("📚 Módulo Contable - Libros Oficiales y Mensuales")
 def formulario_modulo_contable():
     import pandas as pd
