@@ -1234,27 +1234,27 @@ def formulario_modulo_contable():
             st.warning("No hay costos registrados.")
 
     with tab_mayor:
-        st.subheader("📚 Libro Mayor - Consolidado por Cliente / Cuenta")
-        st.write("Acumulado neto de transacciones agrupadas por cliente o tipo.")
+        st.subheader("📚 Libro Mayor - Saldos Actuales por Cliente")
+        st.write("Cálculo de saldo pendiente por cliente (Ventas a Crédito menos Abonos).")
         
         if not df_ventas.empty and 'CLIENTE' in df_ventas.columns and 'MONTO($)' in df_ventas.columns:
-            # Nos aseguramos estrictamente de que el MONTO sea numérico flotante
+            # Aseguramos que el monto sea numérico
             df_ventas['MONTO_NUM'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
             
-            # Agrupamos por cliente sumando los montos y contando operaciones
+            # Agrupamos por cliente para obtener el acumulado real neto y el número de operaciones
             df_mayor = df_ventas.groupby('CLIENTE', as_index=False).agg(
                 N_Operaciones=('MONTO_NUM', 'count'),
-                Saldo_Neto=('MONTO_NUM', 'sum')
+                Saldo_Pendiente=('MONTO_NUM', 'sum')
             )
             
-            # Redondeamos a 2 decimales para que quede impecable
-            df_mayor['Saldo_Neto'] = df_mayor['Saldo_Neto'].round(2)
+            # Redondeamos a 2 decimales
+            df_mayor['Saldo_Pendiente'] = df_mayor['Saldo_Pendiente'].round(2)
             
-            # Ordenamos por mayor número de operaciones o alfabéticamente
-            df_mayor = df_mayor.sort_values(by='N_Operaciones', ascending=False)
+            # Ordenamos por los clientes con mayor saldo pendiente o movimiento
+            df_mayor = df_mayor.sort_values(by='Saldo_Pendiente', ascending=False)
             
             # Renombramos las columnas para la vista final
-            df_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Net ($)']
+            df_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Pendiente ($)']
             
             st.dataframe(df_mayor, use_container_width=True)
         else:
