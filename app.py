@@ -1248,20 +1248,16 @@ def formulario_modulo_contable():
         else:
             st.info("Datos insuficientes.")
 
-    with tab_mensual:
+        with tab_mensual:
         st.markdown("### 📅 Reporte y Resumen Mensual para Libros")
         st.write("Filtra y visualiza el consolidado del mes seleccionado para transcribir ordenadamente.")
         
-        # Selectores de Mes y Año
         col_m1, col_m2 = st.columns(2)
         mes_seleccionado = col_m1.selectbox("Seleccionar Mes", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], index=datetime.now().month - 1)
         anio_seleccionado = col_m2.selectbox("Seleccionar Año", ["2025", "2026", "2027"], index=1)
         
         if not df_ventas.empty and "FECHA" in df_ventas.columns:
-            # Filtro flexible que busca el mes y año dentro del texto de la fecha (ej: formato DD/MM/YYYY)
             patron_mes = f"/{mes_seleccionado}/{anio_seleccionado}"
-            
-            # Limpiamos y filtramos
             df_ventas['FECHA_STR'] = df_ventas['FECHA'].astype(str)
             df_mes = df_ventas[df_ventas['FECHA_STR'].str.contains(patron_mes, na=False)].copy()
             
@@ -1279,12 +1275,13 @@ def formulario_modulo_contable():
                 m_c3.metric("Movimiento Neto Mes", f"${neto_mes:,.2f}")
                 
                 st.markdown("#### Detalle cronológico del mes:")
-                cols_m = [c for c in ["FECHA", "TIPO", "CLIENTE", "MONTO($)"] if c in df_mes.columns]
-                st.dataframe(df_mes[cols_m].sort_values(by="id", ascending=False), use_container_width=True)
+                # Mostramos el dataframe directamente sin ordenar por ID para evitar errores de columnas faltantes
+                st.dataframe(df_mes, use_container_width=True)
             else:
-                st.warning(f"No se encontraron registros de ventas para el mes {mes_seleccionado}/{anio_seleccionado}.")
+                st.warning(f"No se encontraron registros para el mes {mes_seleccionado}/{anio_seleccionado}.")
         else:
             st.warning("No hay datos de fechas disponibles.")
+
 
     st.divider()
     if st.button("❌ Cerrar Módulo Contable", use_container_width=True, type="primary"):
