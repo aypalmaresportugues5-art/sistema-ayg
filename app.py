@@ -1235,13 +1235,13 @@ def formulario_modulo_contable():
 
     with tab_mayor:
         st.subheader("📚 Libro Mayor - Saldos Actuales por Cliente")
-        st.write("Cálculo de saldo pendiente por cliente (Ventas a Crédito menos Abonos).")
+        st.write("Consolidado real de deuda pendiente por cliente (Suma neta de transacciones).")
         
         if not df_ventas.empty and 'CLIENTE' in df_ventas.columns and 'MONTO($)' in df_ventas.columns:
-            # Aseguramos que el monto sea numérico
+            # Limpiamos y convertimos los montos estrictamente a números decimales
             df_ventas['MONTO_NUM'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
             
-            # Agrupamos por cliente para obtener el acumulado real neto y el número de operaciones
+            # Agrupamos por cliente sumando el total de sus montos (créditos menos abonos)
             df_mayor = df_ventas.groupby('CLIENTE', as_index=False).agg(
                 N_Operaciones=('MONTO_NUM', 'count'),
                 Saldo_Pendiente=('MONTO_NUM', 'sum')
@@ -1250,8 +1250,11 @@ def formulario_modulo_contable():
             # Redondeamos a 2 decimales
             df_mayor['Saldo_Pendiente'] = df_mayor['Saldo_Pendiente'].round(2)
             
-            # Ordenamos por los clientes con mayor saldo pendiente o movimiento
+            # Ordenamos estrictamente por el saldo pendiente mayor (descendente)
             df_mayor = df_mayor.sort_values(by='Saldo_Pendiente', ascending=False)
+            
+            # Reseteamos el índice para que no muestre números de fila extraños
+            df_mayor = df_mayor.reset_index(drop=True)
             
             # Renombramos las columnas para la vista final
             df_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Pendiente ($)']
