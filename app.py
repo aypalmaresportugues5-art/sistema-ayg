@@ -1235,31 +1235,48 @@ def formulario_modulo_contable():
 
     with tab_mayor:
         st.subheader("📚 Libro Mayor - Saldos Actuales por Cliente")
-        st.write("Consolidado real de deuda pendiente por cliente (Suma neta de transacciones).")
+        st.write("Consolidado de deudas vigentes por cliente basado en el ciclo activo.")
         
         if not df_ventas.empty and 'CLIENTE' in df_ventas.columns and 'MONTO($)' in df_ventas.columns:
-            # Limpiamos y convertimos los montos estrictamente a números decimales
+            # Limpiamos nombres de clientes y montos
+            df_ventas['CLIENTE'] = df_ventas['CLIENTE'].astype(str).str.strip()
             df_ventas['MONTO_NUM'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
             
-            # Agrupamos por cliente sumando el total de sus montos (créditos menos abonos)
-            df_mayor = df_ventas.groupby('CLIENTE', as_index=False).agg(
-                N_Operaciones=('MONTO_NUM', 'count'),
-                Saldo_Pendiente=('MONTO_NUM', 'sum')
-            )
+            # Calculamos el saldo vigente por cliente simulando la lógica de ciclos
+            saldos_por_cliente = []
             
-            # Redondeamos a 2 decimales
-            df_mayor['Saldo_Pendiente'] = df_mayor['Saldo_Pendiente'].round(2)
+            for cliente, df_cli in df_ventas.groupby('CLIENTE'):
+                # Ordenamos cronológicamente por id
+                df_cli = df_cli.sort_values(by='id', ascending=True).copy()
+                df_cli['acumulado'] = df_cli['MONTO_NUM'].cumsum()
+                
+                # Buscamos dónde la cuenta quedó en cero
+                ceros = df_cli[df_cli['acumulado'].round(2) == 0.0]
+                
+                if not ceros.empty:
+                    ultimo_cero_id = ceros.iloc[-1]['id']
+                    df_ciclo = df_cli[df_cli['id'] > ultimo_cero_id]
+                else:
+                    df_ciclo = df_cli
+                
+                saldo_real = round(df_ciclo['MONTO_NUM'].sum(), 2)
+                operaciones_ciclo = len(df_ciclo)
+                
+                if saldo_real != 0 or operaciones_ciclo > 0:
+                    saldos_por_cliente.append({
+                        'Cliente / Cuenta': cliente,
+                        'N° Operaciones': operaciones_ciclo,
+                        'Saldo Pendiente ($)': saldo_real
+                    })
             
-            # Ordenamos estrictamente por el saldo pendiente mayor (descendente)
-            df_mayor = df_mayor.sort_values(by='Saldo_Pendiente', ascending=False)
+            df_mayor = pd.DataFrame(saldos_por_cliente)
             
-            # Reseteamos el índice para que no muestre números de fila extraños
-            df_mayor = df_mayor.reset_index(drop=True)
-            
-            # Renombramos las columnas para la vista final
-            df_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Pendiente ($)']
-            
-            st.dataframe(df_mayor, use_container_width=True)
+            if not df_mayor.empty:
+                # Ordenamos por mayor saldo pendiente
+                df_mayor = df_mayor.sort_values(by='Saldo Pendiente ($)', ascending=False).reset_index(drop=True)
+                st.dataframe(df_mayor, use_container_width=True)
+            else:
+                st.info("No hay saldos pendientes activos en este momento.")
         else:
             st.info("No hay datos suficientes de ventas para generar el Libro Mayor.")
     st.divider()
