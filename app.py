@@ -1234,14 +1234,31 @@ def formulario_modulo_contable():
             st.warning("No hay costos registrados.")
 
     with tab_mayor:
-        st.markdown("### 📚 Libro Mayor por Cliente")
-        if not df_ventas.empty and "CLIENTE" in df_ventas.columns and "MONTO($)" in df_ventas.columns:
-            libro_mayor = df_ventas.groupby("CLIENTE")["MONTO($)"].agg(['count', 'sum']).reset_index()
-            libro_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Neto ($)']
-            st.dataframe(libro_mayor, use_container_width=True)
+        st.subheader("📚 Libro Mayor - Consolidado por Cliente / Cuenta")
+        st.write("Acumulado neto de transacciones agrupadas por cliente o tipo.")
+        
+        if not df_ventas.empty and 'CLIENTE' in df_ventas.columns and 'MONTO($)' in df_ventas.columns:
+            # Nos aseguramos estrictamente de que el MONTO sea numérico flotante
+            df_ventas['MONTO_NUM'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
+            
+            # Agrupamos por cliente sumando los montos y contando operaciones
+            df_mayor = df_ventas.groupby('CLIENTE', as_index=False).agg(
+                N_Operaciones=('MONTO_NUM', 'count'),
+                Saldo_Neto=('MONTO_NUM', 'sum')
+            )
+            
+            # Redondeamos a 2 decimales para que quede impecable
+            df_mayor['Saldo_Neto'] = df_mayor['Saldo_Neto'].round(2)
+            
+            # Ordenamos por mayor número de operaciones o alfabéticamente
+            df_mayor = df_mayor.sort_values(by='N_Operaciones', ascending=False)
+            
+            # Renombramos las columnas para la vista final
+            df_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Net ($)']
+            
+            st.dataframe(df_mayor, use_container_width=True)
         else:
-            st.warning("Datos insuficientes para generar el Libro Mayor.")
-
+            st.info("No hay datos suficientes de ventas para generar el Libro Mayor.")
     st.divider()
     if st.button("❌ Cerrar Módulo Contable", use_container_width=True, type="primary"):
         st.session_state.formulario_modulo_contable = False
