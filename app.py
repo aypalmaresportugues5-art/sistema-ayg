@@ -1162,14 +1162,16 @@ def formulario_simulador_costos():
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
 
 @st.dialog("📚 Módulo Contable - Libros y Balance")
+@st.dialog("📚 Módulo Contable - Libros Oficiales y Mensuales")
 def formulario_modulo_contable():
     import pandas as pd
     import streamlit as st
+    from datetime import datetime
 
     st.subheader("📊 Consolidado Financiero y Contable")
-    st.write("Análisis en tiempo real cruzando la tabla de Ventas y la de Costos.")
+    st.write("Herramienta de apoyo para transcripción en libros físicos (Normativa Venezolana).")
 
-    # 1. Cargar datos desde Supabase con el rango completo idéntico a Cuentas por Cobrar
+    # 1. Cargar datos desde Supabase con el rango completo
     try:
         res_ventas = supabase.table("ventas").select("*").order("id", desc=True).range(0, 1999).execute()
         df_ventas = pd.DataFrame(res_ventas.data if res_ventas.data else [])
@@ -1184,23 +1186,22 @@ def formulario_modulo_contable():
         df_costos = pd.DataFrame()
         st.error(f"Error al cargar costos: {e}")
 
-    # Pestañas contables
-    tab_balance, tab_diario, tab_costos, tab_mayor = st.tabs([
-        "📈 Balance y Flujo", 
-        "📝 Libro Diario (Ventas)", 
-        "📦 Libro de Costos", 
-        "📚 Libro Mayor"
+    # Pestañas contables ampliadas con el Libro Mensual
+    tab_balance, tab_diario, tab_costos, tab_mayor, tab_mensual = st.tabs([
+        "📈 Balance", 
+        "📝 Diario", 
+        "📦 Costos", 
+        "📚 Mayor",
+        "📅 Libro Mensual"
     ])
 
     with tab_balance:
         st.markdown("### Resumen Financiero General")
-        
         total_ingresos = 0.0
         total_gastos = 0.0
         
         if not df_ventas.empty and "MONTO($)" in df_ventas.columns:
             df_ventas["MONTO_NUM"] = pd.to_numeric(df_ventas["MONTO($)"], errors="coerce").fillna(0.0)
-            # Sumamos los montos positivos (ingresos y abonos reales)
             total_ingresos = df_ventas[df_ventas["MONTO_NUM"] > 0]["MONTO_NUM"].sum()
             
         if not df_costos.empty and "COSTO COMPRA" in df_costos.columns:
@@ -1214,16 +1215,13 @@ def formulario_modulo_contable():
         col2.metric("Inversión / Costos ($)", f"${total_gastos:,.2f}")
         col3.metric("Capital Neto ($)", f"${neto:,.2f}", delta=f"${neto:,.2f}")
 
-        st.divider()
-        st.info("💡 Este balance cruza los ingresos de la tabla `ventas` y los costos de insumos de la tabla `costos`.")
-
     with tab_diario:
         st.markdown("### 📝 Registro de Transacciones")
         if not df_ventas.empty:
             cols_mostrar = [c for c in ["FECHA", "TIPO", "CLIENTE", "MONTO($)"] if c in df_ventas.columns]
             st.dataframe(df_ventas[cols_mostrar], use_container_width=True)
         else:
-            st.warning("No hay registros de ventas disponibles.")
+            st.warning("No hay registros disponibles.")
 
     with tab_costos:
         st.markdown("### 📦 Inventario de Costos e Insumos")
@@ -1234,26 +1232,59 @@ def formulario_modulo_contable():
             st.warning("No hay costos registrados.")
 
     with tab_mayor:
-        st.markdown("### 📚 Libro Mayor - Resumen de Saldos por Cliente")
-        st.write("Consolidado neto de operaciones por cliente.")
-        
+        st.markdown("### 📚 Libro Mayor - Saldos por Cliente")
         if not df_ventas.empty and 'CLIENTE' in df_ventas.columns and 'MONTO($)' in df_ventas.columns:
             df_ventas['CLIENTE'] = df_ventas['CLIENTE'].astype(str).str.strip()
             df_ventas['MONTO_NUM'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
             
-            # Agrupación directa y limpia idéntica al cálculo global de cuentas por cobrar
             df_mayor = df_ventas.groupby('CLIENTE', as_index=False).agg(
                 N_Operaciones=('MONTO_NUM', 'count'),
                 Saldo_Neto=('MONTO_NUM', 'sum')
             )
-            
             df_mayor['Saldo_Neto'] = df_mayor['Saldo_Neto'].round(2)
             df_mayor = df_mayor.sort_values(by='Saldo_Neto', ascending=False).reset_index(drop=True)
             df_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Neto ($)']
-            
             st.dataframe(df_mayor, use_container_width=True)
         else:
-            st.info("No hay datos suficientes de ventas para generar el Libro Mayor.")
+            st.info("Datos insuficientes.")
+
+    with tab_mensual:
+        st.markdown("### 📅 Reporte y Resumen Mensual para Libros")
+        st.write("Filtra y visualiza el consolidado del mes seleccionado para transcribir ordenadamente.")
+        
+        # Selectores de Mes y Año
+        col_m1, col_m2 = st.columns(2)
+        mes_seleccionado = col_m1.selectbox("Seleccionar Mes", ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], index=datetime.now().month - 1)
+        anio_seleccionado = col_m2.selectbox("Seleccionar Año", ["2025", "2026", "2027"], index=1)
+        
+        if not df_ventas.empty and "FECHA" in df_ventas.columns:
+            # Filtro flexible que busca el mes y año dentro del texto de la fecha (ej: formato DD/MM/YYYY)
+            patron_mes = f"/{mes_seleccionado}/{anio_seleccionado}"
+            
+            # Limpiamos y filtramos
+            df_ventas['FECHA_STR'] = df_ventas['FECHA'].astype(str)
+            df_mes = df_ventas[df_ventas['FECHA_STR'].str.contains(patron_mes, na=False)].copy()
+            
+            if not df_mes.empty:
+                df_mes['MONTO_NUM'] = pd.to_numeric(df_mes['MONTO($)'], errors='coerce').fillna(0.0)
+                
+                total_mes_ventas = df_mes[df_mes['MONTO_NUM'] > 0]['MONTO_NUM'].sum()
+                total_mes_abonos = df_mes[df_mes['MONTO_NUM'] < 0]['MONTO_NUM'].sum()
+                neto_mes = total_mes_ventas + total_mes_abonos
+                
+                st.info(f"📌 **Resumen Período {mes_seleccionado}/{anio_seleccionado}**")
+                m_c1, m_c2, m_c3 = st.columns(3)
+                m_c1.metric("Total Ventas/Créditos", f"${total_mes_ventas:,.2f}")
+                m_c2.metric("Total Abonos/Pagos", f"${abs(total_mes_abonos):,.2f}")
+                m_c3.metric("Movimiento Neto Mes", f"${neto_mes:,.2f}")
+                
+                st.markdown("#### Detalle cronológico del mes:")
+                cols_m = [c for c in ["FECHA", "TIPO", "CLIENTE", "MONTO($)"] if c in df_mes.columns]
+                st.dataframe(df_mes[cols_m].sort_values(by="id", ascending=False), use_container_width=True)
+            else:
+                st.warning(f"No se encontraron registros de ventas para el mes {mes_seleccionado}/{anio_seleccionado}.")
+        else:
+            st.warning("No hay datos de fechas disponibles.")
 
     st.divider()
     if st.button("❌ Cerrar Módulo Contable", use_container_width=True, type="primary"):
