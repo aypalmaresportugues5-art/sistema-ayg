@@ -1248,7 +1248,7 @@ def formulario_modulo_contable():
         else:
             st.info("Datos insuficientes.")
 
-        with tab_mensual:
+    with tab_mensual:
         st.markdown("### 📅 Reporte y Resumen Mensual para Libros")
         st.write("Filtra y visualiza el consolidado del mes seleccionado para transcribir ordenadamente.")
         
