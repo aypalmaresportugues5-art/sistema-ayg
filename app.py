@@ -1167,11 +1167,11 @@ def formulario_modulo_contable():
     import streamlit as st
 
     st.subheader("📊 Consolidado Financiero y Contable")
-    st.write("Análisis en tiempo real cruzando la tabla de **Ventas** y la de **Costos/Insumos**.")
+    st.write("Análisis en tiempo real cruzando la tabla de Ventas y la de Costos.")
 
-    # 1. Cargar datos desde Supabase
+    # 1. Cargar datos desde Supabase con el rango completo idéntico a Cuentas por Cobrar
     try:
-        res_ventas = supabase.table("ventas").select("*").execute()
+        res_ventas = supabase.table("ventas").select("*").order("id", desc=True).range(0, 1999).execute()
         df_ventas = pd.DataFrame(res_ventas.data if res_ventas.data else [])
     except Exception as e:
         df_ventas = pd.DataFrame()
@@ -1199,12 +1199,12 @@ def formulario_modulo_contable():
         total_gastos = 0.0
         
         if not df_ventas.empty and "MONTO($)" in df_ventas.columns:
-            df_ventas["MONTO($)"] = pd.to_numeric(df_ventas["MONTO($)"], errors="coerce").fillna(0)
-            # Sumamos los montos positivos (ingresos y abonos)
-            total_ingresos = df_ventas[df_ventas["MONTO($)"] > 0]["MONTO($)"].sum()
+            df_ventas["MONTO_NUM"] = pd.to_numeric(df_ventas["MONTO($)"], errors="coerce").fillna(0.0)
+            # Sumamos los montos positivos (ingresos y abonos reales)
+            total_ingresos = df_ventas[df_ventas["MONTO_NUM"] > 0]["MONTO_NUM"].sum()
             
         if not df_costos.empty and "COSTO COMPRA" in df_costos.columns:
-            df_costos["COSTO COMPRA"] = pd.to_numeric(df_costos["COSTO COMPRA"], errors="coerce").fillna(0)
+            df_costos["COSTO COMPRA"] = pd.to_numeric(df_costos["COSTO COMPRA"], errors="coerce").fillna(0.0)
             total_gastos = df_costos["COSTO COMPRA"].sum()
 
         neto = total_ingresos - total_gastos
@@ -1234,55 +1234,32 @@ def formulario_modulo_contable():
             st.warning("No hay costos registrados.")
 
     with tab_mayor:
-        st.subheader("📚 Libro Mayor - Saldos Actuales por Cliente")
-        st.write("Consolidado de deudas vigentes por cliente basado en el ciclo activo.")
+        st.markdown("### 📚 Libro Mayor - Resumen de Saldos por Cliente")
+        st.write("Consolidado neto de operaciones por cliente.")
         
         if not df_ventas.empty and 'CLIENTE' in df_ventas.columns and 'MONTO($)' in df_ventas.columns:
-            # Limpiamos nombres de clientes y montos
             df_ventas['CLIENTE'] = df_ventas['CLIENTE'].astype(str).str.strip()
             df_ventas['MONTO_NUM'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
             
-            # Calculamos el saldo vigente por cliente simulando la lógica de ciclos
-            saldos_por_cliente = []
+            # Agrupación directa y limpia idéntica al cálculo global de cuentas por cobrar
+            df_mayor = df_ventas.groupby('CLIENTE', as_index=False).agg(
+                N_Operaciones=('MONTO_NUM', 'count'),
+                Saldo_Neto=('MONTO_NUM', 'sum')
+            )
             
-            for cliente, df_cli in df_ventas.groupby('CLIENTE'):
-                # Ordenamos cronológicamente por id
-                df_cli = df_cli.sort_values(by='id', ascending=True).copy()
-                df_cli['acumulado'] = df_cli['MONTO_NUM'].cumsum()
-                
-                # Buscamos dónde la cuenta quedó en cero
-                ceros = df_cli[df_cli['acumulado'].round(2) == 0.0]
-                
-                if not ceros.empty:
-                    ultimo_cero_id = ceros.iloc[-1]['id']
-                    df_ciclo = df_cli[df_cli['id'] > ultimo_cero_id]
-                else:
-                    df_ciclo = df_cli
-                
-                saldo_real = round(df_ciclo['MONTO_NUM'].sum(), 2)
-                operaciones_ciclo = len(df_ciclo)
-                
-                if saldo_real != 0 or operaciones_ciclo > 0:
-                    saldos_por_cliente.append({
-                        'Cliente / Cuenta': cliente,
-                        'N° Operaciones': operaciones_ciclo,
-                        'Saldo Pendiente ($)': saldo_real
-                    })
+            df_mayor['Saldo_Neto'] = df_mayor['Saldo_Neto'].round(2)
+            df_mayor = df_mayor.sort_values(by='Saldo_Neto', ascending=False).reset_index(drop=True)
+            df_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Neto ($)']
             
-            df_mayor = pd.DataFrame(saldos_por_cliente)
-            
-            if not df_mayor.empty:
-                # Ordenamos por mayor saldo pendiente
-                df_mayor = df_mayor.sort_values(by='Saldo Pendiente ($)', ascending=False).reset_index(drop=True)
-                st.dataframe(df_mayor, use_container_width=True)
-            else:
-                st.info("No hay saldos pendientes activos en este momento.")
+            st.dataframe(df_mayor, use_container_width=True)
         else:
             st.info("No hay datos suficientes de ventas para generar el Libro Mayor.")
+
     st.divider()
     if st.button("❌ Cerrar Módulo Contable", use_container_width=True, type="primary"):
         st.session_state.formulario_modulo_contable = False
         st.rerun()
+
 
 
 import streamlit as st
