@@ -1161,98 +1161,92 @@ def formulario_simulador_costos():
     with col_pvp2:
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
 
-@st.dialog("📚 Módulo Contable - Libros Oficiales")
+@st.dialog("📚 Módulo Contable - Libros y Balance")
 def formulario_modulo_contable():
     import pandas as pd
-    import pytz
-    from datetime import datetime
+    import streamlit as st
 
-    tab_resumen, tab_diario, tab_gastos, tab_mayor = st.tabs([
-        "💼 Balance / Flujo de Caja", "📖 Libro Diario", "🧾 Libro de Gastos", "📊 Libro Mayor"
+    st.subheader("📊 Consolidado Financiero y Contable")
+    st.write("Análisis en tiempo real cruzando la tabla de **Ventas** y la de **Costos/Insumos**.")
+
+    # 1. Cargar datos desde Supabase
+    try:
+        res_ventas = supabase.table("ventas").select("*").execute()
+        df_ventas = pd.DataFrame(res_ventas.data if res_ventas.data else [])
+    except Exception as e:
+        df_ventas = pd.DataFrame()
+        st.error(f"Error al cargar ventas: {e}")
+
+    try:
+        res_costos = supabase.table("costos").select("*").execute()
+        df_costos = pd.DataFrame(res_costos.data if res_costos.data else [])
+    except Exception as e:
+        df_costos = pd.DataFrame()
+        st.error(f"Error al cargar costos: {e}")
+
+    # Pestañas contables
+    tab_balance, tab_diario, tab_costos, tab_mayor = st.tabs([
+        "📈 Balance y Flujo", 
+        "📝 Libro Diario (Ventas)", 
+        "📦 Libro de Costos", 
+        "📚 Libro Mayor"
     ])
 
-    # 1. CARGAMOS DATOS GENERALES DE SUPABASE
-    try:
-        res_v = supabase.table("ventas").select("*").order("id", desc=True).execute()
-        df_ventas = pd.DataFrame(res_v.data) if res_v.data else pd.DataFrame()
+    with tab_balance:
+        st.markdown("### Resumen Financiero General")
         
-        res_i = supabase.table("insumos").select("*").execute()
-        df_insumos = pd.DataFrame(res_i.data) if res_i.data else pd.DataFrame()
-    except Exception as e:
-        st.error(f"Error al conectar con Supabase: {e}")
-        df_ventas = pd.DataFrame()
-        df_insumos = pd.DataFrame()
-
-    # Preparación de datos numéricos seguros
-    if not df_ventas.empty and 'MONTO($)' in df_ventas.columns:
-        df_ventas['MONTO($)'] = pd.to_numeric(df_ventas['MONTO($)'], errors='coerce').fillna(0.0)
-        total_ingresos = df_ventas['MONTO($)'].sum()
-    else:
         total_ingresos = 0.0
+        total_gastos = 0.0
+        
+        if not df_ventas.empty and "MONTO($)" in df_ventas.columns:
+            df_ventas["MONTO($)"] = pd.to_numeric(df_ventas["MONTO($)"], errors="coerce").fillna(0)
+            # Sumamos los montos positivos (ingresos y abonos)
+            total_ingresos = df_ventas[df_ventas["MONTO($)"] > 0]["MONTO($)"].sum()
+            
+        if not df_costos.empty and "COSTO COMPRA" in df_costos.columns:
+            df_costos["COSTO COMPRA"] = pd.to_numeric(df_costos["COSTO COMPRA"], errors="coerce").fillna(0)
+            total_gastos = df_costos["COSTO COMPRA"].sum()
 
-    if not df_insumos.empty and 'costo_compra' in df_insumos.columns:
-        df_insumos['costo_compra'] = pd.to_numeric(df_insumos['costo_compra'], errors='coerce').fillna(0.0)
-        total_egresos = df_insumos['costo_compra'].sum()
-    else:
-        total_egresos = 0.0
+        neto = total_ingresos - total_gastos
 
-    capital_neto = total_ingresos - total_egresos
+        col1, col2, col3 = st.columns(3)
+        col1.metric("Ingresos Totales ($)", f"${total_ingresos:,.2f}")
+        col2.metric("Inversión / Costos ($)", f"${total_gastos:,.2f}")
+        col3.metric("Capital Neto ($)", f"${neto:,.2f}", delta=f"${neto:,.2f}")
 
-    # === PESTAÑA 0: BALANCE GENERAL / FLUJO DE CAJA ===
-    with tab_resumen:
-        st.subheader("💼 Resumen Gerencial y Capital Actual")
-        st.write("Vista general consolidada del flujo de efectivo y capital neto del negocio.")
+        st.divider()
+        st.info("💡 Este balance cruza los ingresos de la tabla `ventas` y los costos de insumos de la tabla `costos`.")
 
-        # Métricas principales en tarjetas visuales
-        col1, col2 = st.columns(2)
-        with col1:
-            st.metric("💵 Total Ingresos (Ventas)", f"${total_ingresos:.2f}", delta="Entradas")
-            st.metric("📉 Total Egresos (Insumos)", f"${total_egresos:.2f}", delta="Salidas", delta_value="inverse")
-        with col2:
-            st.metric("💎 Capital Neto en Caja", f"${capital_neto:.2f}", delta="Balance Actual")
-
-        st.info("💡 Este balance se actualiza automáticamente sumando todas tus ventas registradas y restando las inversiones en materia prima.")
-
-    # === PESTAÑA 1: LIBRO DIARIO (CRONOLÓGICO) ===
     with tab_diario:
-        st.subheader("📖 Libro Diario de Operaciones")
-        st.write("Registro cronológico unificado de entradas y salidas de efectivo.")
-
+        st.markdown("### 📝 Registro de Transacciones")
         if not df_ventas.empty:
-            df_diario = df_ventas[['FECHA', 'TIPO', 'CLIENTE', 'MONTO($)']].copy()
-            df_diario.columns = ['Fecha', 'Tipo de Operación', 'Cliente / Concepto', 'Monto ($)']
-            st.dataframe(df_diario, use_container_width=True)
+            cols_mostrar = [c for c in ["FECHA", "TIPO", "CLIENTE", "MONTO($)"] if c in df_ventas.columns]
+            st.dataframe(df_ventas[cols_mostrar], use_container_width=True)
         else:
-            st.info("No hay registros en el diario todavía.")
+            st.warning("No hay registros de ventas disponibles.")
 
-    # === PESTAÑA 2: LIBRO DE GASTOS E INSUMOS ===
-    with tab_gastos:
-        st.subheader("🧾 Control de Gastos y Compras de Insumos")
-        st.write("Inversiones realizadas en materia prima y costos de producción.")
-
-        if not df_insumos.empty:
-            cols_mostrar = [c for c in ['insumo', 'costo_compra', 'presentacion', 'unidad_medida', 'costo_unidad'] if c in df_insumos.columns]
-            st.dataframe(df_insumos[cols_mostrar], use_container_width=True)
-            st.metric("Total Histórico Invertido en Insumos", f"${total_egresos:.2f}")
+    with tab_costos:
+        st.markdown("### 📦 Inventario de Costos e Insumos")
+        if not df_costos.empty:
+            cols_costos = [c for c in ["INSUMO", "COSTO COMPRA", "PRESENTACION"] if c in df_costos.columns]
+            st.dataframe(df_costos[cols_costos], use_container_width=True)
         else:
-            st.info("No hay insumos registrados en la base de datos.")
+            st.warning("No hay costos registrados.")
 
-    # === PESTAÑA 3: LIBRO MAYOR (RESUMEN POR CUENTAS) ===
     with tab_mayor:
-        st.subheader("📊 Libro Mayor - Consolidado por Cliente / Cuenta")
-        st.write("Acumulado neto de transacciones agrupadas por cliente o tipo.")
-
-        if not df_ventas.empty:
-            df_ventas['CLIENTE'] = df_ventas['CLIENTE'].astype(str).str.strip()
-            libro_mayor = df_ventas.groupby('CLIENTE')['MONTO($)'].agg(['count', 'sum']).reset_index()
+        st.markdown("### 📚 Libro Mayor por Cliente")
+        if not df_ventas.empty and "CLIENTE" in df_ventas.columns and "MONTO($)" in df_ventas.columns:
+            libro_mayor = df_ventas.groupby("CLIENTE")["MONTO($)"].agg(['count', 'sum']).reset_index()
             libro_mayor.columns = ['Cliente / Cuenta', 'N° Operaciones', 'Saldo Neto ($)']
             st.dataframe(libro_mayor, use_container_width=True)
         else:
-            st.info("No hay datos suficientes para calcular el Libro Mayor.")
+            st.warning("Datos insuficientes para generar el Libro Mayor.")
 
     st.divider()
-    if st.button("❌ Cerrar Módulo Contable", use_container_width=True):
+    if st.button("❌ Cerrar Módulo Contable", use_container_width=True, type="primary"):
+        st.session_state.formulario_modulo_contable = False
         st.rerun()
+
 
 import streamlit as st
 import pandas as pd
