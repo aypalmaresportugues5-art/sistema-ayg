@@ -447,40 +447,59 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
 
     # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
     with tab_almacen:
-        st.subheader("📦 Estado del Almacén")
-        if productos_dict:
-            import pandas as pd
-            filas_inv = []
-            for k, v in productos_dict.items():
-                # Aseguramos el acceso a las llaves 'precio' y 'stock'
-                precio_v = v.get('precio', 0.0)
-                stock_v = v.get('stock', 0)
-                filas_inv.append({
-                    "Producto": k,
-                    "Precio": f"${precio_v:.2f}",
-                    "Stock": stock_v
-                })
-            df_inv = pd.DataFrame(filas_inv)
-            st.table(df_inv)
-            # === SECCIÓN PARA EDITAR PRECIOS ===
-            st.divider()
-            st.subheader("✏️ Modificar Precio de Producto")
-    
-            col_edit1, col_edit2 = st.columns(2)
-            with col_edit1:
-                prod_a_editar = st.selectbox("Selecciona producto:", list(productos_dict.keys()), key="select_prod_editar_inv")
-            with col_edit2:
-                # Obtenemos el precio actual del producto seleccionado
-                precio_actual_num = float(productos_dict[prod_a_editar].get('precio', 0.0))
-                nuevo_precio = st.number_input("Nuevo precio ($):", value=precio_actual_num, format="%.2f", key="input_nuevo_precio_inv")
-    
-            if st.button("💾 Guardar Cambios de Precio", type="primary", key="btn_guardar_precio_inv"):
-                if actualizar_precio_producto(prod_a_editar, nuevo_precio):
-                    st.success(f"¡Precio de {prod_a_editar} actualizado a ${nuevo_precio:.2f} con éxito!")
-                    st.cache_data.clear()  # Limpiamos la caché para que la app lea de inmediato el cambio
-                    st.rerun()             # Recargamos para refrescar la tabla
-        else:
-            st.warning("⚠️ No se encontraron productos en la base de datos.")
+            st.subheader("📦 Estado del Almacén y Stock Disponible")
+            
+            try:
+                res_inv = supabase.table("productos").select("*").execute()
+                df_inv = pd.DataFrame(res_inv.data if res_inv.data else [])
+            except Exception as e:
+                df_inv = pd.DataFrame()
+                st.error(f"Error al cargar el inventario: {e}")
+
+            if not df_inv.empty:
+                # Nos aseguramos de limpiar y formatear las columnas numéricas
+                df_inv['ENTRADA'] = pd.to_numeric(df_inv.get('ENTRADA', 0), errors='coerce').fillna(0)
+                df_inv['SALIDA'] = pd.to_numeric(df_inv.get('SALIDA', 0), errors='coerce').fillna(0)
+                df_inv['PRECIO'] = pd.to_numeric(df_inv.get('PRECIO', 0), errors='coerce').fillna(0)
+                
+                # CÁLCULO DEL STOCK REAL: Entradas menos Salidas
+                df_inv['STOCK_DISPONIBLE'] = df_inv['ENTRADA'] - df_inv['SALIDA']
+                
+                # Preparamos la tabla para mostrar
+                df_mostrar = df_inv[['NOMBRE', 'PRECIO', 'ENTRADA', 'SALIDA', 'STOCK_DISPONIBLE']].copy()
+                df_mostrar.columns = ['Producto', 'Precio ($)', 'Total Entradas', 'Total Salidas', 'Stock Disponible']
+                
+                st.dataframe(df_mostrar, use_container_width=True)
+                
+                # --- SECCIÓN PARA EDITAR PRECIOS ---
+                st.divider()
+                st.subheader("✏️ Modificar Precio de Producto")
+                
+                col_edit1, col_edit2 = st.columns(2)
+                
+                lista_nombres_prods = df_inv['NOMBRE'].dropna().tolist()
+                
+                with col_edit1:
+                    prod_a_editar = st.selectbox("Selecciona producto:", lista_nombres_prods, key="select_prod_edit_inv")
+                
+                with col_edit2:
+                    # Obtenemos el precio actual del producto seleccionado
+                    prod_fila = df_inv[df_inv['NOMBRE'] == prod_a_editar].iloc[0]
+                    precio_actual_num = float(prod_fila['PRECIO'])
+                    
+                    nuevo_precio = st.number_input("Nuevo precio ($):", value=precio_actual_num, format="%.2f", key="input_nuevo_precio_inv")
+                
+                if st.button("💾 Guardar Cambios de Precio", type="primary", key="btn_guardar_precio_inv"):
+                    try:
+                        prod_id = prod_fila['id']
+                        supabase.table("productos").update({"PRECIO": float(nuevo_precio)}).eq("id", prod_id).execute()
+                        st.success(f"✅ Precio de '{prod_a_editar}' actualizado a ${nuevo_precio:.2f} con éxito!")
+                        st.cache_data.clear()
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error al actualizar el precio: {e}")
+            else:
+                st.warning("⚠️ No se encontraron productos en la base de datos de Supabase.")
             
     # ... (el resto del código de tus otras pestañas sigue igual) ...
     # === PESTAÑA 2: REGISTRO DE MATERIA PRIMA (COSTOS) ===
