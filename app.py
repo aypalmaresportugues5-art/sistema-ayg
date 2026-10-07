@@ -1273,24 +1273,31 @@ def formulario_modulo_contable():
     ])
 
     with tab_balance:
-        st.markdown("### Resumen Financiero General")
+        st.markdown("## 📊 Resumen Financiero General")
         total_ingresos = 0.0
         total_gastos = 0.0
-        
+
         if not df_ventas.empty and "MONTO($)" in df_ventas.columns:
             df_ventas["MONTO_NUM"] = pd.to_numeric(df_ventas["MONTO($)"], errors="coerce").fillna(0.0)
             total_ingresos = df_ventas[df_ventas["MONTO_NUM"] > 0]["MONTO_NUM"].sum()
-            
-        if not df_costos.empty and "COSTO COMPRA" in df_costos.columns:
-            df_costos["COSTO COMPRA"] = pd.to_numeric(df_costos["COSTO COMPRA"], errors="coerce").fillna(0.0)
-            total_gastos = df_costos["COSTO COMPRA"].sum()
+
+        # --- CAMBIO: LEEMOS LOS EGRESOS REALES DESDE SUPABASE ---
+        try:
+            res_egresos = supabase.table("Egresos").select("MONTO").execute()
+            if res_egresos.data:
+                df_egresos_bal = pd.DataFrame(res_egresos.data)
+                df_egresos_bal["MONTO_NUM"] = pd.to_numeric(df_egresos_bal["MONTO"], errors="coerce").fillna(0.0)
+                total_gastos = df_egresos_bal["MONTO_NUM"].sum()
+        except Exception as e:
+            total_gastos = 0.0
+        # -------------------------------------------------------
 
         neto = total_ingresos - total_gastos
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Ingresos Totales ($)", f"${total_ingresos:,.2f}")
-        col2.metric("Inversión / Costos ($)", f"${total_gastos:,.2f}")
-        col3.metric("Capital Neto ($)", f"${neto:,.2f}", delta=f"${neto:,.2f}")
+        col1.metric("Ingresos Totales ($)", f"${total_ingresos:.2f}")
+        col2.metric("Egresos Totales ($)", f"${total_gastos:.2f}")
+        col3.metric("Capital Neto ($)", f"${neto:.2f}", delta=f"${neto:.2f}")
 
     with tab_diario:
         st.markdown("### 📝 Registro de Transacciones")
