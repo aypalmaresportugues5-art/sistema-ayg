@@ -1334,7 +1334,7 @@ def formulario_modulo_contable():
 
     with tab_mensual:
     st.markdown("## 📅 Reporte y Resumen Mensual para Libros Oficiales")
-    st.markdown("Filtra y visualiza el consolidado del mes seleccionado para el contraste entre Ventas y Egresos (Normativa Venezolana).")
+    #st.markdown("Filtra y visualiza el consolidado del mes seleccionado para el contraste entre Ventas y Egresos (Normativa Venezolana).")
 
     # Selectores de Mes y Año
     col_m1, col_m2 = st.columns(2)
