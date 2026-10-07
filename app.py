@@ -1362,7 +1362,12 @@ def formulario_modulo_contable():
             df_ventas_mes = df_ventas[mask_ventas].copy()
         
             if not df_ventas_mes.empty and "MONTO_NUM" in df_ventas_mes.columns:
-                total_ventas_mes = df_ventas_mes["MONTO_NUM"].sum()
+                # Filtramos para sumar SOLO lo facturado (Contado y Crédito), excluyendo los Abonos
+                if "TIPO" in df_ventas_mes.columns:
+                    df_facturado = df_ventas_mes[df_ventas_mes["TIPO"].isin(["Contado", "Crédito", "CONTADO", "CREDITO"])]
+                    total_ventas_mes = df_facturado["MONTO_NUM"].sum()
+                else:
+                    total_ventas_mes = df_ventas_mes["MONTO_NUM"].sum()
 
         # 2. FILTRAR EGRESOS / COMPRAS DEL MES DESDE SUPABASE
         total_egresos_mes = 0.0
