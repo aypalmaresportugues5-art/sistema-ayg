@@ -1173,8 +1173,17 @@ def formulario_modulo_contable():
 
     # 1. Cargar datos desde Supabase con el rango completo
     try:
-        res_ventas = supabase.table("ventas").select("*").order("id", desc=True).range(0, 1999).execute()
-        df_ventas = pd.DataFrame(res_ventas.data if res_ventas.data else [])
+        # Traemos el primer bloque de 0 a 999
+        res_1 = supabase.table("ventas").select("*").order("id", desc=True).range(0, 999).execute()
+        data_1 = res_1.data if res_1.data else []
+        
+        # Traemos el segundo bloque de 1000 en adelante para no perder los registros antiguos (hoja 11, etc.)
+        res_2 = supabase.table("ventas").select("*").order("id", desc=True).range(1000, 1999).execute()
+        data_2 = res_2.data if res_2.data else []
+        
+        # Unimos ambos bloques
+        todos_los_datos = data_1 + data_2
+        df_ventas = pd.DataFrame(todos_los_datos)
     except Exception as e:
         df_ventas = pd.DataFrame()
         st.error(f"Error al cargar ventas: {e}")
