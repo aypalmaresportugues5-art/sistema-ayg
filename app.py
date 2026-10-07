@@ -1333,80 +1333,80 @@ def formulario_modulo_contable():
             st.info("Datos insuficientes.")
 
     with tab_mensual:
-    st.markdown("## 📅 Reporte y Resumen Mensual para Libros Oficiales")
-    #st.markdown("Filtra y visualiza el consolidado del mes seleccionado para el contraste entre Ventas y Egresos (Normativa Venezolana).")
+        st.markdown("## 📅 Reporte y Resumen Mensual para Libros Oficiales")
+        st.markdown("Filtra y visualiza el consolidado del mes seleccionado para el contraste entre Ventas y Egresos (Normativa Venezolana).")
 
-    # Selectores de Mes y Año
-    col_m1, col_m2 = st.columns(2)
-    with col_m1:
-        mes_seleccionado = st.selectbox("Seleccionar Mes", list(range(1, 13)), index=9, key="mes_libros_sel") # Por defecto octubre (10)
-    with col_m2:
-        anio_seleccionado = st.selectbox("Seleccionar Año", [2025, 2026, 2027], index=1, key="anio_libros_sel")
+        # Selectores de Mes y Año
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            mes_seleccionado = st.selectbox("Seleccionar Mes", list(range(1, 13)), index=9, key="mes_libros_sel") # Por defecto octubre (10)
+        with col_m2:
+            anio_seleccionado = st.selectbox("Seleccionar Año", [2025, 2026, 2027], index=1, key="anio_libros_sel")
 
-    # 1. FILTRAR VENTAS DEL MES
-    total_ventas_mes = 0.0
-    df_ventas_mes = pd.DataFrame()
+        # 1. FILTRAR VENTAS DEL MES
+        total_ventas_mes = 0.0
+        df_ventas_mes = pd.DataFrame()
     
-    if not df_ventas.empty and "FECHA" in df_ventas.columns:
-        # Asegurarnos de extraer mes y año de la columna FECHA (formato DD/MM/YYYY)
-        def filtrar_mes_anio(fecha_str):
-            try:
-                partes = str(fecha_str).split("/")
-                if len(partes) == 3:
-                    return int(partes[1]) == int(mes_seleccionado) and int(partes[2]) == int(anio_seleccionado)
-            except:
-                pass
-            return False
+        if not df_ventas.empty and "FECHA" in df_ventas.columns:
+            # Asegurarnos de extraer mes y año de la columna FECHA (formato DD/MM/YYYY)
+            def filtrar_mes_anio(fecha_str):
+                try:
+                   partes = str(fecha_str).split("/")
+                   if len(partes) == 3:
+                       return int(partes[1]) == int(mes_seleccionado) and int(partes[2]) == int(anio_seleccionado)
+                except:
+                    pass
+                return False
 
-        mask_ventas = df_ventas["FECHA"].apply(filtrar_mes_anio)
-        df_ventas_mes = df_ventas[mask_ventas].copy()
+           mask_ventas = df_ventas["FECHA"].apply(filtrar_mes_anio)
+           df_ventas_mes = df_ventas[mask_ventas].copy()
         
-        if not df_ventas_mes.empty and "MONTO_NUM" in df_ventas_mes.columns:
-            total_ventas_mes = df_ventas_mes["MONTO_NUM"].sum()
+           if not df_ventas_mes.empty and "MONTO_NUM" in df_ventas_mes.columns:
+               total_ventas_mes = df_ventas_mes["MONTO_NUM"].sum()
 
-    # 2. FILTRAR EGRESOS / COMPRAS DEL MES DESDE SUPABASE
-    total_egresos_mes = 0.0
-    df_egresos_mes = pd.DataFrame()
+       # 2. FILTRAR EGRESOS / COMPRAS DEL MES DESDE SUPABASE
+       total_egresos_mes = 0.0
+       df_egresos_mes = pd.DataFrame()
     
-    try:
-        res_egresos_libros = supabase.table("Egresos").select("*").execute()
-        if res_egresos_libros.data:
-            df_egresos_all = pd.DataFrame(res_egresos_libros.data)
-            if "FECHA" in df_egresos_all.columns:
-                mask_egresos = df_egresos_all["FECHA"].apply(filtrar_mes_anio)
-                df_egresos_mes = df_egresos_all[mask_egresos].copy()
-                if not df_egresos_mes.empty:
-                    df_egresos_mes["MONTO_NUM"] = pd.to_numeric(df_egresos_mes["MONTO"], errors="coerce").fillna(0.0)
-                    total_egresos_mes = df_egresos_mes["MONTO_NUM"].sum()
-    except Exception as e:
-        st.warning(f"No se pudieron cargar los egresos para el libro: {e}")
+       try:
+          res_egresos_libros = supabase.table("Egresos").select("*").execute()
+          if res_egresos_libros.data:
+              df_egresos_all = pd.DataFrame(res_egresos_libros.data)
+              if "FECHA" in df_egresos_all.columns:
+                  mask_egresos = df_egresos_all["FECHA"].apply(filtrar_mes_anio)
+                  df_egresos_mes = df_egresos_all[mask_egresos].copy()
+                  if not df_egresos_mes.empty:
+                      df_egresos_mes["MONTO_NUM"] = pd.to_numeric(df_egresos_mes["MONTO"], errors="coerce").fillna(0.0)
+                      total_egresos_mes = df_egresos_mes["MONTO_NUM"].sum()
+       except Exception as e:
+           st.warning(f"No se pudieron cargar los egresos para el libro: {e}")
 
-    # 3. MOVIMIENTO NETO DEL MES (Ventas - Egresos)
-    movimiento_neto_mes = total_ventas_mes - total_egresos_mes
+       # 3. MOVIMIENTO NETO DEL MES (Ventas - Egresos)
+       movimiento_neto_mes = total_ventas_mes - total_egresos_mes
 
-    st.markdown(f"### 📌 Resumen Período: {mes_seleccionado:02d}/{anio_seleccionado}")
+       st.markdown(f"### 📌 Resumen Período: {mes_seleccionado:02d}/{anio_seleccionado}")
     
-    col_res1, col_res2, col_res3 = st.columns(3)
-    col_res1.metric("Total Ventas (Mes)", f"${total_ventas_mes:.2f}")
-    col_res2.metric("Total Egresos/Compras (Mes)", f"${total_egresos_mes:.2f}")
-    col_res3.metric("Resultado Neto Mes", f"${movimiento_neto_mes:.2f}", delta=f"${movimiento_neto_mes:.2f}")
+       col_res1, col_res2, col_res3 = st.columns(3)
+       col_res1.metric("Total Ventas (Mes)", f"${total_ventas_mes:.2f}")
+       col_res2.metric("Total Egresos/Compras (Mes)", f"${total_egresos_mes:.2f}")
+       col_res3.metric("Resultado Neto Mes", f"${movimiento_neto_mes:.2f}", delta=f"${movimiento_neto_mes:.2f}")
 
-    st.divider()
+       st.divider()
 
-    # 4. VISUALIZACIÓN DETALLADA
-    st.markdown("### 📋 Detalle de Ventas del Mes")
-    if not df_ventas_mes.empty:
-        cols_mostrar_v = [c for c in ["FECHA", "TIPO", "CLIENTE", "MONTO($)"] if c in df_ventas_mes.columns]
-        st.dataframe(df_ventas_mes[cols_mostrar_v], use_container_width=True)
-    else:
-        st.info("ℹ️ No hay registros de ventas para este mes y año.")
+       # 4. VISUALIZACIÓN DETALLADA
+       st.markdown("### 📋 Detalle de Ventas del Mes")
+       if not df_ventas_mes.empty:
+           cols_mostrar_v = [c for c in ["FECHA", "TIPO", "CLIENTE", "MONTO($)"] if c in df_ventas_mes.columns]
+           st.dataframe(df_ventas_mes[cols_mostrar_v], use_container_width=True)
+       else:
+           st.info("ℹ️ No hay registros de ventas para este mes y año.")
 
-    st.markdown("### 💸 Detalle de Egresos y Gastos del Mes")
-    if not df_egresos_mes.empty:
-        cols_mostrar_e = [c for c in ["FECHA", "CONCEPTO", "MONTO"] if c in df_egresos_mes.columns]
-        st.dataframe(df_egresos_mes[cols_mostrar_e], use_container_width=True)
-    else:
-        st.info("ℹ️ No hay registros de egresos para este mes y año.")
+       st.markdown("### 💸 Detalle de Egresos y Gastos del Mes")
+       if not df_egresos_mes.empty:
+           cols_mostrar_e = [c for c in ["FECHA", "CONCEPTO", "MONTO"] if c in df_egresos_mes.columns]
+           st.dataframe(df_egresos_mes[cols_mostrar_e], use_container_width=True)
+       else:
+           st.info("ℹ️ No hay registros de egresos para este mes y año.")
         
     with tab_egresos:
         st.subheader("💸 Registro de Gastos, Delivery y Egresos")
