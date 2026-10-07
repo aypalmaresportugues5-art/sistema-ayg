@@ -436,9 +436,14 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
     # Cargamos los datos aquí mismo dentro del diálogo
     productos_dict = cargar_productos_dict() 
     
-    tab_almacen, tab_insumos, tab_productos, tab_clientex, tab_movimientos, tab_imprimir = st.tabs([
-    "📦 Estado del Almacén", "🌾 Materia Prima", "➕ Nuevos Productos", "👤 Nuevos Clientes", "🔄 Entradas / Salidas", "📄 Imprimir Lista"
-])
+    tab_almacen, tab_insumos, tab_productos, tab_clientes, tab_movimientos, tab_imprimir = st.tabs([
+            "📦 Estado del Almacén", 
+            "🌾 Materia Prima", 
+            "➕ Nuevos Productos", 
+            "👤 Nuevos Clientes", 
+            "🔄 Entradas / Salidas", 
+            "📄 Imprimir Lista"
+        ])
 
     # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
     with tab_almacen:
@@ -554,6 +559,46 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
                     st.error(f"🚨 Error al registrar cliente: {e}")
             else:
                 st.warning("⚠️ Por favor, escribe un nombre válido.")
+    with tab_movimientos:
+            st.markdown("### 🔄 Control de Entradas y Salidas")
+            st.write("Ajusta el inventario manualmente por compras, producción o salidas de emergencia.")
+
+            try:
+                res_prods = supabase.table("productos").select("*").execute()
+                df_prods = pd.DataFrame(res_prods.data if res_prods.data else [])
+            except Exception as e:
+                df_prods = pd.DataFrame()
+                st.error(f"Error al cargar productos: {e}")
+
+            if not df_prods.empty and "NOMBRE" in df_prods.columns:
+                lista_nombres = df_prods["NOMBRE"].dropna().unique().tolist()
+                
+                prod_seleccionado = st.selectbox("Seleccionar Producto", lista_nombres, key="sel_prod_mov")
+                tipo_movimiento = st.radio("Tipo de Movimiento", ["➕ Registrar Entrada (Compra/Producción)", "➖ Registrar Salida (Emergencia/Ajuste)"], horizontal=True, key="tipo_mov_radio")
+                cantidad_mov = st.number_input("Cantidad", min_value=0.01, step=1.0, value=1.0, key="cant_mov_num")
+                
+                if st.button("💾 Actualizar Stock en Supabase", use_container_width=True, type="primary", key="btn_act_stock"):
+                    try:
+                        prod_info = df_prods[df_prods["NOMBRE"] == prod_seleccionado].iloc[0]
+                        prod_id = prod_info["id"]
+                        
+                        entrada_actual = float(prod_info["ENTRADA"]) if pd.notna(prod_info.get("ENTRADA")) else 0.0
+                        salida_actual = float(prod_info["SALIDA"]) if pd.notna(prod_info.get("SALIDA")) else 0.0
+                        
+                        if "Entrada" in tipo_movimiento:
+                            nueva_entrada = entrada_actual + cantidad_mov
+                            supabase.table("productos").update({"ENTRADA": nueva_entrada}).eq("id", prod_id).execute()
+                            st.success(f"¡Entrada registrada! Se sumaron {cantidad_mov} a {prod_seleccionado}.")
+                        else:
+                            nueva_salida = salida_actual + cantidad_mov
+                            supabase.table("productos").update({"SALIDA": nueva_salida}).eq("id", prod_id).execute()
+                            st.success(f"¡Salida registrada! Se descontaron {cantidad_mov} de {prod_seleccionado}.")
+                        
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"Error al actualizar: {e}")
+            else:
+                st.warning("No hay productos registrados en el sistema.")
 
     # === PESTAÑA 5: IMPRIMIR LISTA DE PRECIOS ===
     with tab_imprimir:
