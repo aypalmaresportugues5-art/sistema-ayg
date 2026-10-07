@@ -436,9 +436,9 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
     # Cargamos los datos aquí mismo dentro del diálogo
     productos_dict = cargar_productos_dict() 
     
-    tab_almacen, tab_insumos, tab_productos, tab_clientes, tab_imprimir = st.tabs([
-        "📦 Estado del Almacén", "📦 Materia Prima", "➕ Nuevos Productos", "👤 Nuevos Clientes", "📄 Imprimir Lista"
-    ])
+    tab_almacen, tab_insumos, tab_productos, tab_clientex, tab_movimientos, tab_imprimir = st.tabs([
+    "📦 Estado del Almacén", "🌾 Materia Prima", "➕ Nuevos Productos", "👤 Nuevos Clientes", "🔄 Entradas / Salidas", "📄 Imprimir Lista"
+])
 
     # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
     with tab_almacen:
