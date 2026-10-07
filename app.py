@@ -1263,7 +1263,7 @@ def formulario_modulo_contable():
         st.error(f"Error al cargar costos: {e}")
 
     # Pestañas contables ampliadas con el Libro Mensual
-    tab_balance, tab_diario, tab_costos, tab_mayor, tab_mensual = st.tabs([
+    tab_balance, tab_diario, tab_costos, tab_mayor, tab_mensual,tab_egresos = st.tabs([
         "📈 Balance", 
         "📝 Diario", 
         "📦 Costos", 
