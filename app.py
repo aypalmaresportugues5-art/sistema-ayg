@@ -660,53 +660,53 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
                 st.error(f"🚨 Error al generar PDF: {e}")
 
     with tab_egresos:
-    st.subheader("💸 Registro de Gastos, Delivery y Egresos")
+        st.subheader("💸 Registro de Gastos, Delivery y Egresos")
     
-    # Formulario para registrar un nuevo egreso
-    with st.form("form_registrar_egreso", clear_on_submit=True):
-        col_eg1, col_eg2 = st.columns(2)
-        with col_eg1:
-            concepto_egreso = st.text_input("Concepto (Ej: Delivery, Gasolina, Personal):")
-        with col_eg2:
-            monto_egreso = st.number_input("Monto ($):", min_value=0.01, step=1.0, format="%.2f")
+        # Formulario para registrar un nuevo egreso
+        with st.form("form_registrar_egreso", clear_on_submit=True):
+            col_eg1, col_eg2 = st.columns(2)
+            with col_eg1:
+                concepto_egreso = st.text_input("Concepto (Ej: Delivery, Gasolina, Personal):")
+            with col_eg2:
+                monto_egreso = st.number_input("Monto ($):", min_value=0.01, step=1.0, format="%.2f")
         
-        from datetime import datetime
-        fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
+            from datetime import datetime
+            fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
         
-        btn_guardar_egreso = st.form_submit_button("Guardar Gasto / Egreso", use_container_width=True)
+            btn_guardar_egreso = st.form_submit_button("Guardar Gasto / Egreso", use_container_width=True)
         
-        if btn_guardar_egreso:
-            if concepto_egreso and monto_egreso > 0:
-                try:
-                    payload_egreso = {
-                        "CONCEPTO": concepto_egreso,
-                        "MONTO": float(monto_egreso),
-                        "FECHA": fecha_hoy_str
-                    }
-                    supabase.table("Egresos").insert(payload_egreso).execute()
-                    st.success(f"✅ Gasto '{concepto_egreso}' de ${monto_egreso:.2f} registrado con éxito!")
-                    st.cache_data.clear()
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"❌ Error al guardar el egreso: {e}")
-            else:
-                st.warning("⚠️ Por favor, completa el concepto y asegúrate de que el monto sea mayor a cero.")
+            if btn_guardar_egreso:
+                if concepto_egreso and monto_egreso > 0:
+                    try:
+                        payload_egreso = {
+                            "CONCEPTO": concepto_egreso,
+                            "MONTO": float(monto_egreso),
+                            "FECHA": fecha_hoy_str
+                        }
+                        supabase.table("Egresos").insert(payload_egreso).execute()
+                        st.success(f"✅ Gasto '{concepto_egreso}' de ${monto_egreso:.2f} registrado con éxito!")
+                        st.cache_data.clear()
+                        st.rerun()
+                    except Exception as e:
+                        st.error(f"❌ Error al guardar el egreso: {e}")
+                else:
+                    st.warning("⚠️ Por favor, completa el concepto y asegúrate de que el monto sea mayor a cero.")
 
-    st.divider()
-    st.markdown("### 📋 Historial de Egresos Registrados")
+        st.divider()
+        st.markdown("### 📋 Historial de Egresos Registrados")
     
-    # Mostrar la tabla con los egresos que ya vas guardando
-    try:
-        res_egresos = supabase.table("Egresos").select("*").execute()
-        df_egresos = pd.DataFrame(res_egresos.data if res_egresos.data else [])
+        # Mostrar la tabla con los egresos que ya vas guardando
+        try:
+            res_egresos = supabase.table("Egresos").select("*").execute()
+            df_egresos = pd.DataFrame(res_egresos.data if res_egresos.data else [])
         
-        if not df_egresos.empty:
-            # Ordenamos o filtramos si es necesario para visualizarlo limpio
-            st.dataframe(df_egresos[['FECHA', 'CONCEPTO', 'MONTO']], use_container_width=True)
-        else:
-            st.info("ℹ️ Todavía no hay egresos registrados en Supabase.")
-    except Exception as e:
-        st.error(f"Error al cargar los egresos: {e}")
+            if not df_egresos.empty:
+                # Ordenamos o filtramos si es necesario para visualizarlo limpio
+                st.dataframe(df_egresos[['FECHA', 'CONCEPTO', 'MONTO']], use_container_width=True)
+            else:
+                st.info("ℹ️ Todavía no hay egresos registrados en Supabase.")
+        except Exception as e:
+            st.error(f"Error al cargar los egresos: {e}")
 
 # 2. JUSTO AQUÍ, AL FINAL DE LA FUNCIÓN, pon el botón de cierre:
     st.divider() # Una línea horizontal para separar
