@@ -1226,7 +1226,7 @@ def formulario_simulador_costos():
         df_costos_real['insumo_clean'] = df_costos_real[col_insumo].astype(str).str.upper().str.strip()
 
     # Insumos base fijos para tu producción directa
-    lista_insumos = ["HARINA", "AGUA", "AZUCAR", "SAL", "MANECA", "LEVADURA", "ESENCIAS", "ANIS-DULCE"]
+    lista_insumos = ["HARINA", "AGUA", "AZUCAR", "SAL", "MANTECA", "LEVADURA", "ESENCIAS", "ANIS-DULCE"]
 
     # Interfaz limpia en dos columnas
     col1, col2 = st.columns(2)
@@ -1324,6 +1324,7 @@ def formulario_simulador_costos():
         st.success(f"**PVP Sugerido por Unidad:**\n\n${pvp_unidad_sugerido:.2f}")
     with col_pvp2:
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
+
 
 
 @st.dialog("📚 Módulo Contable - Libros Oficiales y Mensuales")
