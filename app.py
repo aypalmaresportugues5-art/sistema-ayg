@@ -1029,8 +1029,13 @@ def formulario_cierre_de_caja():
         df_v['FECHA_CORTA'] = df_v['FECHA'].astype(str).str.slice(0, 10)
         
         # Filtrar operaciones de la jornada de hoy
-        df_hoy = df_v[df_v['FECHA_CORTA'] == fecha_hoy]
-
+        df_v['FECHA_LIMPIA'] = df_v['FECHA'].astype(str).str.strip()
+        
+        # Filtramos para que busque si contiene la fecha de hoy o coincide exactamente
+        df_hoy = df_v[df_v['FECHA_LIMPIA'].str.contains(fecha_hoy) | df_v['FECHA_CORTA'].str.contains(fecha_hoy)]
+        
+        # (Opcional para depurar si vuelve a pasar): 
+        # st.write(f"Buscando fecha: {fecha_hoy} | Total registros leídos: {len(df_v)}")
         if not df_hoy.empty:
             # 1. Clasificación de ventas del día
             df_detal_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]
