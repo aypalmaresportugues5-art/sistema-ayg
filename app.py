@@ -1018,21 +1018,20 @@ def formulario_cierre_de_caja():
 
     # --- AJUSTE DE FECHA LOCAL ---
     zona_ve = pytz.timezone('America/Caracas')
-    fecha_hoy = datetime.now(zona_ve).strftime('%Y-%m-%d')
+    fecha_hoy = datetime.now(zona_ve).strftime('%d/%m/%Y')  # Formato DD/MM/YYYY igual a tu BD
     fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
 
-    st.write(f"📅 **Resumen de Operaciones:** {fecha_ve}")
+    st.write(f"**Resumen de Operaciones:** {fecha_ve}")
 
     if not df_v.empty:
-        # Limpiamos y normalizamos las columnas clave para evitar errores por mayúsculas, acentos o espacios
+        # Limpiamos y normalizamos las columnas clave
         df_v['FECHA_STR'] = df_v['FECHA'].astype(str).str.strip()
         df_v['TIPO_NORM'] = df_v['TIPO'].astype(str).str.lower().str.strip()
         df_v['CLIENTE_NORM'] = df_v['CLIENTE'].astype(str).str.lower().str.strip()
         df_v['MONTO($)'] = pd.to_numeric(df_v['MONTO($)'], errors='coerce').fillna(0.0)
 
-        # Filtramos la jornada de hoy comparando si la fecha contiene la fecha actual
+        # Filtramos la jornada de hoy buscando el texto de la fecha (ej. 08/10/2026)
         df_hoy = df_v[df_v['FECHA_STR'].str.contains(fecha_hoy, na=False)].copy()
-
         if not df_hoy.empty:
             # 1. Clasificación flexible de ventas del día
             # Ventas al Detal (Contado y cliente detal)
