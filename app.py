@@ -1035,7 +1035,7 @@ def formulario_cierre_de_caja():
         df_hoy = df_v[df_v['FECHA_STR'].str.contains(fecha_hoy, na=False)].copy()
         if not df_hoy.empty:
             # 1. Clasificación flexible de ventas del día
-            # Ventas al Detal (Contado y cliente detal)
+            # Ventas al Detal a Contado (Contado y cliente detal)
             df_detal_contado = df_hoy[(df_hoy['TIPO_NORM'] == 'contado') & (df_hoy['CLIENTE_NORM'].str.contains('detal'))]
             total_detal = df_detal_contado['MONTO($)'].sum()
 
@@ -1043,11 +1043,8 @@ def formulario_cierre_de_caja():
             df_mayor_contado = df_hoy[(df_hoy['TIPO_NORM'] == 'contado') & (~df_hoy['CLIENTE_NORM'].str.contains('detal'))]
             total_mayor_contado = df_mayor_contado['MONTO($)'].sum()
 
-            # Ventas al Mayor a Crédito
-            df_mayor_credito = df_hoy[
-                (df_hoy['TIPO_NORM'].str.contains('cred|credito|crédito|fiad', na=False)) & 
-                (~df_hoy['CLIENTE_NORM'].str.contains('detal'))
-            ]
+            # Ventas a Crédito (¡Cualquier crédito, sea al detal o al mayor!)
+            df_mayor_credito = df_hoy[df_hoy['TIPO_NORM'].str.contains('cred|credito|crédito|fiad', na=False)]
             total_mayor_credito = df_mayor_credito['MONTO($)'].sum()
 
             # Abonos recibidos
@@ -1059,6 +1056,7 @@ def formulario_cierre_de_caja():
             total_contado_general = total_detal + total_mayor_contado
             venta_total_dia = total_contado_general + total_mayor_credito
             total_liquido_caja = total_contado_general + effective_abonos
+
 
             # 3. VISUALIZACIÓN EN PANTALLA
             st.markdown("### 📊 Resumen Financiero del Día")
