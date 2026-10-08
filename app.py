@@ -1022,6 +1022,8 @@ def formulario_cierre_de_caja():
     fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
 
     st.write(f"**Resumen de Operaciones:** {fecha_ve}")
+    st.write(f"🔍 **Fecha buscada:** [{fecha_hoy}]")
+    st.write(f"🔍 **Últimas fechas en BD:** {df_v['FECHA'].tail(3).tolist() if not df_v.empty else 'DataFrame vacío'}")
 
     if not df_v.empty:
         # Limpiamos y normalizamos las columnas clave
