@@ -1203,19 +1203,33 @@ def formulario_simulador_costos():
                     costo_unitario = 1.0
 
         costo_materia_prima_total += cant_actual * costo_unitario
-    # Operaciones de Rendimiento y Peso Total de Masa
-    total_kilos_mezcla = sum(ingredientes_modificados.values())
+        # Operaciones de Rendimiento y Peso Total de Masa (Blindado contra errores de tipo)
+    kilos_validos = []
+    for ing, val in ingredientes_modificados.items():
+        try:
+            kilos_validos.append(float(val) if val is not None else 0.0)
+        except Exception:
+            kilos_validos.append(0.0)
+            
+    total_kilos_mezcla = sum(kilos_validos)
     
     # Cálculo del costo por kilogramo de masa
     costo_por_kg_masa = (costo_materia_prima_total / total_kilos_mezcla) if total_kilos_mezcla > 0 else 0.0
 
-    cantidad_unidades_totales = int(total_kilos_mezcla / peso_pan) if peso_pan > 0 else 0
-    total_paquetes = cantidad_unidades_totales / unidades_paquete if unidades_paquete > 0 else 0
-    costo_operativo_total = costo_materia_prima_total + costo_mano_obra + costo_gas
+    # Aseguramos variables numéricas seguras
+    p_pan = float(peso_pan) if peso_pan else 0.25
+    u_paq = int(unidades_paquete) if unidades_paquete else 1
+    c_obra = float(costo_mano_obra) if costo_mano_obra else 0.0
+    c_gas = float(costo_gas) if costo_gas else 0.0
+    c_bolsa = float(costo_bolsa) if costo_bolsa else 0.0
+
+    cantidad_unidades_totales = int(total_kilos_mezcla / p_pan) if p_pan > 0 else 0
+    total_paquetes = cantidad_unidades_totales / u_paq if u_paq > 0 else 0
+    costo_operativo_total = costo_materia_prima_total + c_obra + c_gas
 
     if cantidad_unidades_totales > 0:
         costo_por_unidad_bruto = costo_operativo_total / cantidad_unidades_totales
-        costo_por_paquete = (costo_por_unidad_bruto * unidades_paquete) + costo_bolsa
+        costo_por_paquete = (costo_por_unidad_bruto * u_paq) + c_bolsa
     else:
         costo_por_unidad_bruto = 0.0
         costo_por_paquete = 0.0
