@@ -1058,7 +1058,7 @@ def formulario_cierre_de_caja():
             c2.metric("Entrada Real en Caja", f"${total_liquido_caja:.2f}")
             c3.metric("Total Movimientos", len(df_hoy))
 
-            st.markdown("#### 🔍 Desglose por Tipo"
+            st.markdown("#### 🔍 Desglose por Tipo") 
             sub1, sub2, sub3 = st.columns(3)
             sub1.metric("💵 Contado Total", f"${total_contado_general:.2f}")
             sub2.metric("🤝 Créditos Otorgados", f"${total_mayor_credito:.2f}")
