@@ -1031,40 +1031,40 @@ def formulario_cierre_de_caja():
         # Filtrar operaciones de la jornada de hoy
         df_hoy = df_v[df_v['FECHA_CORTA'] == fecha_hoy]
 
-    if not df_hoy.empty:
-        # 1. Clasificación de ventas del día
-        df_detal_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]
-        total_detal = df_detal_contado['MONTO($)'].sum() if not df_detal_contado.empty else 0.0
+        if not df_hoy.empty:
+            # 1. Clasificación de ventas del día
+            df_detal_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]
+            total_detal = df_detal_contado['MONTO($)'].sum() if not df_detal_contado.empty else 0.0
+   
+            df_mayor_contado = df_hoy[(df_hoy['TIPO'].isin(['Contado', 'CONTADO'])) & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
+            total_mayor_contado = df_mayor_contado['MONTO($)'].sum() if not df_mayor_contado.empty else 0.0
 
-        df_mayor_contado = df_hoy[(df_hoy['TIPO'].isin(['Contado', 'CONTADO'])) & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
-        total_mayor_contado = df_mayor_contado['MONTO($)'].sum() if not df_mayor_contado.empty else 0.0
+            df_mayor_credito = df_hoy[(df_hoy['TIPO'].isin(['Crédito', 'Credito', 'CRÉDITO', 'CREDITO'])) & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
+            total_mayor_credito = df_mayor_credito['MONTO($)'].sum() if not df_mayor_credito.empty else 0.0
 
-        df_mayor_credito = df_hoy[(df_hoy['TIPO'].isin(['Crédito', 'Credito', 'CRÉDITO', 'CREDITO'])) & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
-        total_mayor_credito = df_mayor_credito['MONTO($)'].sum() if not df_mayor_credito.empty else 0.0
+            df_abonos = df_hoy[df_hoy['TIPO'] == 'Abono']
+            total_abonos = df_abonos['MONTO($)'].sum() if not df_abonos.empty else 0.0
+            effective_abonos = abs(total_abonos)
 
-        df_abonos = df_hoy[df_hoy['TIPO'] == 'Abono']
-        total_abonos = df_abonos['MONTO($)'].sum() if not df_abonos.empty else 0.0
-        effective_abonos = abs(total_abonos)
+            # 2. Totales contables y de caja
+            total_contado_general = total_detal + total_mayor_contado
+            venta_total_dia = total_contado_general + total_mayor_credito
+            total_liquido_caja = total_contado_general + effective_abonos
 
-        # 2. Totales contables y de caja
-        total_contado_general = total_detal + total_mayor_contado
-        venta_total_dia = total_contado_general + total_mayor_credito
-        total_liquido_caja = total_contado_general + effective_abonos
+            # 3. VISUALIZACIÓN EN PANTALLA (Métricas principales y desglose)
+            st.markdown("### 📊 Resumen Financiero del Día")
+            c1, c2, c3 = st.columns(3)
+            c1.metric("Venta Total del Día", f"${venta_total_dia:.2f}")
+            c2.metric("Entrada Real en Caja", f"${total_liquido_caja:.2f}")
+            c3.metric("Total Movimientos", len(df_hoy))
 
-        # 3. VISUALIZACIÓN EN PANTALLA (Métricas principales y desglose)
-        st.markdown("### 📊 Resumen Financiero del Día")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Venta Total del Día", f"${venta_total_dia:.2f}")
-        c2.metric("Entrada Real en Caja", f"${total_liquido_caja:.2f}")
-        c3.metric("Total Movimientos", len(df_hoy))
+            st.markdown("#### 🔍 Desglose por Tipo"
+            sub1, sub2, sub3 = st.columns(3)
+            sub1.metric("💵 Contado Total", f"${total_contado_general:.2f}")
+            sub2.metric("🤝 Créditos Otorgados", f"${total_mayor_credito:.2f}")
+            sub3.metric("📥 Abonos Recibidos", f"${effective_abonos:.2f}")
 
-        st.markdown("#### 🔍 Desglose por Tipo")
-        sub1, sub2, sub3 = st.columns(3)
-        sub1.metric("💵 Contado Total", f"${total_contado_general:.2f}")
-        sub2.metric("🤝 Créditos Otorgados", f"${total_mayor_credito:.2f}")
-        sub3.metric("📥 Abonos Recibidos", f"${effective_abonos:.2f}")
-
-        st.divider()
+            st.divider()
             # Formulario para confirmar el cierre físico
             with st.form("form_cierre", clear_on_submit=True):
                 st.write("¿Todo cuadra con el dinero físico en mano?")
