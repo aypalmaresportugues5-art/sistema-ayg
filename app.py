@@ -1211,8 +1211,15 @@ def formulario_simulador_costos():
         except Exception:
             kilos_validos.append(0.0)
             
-    total_kilos_mezcla = sum(kilos_validos)
-    
+    total_kilos_mezcla = 0.0
+    if isinstance(ingredientes_modificados, dict):
+        for ing, val in ingredientes_modificados.items():
+            try:
+                if val is not None:
+                    total_kilos_mezcla += float(val)
+            except Exception:
+                pass
+
     # Cálculo del costo por kilogramo de masa
     costo_por_kg_masa = (costo_materia_prima_total / total_kilos_mezcla) if total_kilos_mezcla > 0 else 0.0
 
@@ -1234,21 +1241,28 @@ def formulario_simulador_costos():
         costo_por_unidad_bruto = 0.0
         costo_por_paquete = 0.0
 
+    # Forzamos conversión final para evitar cualquier error de tipo en Streamlit
+    val_total_kilos = float(total_kilos_mezcla or 0.0)
+    val_costo_mp = float(costo_materia_prima_total or 0.0)
+    val_costo_kg = float(costo_por_kg_masa or 0.0)
+    val_costo_uni = float(costo_por_unidad_bruto or 0.0)
+    val_paquetes = float(total_paquetes or 0.0)
+    val_costo_paq = float(costo_por_paquete or 0.0)
+
     # 3. REPORTE FINAL EN PANTALLA
     st.write("---")
     st.subheader("📊 Reporte Técnico de Rendimiento y Costo Real")
 
     c_res1, c_res2, c_res3 = st.columns(3)
     with c_res1:
-        st.metric("Masa Total Mezcla", f"{total_kilos_mezcla:.2f} Kg")[span_3](start_span)[span_3](end_span)
-        st.metric("Costo Materia Prima", f"${costo_materia_prima_total:.2f}")[span_4](start_span)[span_4](end_span)
+        st.metric("Masa Total Mezcla", f"{val_total_kilos:.2f} Kg")
+        st.metric("Costo Materia Prima", f"${val_costo_mp:.2f}")
     with c_res2:
-        st.metric("Costo por Kg de Masa", f"${costo_por_kg_masa:.2f} /Kg")
-        st.metric("Costo por Unidad", f"${costo_por_unidad_bruto:.3f}")[span_5](start_span)[span_5](end_span)
+        st.metric("Costo por Kg de Masa", f"${val_costo_kg:.2f} /Kg")
+        st.metric("Costo por Unidad", f"${val_costo_uni:.3f}")
     with c_res3:
-        st.metric("Total Paquetes", f"{total_paquetes:.1f} Paquetes")[span_6](start_span)[span_6](end_span)
-        st.metric("Costo por Paquete", f"${costo_por_paquete:.2f}")[span_7](start_span)[span_7](end_span)
-
+        st.metric("Total Paquetes", f"{val_paquetes:.1f} Paquetes")
+        st.metric("Costo por Paquete", f"${val_costo_paq:.2f}")
     # Calculador interactivo de ganancias y PVP sugerido
     st.subheader("💰 Calculador Interactivo de Ganancias")
     margen_deseado = st.slider("Selecciona tu porcentaje de ganancia ideal (%):", min_value=10, max_value=150, value=30, key="sim_margen")
