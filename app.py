@@ -1044,7 +1044,10 @@ def formulario_cierre_de_caja():
             total_mayor_contado = df_mayor_contado['MONTO($)'].sum()
 
             # Ventas al Mayor a Crédito
-            df_mayor_credito = df_hoy[df_hoy['TIPO_NORM'].isin(['crédito', 'credito']) & (~df_hoy['CLIENTE_NORM'].str.contains('detal'))]
+            df_mayor_credito = df_hoy[
+                (df_hoy['TIPO_NORM'].str.contains('cred|credito|crédito|fiad', na=False)) & 
+                (~df_hoy['CLIENTE_NORM'].str.contains('detal'))
+            ]
             total_mayor_credito = df_mayor_credito['MONTO($)'].sum()
 
             # Abonos recibidos
