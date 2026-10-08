@@ -1218,36 +1218,100 @@ def formulario_simulador_costos():
                 if val is not None:
                     total_kilos_mezcla += float(val)
             except Exception:
-                pass
+@st.dialog("🍞 Simulador Unificado de Costos e Insumos")
+def formulario_simulador_costos():
+    import pandas as pd
+    import streamlit as st
 
-    # Cálculo del costo por kilogramo de masa
+    st.subheader("🍞 Simulador Directo de Costos")
+    st.write("Ingresa las cantidades de tu tanda y calcula el costo real al instante.")
+
+    # 1. CARGAR DATOS DESDE SUPABASE: Tabla de insumos
+    try:
+        res = supabase.table("costos").select("*").execute()
+        datos_recibidos = res.data if res.data else []
+        df_costos_real = pd.DataFrame(datos_recibidos)
+    except Exception as e:
+        st.error(f"⚠️ Error al consultar la tabla de insumos en Supabase: {e}")
+        df_costos_real = pd.DataFrame()
+
+    # Normalizamos la tabla de costos de Supabase para buscar fácil
+    if not df_costos_real.empty:
+        df_costos_real.columns = [c.strip() for c in df_costos_real.columns]
+        col_insumo = next((c for c in df_costos_real.columns if c.lower() in ['insumo', 'nombre', 'articulo']), df_costos_real.columns[2])
+        col_costo = next((c for c in df_costos_real.columns if c.lower() in ['costo por unidad', 'costo_unitario', 'precio']), df_costos_real.columns[5])
+        df_costos_real['insumo_clean'] = df_costos_real[col_insumo].astype(str).str.upper().str.strip()
+
+    # Insumos base fijos para tu producción directa
+    lista_insumos = ["HARINA", "AGUA", "AZUCAR", "SAL", "MANECA", "LEVADURA", "ESENCIAS", "ANIS-DULCE"]
+
+    # Interfaz limpia en dos columnas
+    col1, col2 = st.columns(2)
+
+    ingredientes_modificados = {}
+    with col1:
+        st.markdown("**📦 Cantidad de Insumos (Kg / Unidades):**")
+        for insumo in lista_insumos:
+            cant_actual = st.number_input(
+                f"{insumo}:",
+                min_value=0.0,
+                value=0.0,
+                step=0.1,
+                key=f"sim_{insumo}"
+            )
+            ingredientes_modificados[insumo] = cant_actual
+
+    with col2:
+        st.markdown("**⚙️ Configuración Física del Producto:**")
+        peso_pan = st.number_input("Peso por unidad en crudo (Kg):", min_value=0.001, value=0.25, step=0.01, key="sim_peso_pan")
+        unidades_paquete = st.number_input("Unidades por paquete terminado:", min_value=1, value=1, step=1, key="sim_unidades_paq")
+        
+        st.markdown("---")
+        st.markdown("**💰 Costos Operativos y Extras:**")
+        costo_mano_obra = st.number_input("Mano de Obra de la tanda ($):", min_value=0.0, value=0.0, step=0.5, key="sim_mano_obra")
+        costo_gas = st.number_input("Costo de Gas / Energía ($):", min_value=0.0, value=0.0, step=0.1, key="sim_gas")
+        costo_bolsa = st.number_input("Costo por cada Bolsa de empaque ($):", min_value=0.0, value=0.05, step=0.01, key="sim_bolsa")
+
+    # 2. CÁLCULO MATEMÁTICO CON CONSULTA DE PRECIOS EN SUPABASE
+    costo_materia_prima_total = 0.0
+
+    for ingrediente, cant_actual in ingredientes_modificados.items():
+        costo_unitario = 1.0 
+        if not df_costos_real.empty:
+            busqueda = str(ingrediente).upper().strip()
+            resultado = df_costos_real[df_costos_real['insumo_clean'].str.contains(busqueda, na=False)]
+            if not resultado.empty:
+                try:
+                    val_costo = resultado.iloc[0][col_costo]
+                    costo_unitario = float(val_costo)
+                except Exception:
+                    costo_unitario = 1.0
+
+        costo_materia_prima_total += float(cant_actual) * float(costo_unitario)
+
+    # Operaciones de Rendimiento y Peso Total de Masa
+    total_kilos_mezcla = sum(float(val) for val in ingredientes_modificados.values() if val is not None)
+    
     costo_por_kg_masa = (costo_materia_prima_total / total_kilos_mezcla) if total_kilos_mezcla > 0 else 0.0
 
-    # Aseguramos variables numéricas seguras
-    p_pan = float(peso_pan) if peso_pan else 0.25
-    u_paq = int(unidades_paquete) if unidades_paquete else 1
-    c_obra = float(costo_mano_obra) if costo_mano_obra else 0.0
-    c_gas = float(costo_gas) if costo_gas else 0.0
-    c_bolsa = float(costo_bolsa) if costo_bolsa else 0.0
-
-    cantidad_unidades_totales = int(total_kilos_mezcla / p_pan) if p_pan > 0 else 0
-    total_paquetes = cantidad_unidades_totales / u_paq if u_paq > 0 else 0
-    costo_operativo_total = costo_materia_prima_total + c_obra + c_gas
+    cantidad_unidades_totales = int(total_kilos_mezcla / peso_pan) if peso_pan > 0 else 0
+    total_paquetes = cantidad_unidades_totales / unidades_paquete if unidades_paquete > 0 else 0
+    costo_operativo_total = costo_materia_prima_total + costo_mano_obra + costo_gas
 
     if cantidad_unidades_totales > 0:
         costo_por_unidad_bruto = costo_operativo_total / cantidad_unidades_totales
-        costo_por_paquete = (costo_por_unidad_bruto * u_paq) + c_bolsa
+        costo_por_paquete = (costo_por_unidad_bruto * unidades_paquete) + costo_bolsa
     else:
         costo_por_unidad_bruto = 0.0
         costo_por_paquete = 0.0
 
-    # Forzamos conversión final para evitar cualquier error de tipo en Streamlit
-    val_total_kilos = float(total_kilos_mezcla or 0.0)
-    val_costo_mp = float(costo_materia_prima_total or 0.0)
-    val_costo_kg = float(costo_por_kg_masa or 0.0)
-    val_costo_uni = float(costo_por_unidad_bruto or 0.0)
-    val_paquetes = float(total_paquetes or 0.0)
-    val_costo_paq = float(costo_por_paquete or 0.0)
+    # Conversión segura final para evitar errores visuales
+    val_total_kilos = float(total_kilos_mezcla)
+    val_costo_mp = float(costo_materia_prima_total)
+    val_costo_kg = float(costo_por_kg_masa)
+    val_costo_uni = float(costo_por_unidad_bruto)
+    val_paquetes = float(total_paquetes)
+    val_costo_paq = float(costo_por_paquete)
 
     # 3. REPORTE FINAL EN PANTALLA
     st.write("---")
@@ -1263,13 +1327,14 @@ def formulario_simulador_costos():
     with c_res3:
         st.metric("Total Paquetes", f"{val_paquetes:.1f} Paquetes")
         st.metric("Costo por Paquete", f"${val_costo_paq:.2f}")
-    # Calculador interactivo de ganancias y PVP sugerido
-    st.subheader("💰 Calculador Interactivo de Ganancias")
-    margen_deseado = st.slider("Selecciona tu porcentaje de ganancia ideal (%):", min_value=10, max_value=150, value=30, key="sim_margen")
+
+    # Calculadora interactiva de ganancias y PVP sugerido
+    st.subheader("📈 Calculador Interactivo de Ganancias")
+    margen_deseado = st.slider("Selecciona tu porcentaje de ganancia ideal (%):", min_value=-10, max_value=150, value=30, key="sim_margen")
 
     factor_ganancia = 1 + (margen_deseado / 100)
-    pvp_unidad_sugerido = costo_por_unidad_bruto * factor_ganancia
-    pvp_paquete_sugerido = costo_por_paquete * factor_ganancia
+    pvp_unidad_sugerido = val_costo_uni * factor_ganancia
+    pvp_paquete_sugerido = val_costo_paq * factor_ganancia
 
     col_pvp1, col_pvp2 = st.columns(2)
     with col_pvp1:
