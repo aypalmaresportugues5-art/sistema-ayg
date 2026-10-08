@@ -1071,9 +1071,7 @@ def formulario_cierre_de_caja():
             sub3.metric("📥 Abonos Recibidos", f"${effective_abonos:.2f}")
 
             st.divider()
-        else:
-            st.info(f"ℹ️ No se encontraron registros para la fecha de hoy ({fecha_hoy}).")
-
+        
             # Formulario para confirmar el cierre físico
             with st.form("form_cierre", clear_on_submit=True):
                 st.write("¿Todo cuadra con el dinero físico en mano?")
