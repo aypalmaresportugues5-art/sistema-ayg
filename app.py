@@ -1031,7 +1031,7 @@ def formulario_cierre_de_caja():
         # Filtrar operaciones de la jornada de hoy
         df_hoy = df_v[df_v['FECHA_CORTA'] == fecha_hoy]
 
-        if not df_hoy.empty:
+    if not df_hoy.empty:
         # 1. Clasificación de ventas del día
         df_detal_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]
         total_detal = df_detal_contado['MONTO($)'].sum() if not df_detal_contado.empty else 0.0
