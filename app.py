@@ -1116,49 +1116,35 @@ def formulario_simulador_costos():
     st.subheader("🍞 Simulador Unificado de Costos e Insumos")
     st.write("Calcula en tiempo real el costo bruto, operativo y sugerencia de PVP para tu producción.")
 
-    RECETAS_BASE = {
-        "Pan Salado": {"HARINA": 45.0, "AGUA": 18.0, "AZUCAR": 3.0, "SAL": 1.0, "MANTECA": 2.0, "LEVADURA": 0.3, "peso_base": 0.25, "unidades_paquete": 1},
-        "Pan de Perro": {"HARINA": 50.0, "AGUA": 19.0, "AZUCAR": 5.0, "SAL": 1.0, "MANTECA": 1.7, "LEVADURA": 0.25, "peso_base": 0.05, "unidades_paquete": 12},
-        "Polvorosas": {"HARINA": 4.5, "PVP": 0.5, "AZUCAR": 2.0, "AGUA": 0.0, "MANTECA": 2.5, "peso_base": 0.04, "unidades_paquete": 1},
-        "Catalinas": {"HARINA": 5.0, "SODA": 0.5, "MIELINA": 3.5, "MELAO PAPELON": 2.0, "AGUA": 2.0, "ESENCIAS": 0.1, "peso_base": 0.04, "unidades_paquete": 6},
-        "Receta Brownie": {"HARINA": 2.0, "AGUA": 1.0, "AZUCAR": 3.0, "MANTECA": 1.0, "CACAO": 1.0, "HUEVOS": 1.2, "peso_base": 0.5, "unidades_paquete": 1},
-        "Pudín": {"HARINA": 10.0, "LECHE": 5.0, "AZUCAR": 4.0, "HUEVOS": 1.5, "ESENCIAS": 0.2, "peso_base": 0.50, "unidades_paquete": 1},
-        "Banquete (50 und)": {"HARINA": 5.0, "AGUA": 2.0, "AZUCAR": 0.5, "SAL": 0.1, "MANTECA": 0.4, "LEVADURA": 0.1, "peso_base": 0.03, "unidades_paquete": 50},
-        "Pan de Dulce": {"HARINA": 1.0, "AGUA": 1.0, "AZUCAR": 1.0, "ANIS-DULCE": 1.0, "MANTECA": 1.0, "LEVADURA": 0.1, "peso_base": 0.25, "unidades_paquete": 1}
-    }
+        # Insumos base fijos para tu producción directa
+    lista_insumos = ["HARINA", "AGUA", "AZUCAR", "SAL", "MANTECA", "LEVADURA", "ESENCIAS", "ANIS-DULCE"]
 
-    opciones_productos = list(RECETAS_BASE.keys())
-    producto_con_clave = st.selectbox("Selecciona el producto a producir:", opciones_productos, key="sim_prod_sel")
-    receta = RECETAS_BASE[producto_con_clave]
-
-    st.subheader(f"🥣 Ajustar Ingredientes para: {producto_con_clave}")
-
-    # 🟢 1. CÓDIGO SUPABASE: Cargar tabla de insumos desde la base de datos
-    try:
-        res = supabase.table("costos").select("*").execute()
-        datos_recibidos = res.data if res.data else []
-        df_costos_real = pd.DataFrame(datos_recibidos)
-    except Exception as e:
-        st.error(f"🚨 Error al consultar la tabla de insumos en Supabase: {e}")
-        df_costos_real = pd.DataFrame()
-
-    ingredientes_modificados = {}
-
-    # Interfaz en dos columnas para adaptarse a dispositivos móviles
+    # Interfaz limpia en dos columnas
     col1, col2 = st.columns(2)
 
+    ingredientes_modificados = {}
     with col1:
-        st.markdown("**📝 Cantidad de Insumos (Kg / Unidades):**")
-        for ingrediente, cant_base in receta.items():
-            if ingrediente not in ["peso_base", "unidades_paquete"]:
-                cant_actual = st.number_input(
-                    f"{ingrediente}:",
-                    min_value=0.0,
-                    value=float(cant_base),
-                    step=0.1,
-                    key=f"input_sim_{ingrediente}"
-                )
-                ingredientes_modificados[ingrediente] = cant_actual
+        st.markdown("**📦 Cantidad de Insumos (Kg / Unidades):**")
+        for insumo in lista_insumos:
+            cant_actual = st.number_input(
+                f"{insumo}:",
+                min_value=0.0,
+                value=0.0,
+                step=0.1,
+                key=f"sim_{insumo}"
+            )
+            ingredientes_modificados[insumo] = cant_actual
+
+    with col2:
+        st.markdown("**⚙️ Configuración Física del Producto:**")
+        peso_pan = st.number_input("Peso por unidad en crudo (Kg):", min_value=0.001, value=0.25, step=0.01, key="sim_peso_pan")
+        unidades_paquete = st.number_input("Unidades por paquete terminado:", min_value=1, value=1, step=1, key="sim_unidades_paq")
+        
+        st.markdown("---")
+        st.markdown("**💰 Costos Operativos y Extras:**")
+        costo_mano_obra = st.number_input("Mano de Obra de la tanda ($):", min_value=0.0, value=0.0, step=0.5, key="sim_mano_obra")
+        costo_gas = st.number_input("Costo de Gas / Energía ($):", min_value=0.0, value=0.0, step=0.1, key="sim_gas")
+        costo_bolsa = st.number_input("Costo por cada Bolsa de empaque ($):", min_value=0.0, value=0.05, step=0.01, key="sim_bolsa")
 
     with col2:
         st.markdown("**📦 Configuración Física del Producto:**")
