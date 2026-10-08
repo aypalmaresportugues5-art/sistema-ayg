@@ -1112,99 +1112,6 @@ def formulario_cierre_de_caja():
 def formulario_simulador_costos():
     import pandas as pd
     import streamlit as st
-    
-    st.subheader("🍞 Simulador Unificado de Costos e Insumos")
-    st.write("Calcula en tiempo real el costo bruto, operativo y sugerencia de PVP para tu producción.")
-
-        # Insumos base fijos para tu producción directa
-    lista_insumos = ["HARINA", "AGUA", "AZUCAR", "SAL", "MANTECA", "LEVADURA", "ESENCIAS", "ANIS-DULCE"]
-
-    # Interfaz limpia en dos columnas
-    col1, col2 = st.columns(2)
-
-    ingredientes_modificados = {}
-    with col1:
-        st.markdown("**📦 Cantidad de Insumos (Kg / Unidades):**")
-        for insumo in lista_insumos:
-            cant_actual = st.number_input(
-                f"{insumo}:",
-                min_value=0.0,
-                value=0.0,
-                step=0.1,
-                key=f"sim_{insumo}"
-            )
-            ingredientes_modificados[insumo] = cant_actual
-
-    with col2:
-        st.markdown("**⚙️ Configuración Física del Producto:**")
-        peso_pan = st.number_input("Peso por unidad en crudo (Kg):", min_value=0.001, value=0.25, step=0.01, key="sim_peso_pan")
-        unidades_paquete = st.number_input("Unidades por paquete terminado:", min_value=1, value=1, step=1, key="sim_unidades_paq")
-        
-        st.markdown("---")
-        st.markdown("**💰 Costos Operativos y Extras:**")
-        costo_mano_obra = st.number_input("Mano de Obra de la tanda ($):", min_value=0.0, value=0.0, step=0.5, key="sim_mano_obra")
-        costo_gas = st.number_input("Costo de Gas / Energía ($):", min_value=0.0, value=0.0, step=0.1, key="sim_gas")
-        costo_bolsa = st.number_input("Costo por cada Bolsa de empaque ($):", min_value=0.0, value=0.05, step=0.01, key="sim_bolsa")
-
-    with col2:
-        st.markdown("**📦 Configuración Física del Producto:**")
-        peso_pan = st.number_input("Peso por unidad en crudo (Kg):", min_value=0.001, value=float(receta["peso_base"]), step=0.01, key="sim_peso_pan")
-        unidades_paquete = st.number_input("Unidades por paquete terminado:", min_value=1, value=int(receta["unidades_paquete"]), step=1, key="sim_und_paquete")
-
-        st.markdown("**💰 Costos Operativos y Extras:**")
-        costo_mano_obra = st.number_input("Mano de Obra de la tanda ($):", min_value=0.0, value=0.0, step=0.5, key="sim_mo")
-        costo_gas = st.number_input("Costo de Gas / Energía ($):", min_value=0.0, value=0.0, step=0.5, key="sim_gas")
-        costo_bolsa = st.number_input("Costo por cada Bolsa de empaque ($):", min_value=0.0, value=0.05, step=0.01, key="sim_bolsa")
-
-    # 2. CÁLCULO MATEMÁTICO CON CONSULTA DE PRECIOS EN SUPABASE
-    costo_materia_prima_total = 0.0
-
-    for ingrediente, cant_actual in ingredientes_modificados.items():
-        costo_unitario = 1.0 
-        if not df_costos_real.empty:
-            busqueda = str(ingrediente).upper().strip()
-            resultado = df_costos_real[df_costos_real['insumo_clean'].str.contains(busqueda, na=False)]
-            if not resultado.empty:
-                try:
-                    val_costo = resultado.iloc[0][col_costo]
-                    costo_unitario = float(val_costo)
-                except Exception:
-                    costo_unitario = 1.0  # <--- Esta línea debe estar indentada debajo del except
-
-        costo_materia_prima_total += float(cant_actual) * float(costo_unitario)
-
-        
-        if not df_costos_real.empty:
-            busqueda = str(ingrediente).upper().strip()
-            resultado = df_costos_real[df_costos_real['insumo_clean'].str.contains(busqueda, na=False)]
-            
-            if not resultado.empty:
-                try:
-                    val_costo = resultado.iloc[0][col_costo]
-                    costo_unitario = float(val_costo)
-                except Exception:
-                    costo_unitario = 1.0
-
-        costo_materia_prima_total += cant_actual * costo_unitario
-        # Operaciones de Rendimiento y Peso Total de Masa (Blindado contra errores de tipo)
-    kilos_validos = []
-    for ing, val in ingredientes_modificados.items():
-        try:
-            kilos_validos.append(float(val) if val is not None else 0.0)
-        except Exception:
-            kilos_validos.append(0.0)
-            
-    total_kilos_mezcla = 0.0
-    if isinstance(ingredientes_modificados, dict):
-        for ing, val in ingredientes_modificados.items():
-            try:
-                if val is not None:
-                    total_kilos_mezcla += float(val)
-            except Exception:
-@st.dialog("🍞 Simulador Unificado de Costos e Insumos")
-def formulario_simulador_costos():
-    import pandas as pd
-    import streamlit as st
 
     st.subheader("🍞 Simulador Directo de Costos")
     st.write("Ingresa las cantidades de tu tanda y calcula el costo real al instante.")
@@ -1324,6 +1231,7 @@ def formulario_simulador_costos():
         st.success(f"**PVP Sugerido por Unidad:**\n\n${pvp_unidad_sugerido:.2f}")
     with col_pvp2:
         st.success(f"**PVP Sugerido por Paquete (Mayor):**\n\n${pvp_paquete_sugerido:.2f}")
+
 
 
 
