@@ -1024,31 +1024,32 @@ def formulario_cierre_de_caja():
     st.write(f"📅 **Resumen de Operaciones:** {fecha_ve}")
 
     if not df_v.empty:
-        # Forzamos la conversión a numérico del monto y la extracción limpia de fecha (YYYY-MM-DD)
+        # Limpiamos y normalizamos las columnas clave para evitar errores por mayúsculas, acentos o espacios
+        df_v['FECHA_STR'] = df_v['FECHA'].astype(str).str.strip()
+        df_v['TIPO_NORM'] = df_v['TIPO'].astype(str).str.lower().str.strip()
+        df_v['CLIENTE_NORM'] = df_v['CLIENTE'].astype(str).str.lower().str.strip()
         df_v['MONTO($)'] = pd.to_numeric(df_v['MONTO($)'], errors='coerce').fillna(0.0)
-        df_v['FECHA_CORTA'] = df_v['FECHA'].astype(str).str.slice(0, 10)
-        
-        # Filtrar operaciones de la jornada de hoy
-        df_v['FECHA_LIMPIA'] = df_v['FECHA'].astype(str).str.strip()
-        
-        # Filtramos para que busque si contiene la fecha de hoy o coincide exactamente
-        df_hoy = df_v[df_v['FECHA_LIMPIA'].str.contains(fecha_hoy) | df_v['FECHA_CORTA'].str.contains(fecha_hoy)]
-        
-        # (Opcional para depurar si vuelve a pasar): 
-        # st.write(f"Buscando fecha: {fecha_hoy} | Total registros leídos: {len(df_v)}")
+
+        # Filtramos la jornada de hoy comparando si la fecha contiene la fecha actual
+        df_hoy = df_v[df_v['FECHA_STR'].str.contains(fecha_hoy, na=False)].copy()
+
         if not df_hoy.empty:
-            # 1. Clasificación de ventas del día
-            df_detal_contado = df_hoy[(df_hoy['TIPO'] == 'Contado') & (df_hoy['CLIENTE'] == 'CLIENTE DETAL')]
-            total_detal = df_detal_contado['MONTO($)'].sum() if not df_detal_contado.empty else 0.0
-   
-            df_mayor_contado = df_hoy[(df_hoy['TIPO'].isin(['Contado', 'CONTADO'])) & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
-            total_mayor_contado = df_mayor_contado['MONTO($)'].sum() if not df_mayor_contado.empty else 0.0
+            # 1. Clasificación flexible de ventas del día
+            # Ventas al Detal (Contado y cliente detal)
+            df_detal_contado = df_hoy[(df_hoy['TIPO_NORM'] == 'contado') & (df_hoy['CLIENTE_NORM'].str.contains('detal'))]
+            total_detal = df_detal_contado['MONTO($)'].sum()
 
-            df_mayor_credito = df_hoy[(df_hoy['TIPO'].isin(['Crédito', 'Credito', 'CRÉDITO', 'CREDITO'])) & (df_hoy['CLIENTE'] != 'CLIENTE DETAL')]
-            total_mayor_credito = df_mayor_credito['MONTO($)'].sum() if not df_mayor_credito.empty else 0.0
+            # Ventas al Mayor a Contado (Contado pero cliente distinto a detal)
+            df_mayor_contado = df_hoy[(df_hoy['TIPO_NORM'] == 'contado') & (~df_hoy['CLIENTE_NORM'].str.contains('detal'))]
+            total_mayor_contado = df_mayor_contado['MONTO($)'].sum()
 
-            df_abonos = df_hoy[df_hoy['TIPO'] == 'Abono']
-            total_abonos = df_abonos['MONTO($)'].sum() if not df_abonos.empty else 0.0
+            # Ventas al Mayor a Crédito
+            df_mayor_credito = df_hoy[df_hoy['TIPO_NORM'].isin(['crédito', 'credito']) & (~df_hoy['CLIENTE_NORM'].str.contains('detal'))]
+            total_mayor_credito = df_mayor_credito['MONTO($)'].sum()
+
+            # Abonos recibidos
+            df_abonos = df_hoy[df_hoy['TIPO_NORM'] == 'abono']
+            total_abonos = df_abonos['MONTO($)'].sum()
             effective_abonos = abs(total_abonos)
 
             # 2. Totales contables y de caja
@@ -1056,20 +1057,23 @@ def formulario_cierre_de_caja():
             venta_total_dia = total_contado_general + total_mayor_credito
             total_liquido_caja = total_contado_general + effective_abonos
 
-            # 3. VISUALIZACIÓN EN PANTALLA (Métricas principales y desglose)
+            # 3. VISUALIZACIÓN EN PANTALLA
             st.markdown("### 📊 Resumen Financiero del Día")
             c1, c2, c3 = st.columns(3)
             c1.metric("Venta Total del Día", f"${venta_total_dia:.2f}")
             c2.metric("Entrada Real en Caja", f"${total_liquido_caja:.2f}")
             c3.metric("Total Movimientos", len(df_hoy))
 
-            st.markdown("#### 🔍 Desglose por Tipo") 
+            st.markdown("#### 🔍 Desglose por Tipo")
             sub1, sub2, sub3 = st.columns(3)
             sub1.metric("💵 Contado Total", f"${total_contado_general:.2f}")
             sub2.metric("🤝 Créditos Otorgados", f"${total_mayor_credito:.2f}")
             sub3.metric("📥 Abonos Recibidos", f"${effective_abonos:.2f}")
 
             st.divider()
+        else:
+            st.info(f"ℹ️ No se encontraron registros para la fecha de hoy ({fecha_hoy}).")
+
             # Formulario para confirmar el cierre físico
             with st.form("form_cierre", clear_on_submit=True):
                 st.write("¿Todo cuadra con el dinero físico en mano?")
