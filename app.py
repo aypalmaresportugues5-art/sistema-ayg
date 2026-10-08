@@ -1172,24 +1172,21 @@ def formulario_simulador_costos():
 
     # 2. CÁLCULO MATEMÁTICO CON CONSULTA DE PRECIOS EN SUPABASE
     costo_materia_prima_total = 0.0
-    
-    # Normalizamos los nombres de las columnas a minúsculas para ubicarlas sin error
-    if not df_costos_real.empty:
-        df_costos_real.columns = [c.strip() for c in df_costos_real.columns]
-        
-        # Buscamos la columna de insumo y la de costo unitario de forma segura
-        col_insumo = next((c for c in df_costos_real.columns if c.lower() in ['insumo', 'nombre', 'articulo']), None)
-        col_costo = next((c for c in df_costos_real.columns if c.lower() in ['costo por unidad', 'costo_unitario', 'precio']), None)
-        
-        if not col_insumo:
-            col_insumo = df_costos_real.columns[2] # Por defecto la columna INSUMO (3era columna)
-        if not col_costo:
-            col_costo = df_costos_real.columns[5] # Por defecto la columna COSTO POR UNIDAD
-            
-        df_costos_real['insumo_clean'] = df_costos_real[col_insumo].astype(str).str.upper().str.strip()
 
     for ingrediente, cant_actual in ingredientes_modificados.items():
-        costo_unitario = 1.0 # Valor por defecto de seguridad
+        costo_unitario = 1.0 
+        if not df_costos_real.empty:
+            busqueda = str(ingrediente).upper().strip()
+            resultado = df_costos_real[df_costos_real['insumo_clean'].str.contains(busqueda, na=False)]
+            if not resultado.empty:
+                try:
+                    val_costo = resultado.iloc[0][col_costo]
+                    costo_unitario = float(val_costo)
+                except Exception:
+                    costo_unitario = 1.0  # <--- Esta línea debe estar indentada debajo del except
+
+        costo_materia_prima_total += float(cant_actual) * float(costo_unitario)
+
         
         if not df_costos_real.empty:
             busqueda = str(ingrediente).upper().strip()
