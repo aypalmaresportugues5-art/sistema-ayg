@@ -1170,23 +1170,22 @@ def formulario_simulador_costos():
         costo_gas = st.number_input("Costo de Gas / Energía ($):", min_value=0.0, value=0.0, step=0.5, key="sim_gas")
         costo_bolsa = st.number_input("Costo por cada Bolsa de empaque ($):", min_value=0.0, value=0.05, step=0.01, key="sim_bolsa")
 
-    # 🟢 2. CÁLCULO MATEMÁTICO CON CONSULTA DE PRECIOS EN SUPABASE
+    # 2. CÁLCULO MATEMÁTICO CON CONSULTA DE PRECIOS EN SUPABASE
     costo_materia_prima_total = 0.0
-
+    
     if not df_costos_real.empty:
         # Pre-procesamiento de nombres de insumos para búsqueda insensible a mayúsculas/espacios
         df_costos_real['insumo_clean'] = df_costos_real['nombre'].astype(str).str.upper().str.strip()
 
     for ingrediente, cant_actual in ingredientes_modificados.items():
-        costo_unitario = 1.0  # Valor base por defecto
-
+        costo_unitario = 1.0 # Valor base por defecto
+        
         if not df_costos_real.empty:
             busqueda = str(ingrediente).upper().strip()
             resultado = df_costos_real[df_costos_real['insumo_clean'].str.contains(busqueda, na=False)]
-
+            
             if not resultado.empty:
                 try:
-                    # Toma el costo unitario/kg registrado en la columna 'precio_unitario' o 'costo'
                     col_costo = 'costo_unitario' if 'costo_unitario' in resultado.columns else 'precio'
                     val_costo = resultado.iloc[0][col_costo]
                     costo_unitario = float(val_costo)
@@ -1195,8 +1194,12 @@ def formulario_simulador_costos():
 
         costo_materia_prima_total += cant_actual * costo_unitario
 
-    # Operaciones de Rendimiento Automatizadas
+    # Operaciones de Rendimiento y Peso Total de Masa
     total_kilos_mezcla = sum(ingredientes_modificados.values())
+    
+    # Cálculo del costo por kilogramo de masa
+    costo_por_kg_masa = (costo_materia_prima_total / total_kilos_mezcla) if total_kilos_mezcla > 0 else 0.0
+
     cantidad_unidades_totales = int(total_kilos_mezcla / peso_pan) if peso_pan > 0 else 0
     total_paquetes = cantidad_unidades_totales / unidades_paquete if unidades_paquete > 0 else 0
     costo_operativo_total = costo_materia_prima_total + costo_mano_obra + costo_gas
@@ -1208,20 +1211,20 @@ def formulario_simulador_costos():
         costo_por_unidad_bruto = 0.0
         costo_por_paquete = 0.0
 
-    # 🟢 3. REPORTE FINAL EN PANTALLA
+    # 3. REPORTE FINAL EN PANTALLA
     st.write("---")
     st.subheader("📊 Reporte Técnico de Rendimiento y Costo Real")
 
     c_res1, c_res2, c_res3 = st.columns(3)
     with c_res1:
-        st.metric("Masa Total Mezcla", f"{total_kilos_mezcla:.2f} Kg")
-        st.metric("Costo Neto Mezcla", f"${costo_materia_prima_total:.2f}")
+        st.metric("Masa Total Mezcla", f"{total_kilos_mezcla:.2f} Kg")[span_3](start_span)[span_3](end_span)
+        st.metric("Costo Materia Prima", f"${costo_materia_prima_total:.2f}")[span_4](start_span)[span_4](end_span)
     with c_res2:
-        st.metric("Rendimiento", f"{cantidad_unidades_totales} Unidades")
-        st.metric("Costo por Unidad", f"${costo_por_unidad_bruto:.3f}")
+        st.metric("Costo por Kg de Masa", f"${costo_por_kg_masa:.2f} /Kg")
+        st.metric("Costo por Unidad", f"${costo_por_unidad_bruto:.3f}")[span_5](start_span)[span_5](end_span)
     with c_res3:
-        st.metric("Total Empacado", f"{total_paquetes:.1f} Paquetes")
-        st.metric("Costo por Paquete", f"${costo_por_paquete:.2f}")
+        st.metric("Total Paquetes", f"{total_paquetes:.1f} Paquetes")[span_6](start_span)[span_6](end_span)
+        st.metric("Costo por Paquete", f"${costo_por_paquete:.2f}")[span_7](start_span)[span_7](end_span)
 
     # Calculador interactivo de ganancias y PVP sugerido
     st.subheader("💰 Calculador Interactivo de Ganancias")
