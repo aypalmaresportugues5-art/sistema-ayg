@@ -1009,13 +1009,12 @@ def formulario_cierre_de_caja():
 
     # 1. Consulta directa a la tabla 'ventas' en Supabase
     try:
-        res = supabase.table("ventas").select("*").execute()
+        res = supabase.table("ventas").select("*").order("id", desc=True).limit(500).execute()
         datos_recibidos = res.data if res.data else []
         df_v = pd.DataFrame(datos_recibidos)
     except Exception as e:
-        st.error(f"🚨 Error al cargar datos de Supabase: {e}")
+        st.error(f"❌ Error al cargar datos de Supabase: {e}")
         df_v = pd.DataFrame()
-
     # --- AJUSTE DE FECHA LOCAL ---
     zona_ve = pytz.timezone('America/Caracas')
     fecha_hoy = datetime.now(zona_ve).strftime('%d/%m/%Y')  # Formato DD/MM/YYYY igual a tu BD
