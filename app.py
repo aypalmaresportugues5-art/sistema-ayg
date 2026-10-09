@@ -1,4 +1,4 @@
-import streamlit as st
+httpimport streamlit as st
 import pandas as pd
 from supabase import create_client
 from datetime import datetime
@@ -1080,22 +1080,23 @@ def formulario_cierre_de_caja():
                 boton_cierre = st.form_submit_button("🔒 CONSOLIDAR Y CERRAR CAJA")
 
             if boton_cierre:
-                # Aseguramos de forma segura que las variables existan y tengan un valor numérico válido
-                t_detal = float(total_detal) if 'total_detal' in locals() and total_detal is not None else 0.0
-                t_mayor = float(total_mayor) if 'total_mayor' in locals() and total_mayor is not None else 0.0
-                t_abonos = float(efectivo_abonos) if 'efectivo_abonos' in locals() and efectivo_abonos is not None else 0.0
-                t_liquido = float(total_liquid_caja) if 'total_liquid_caja' in locals() and total_liquid_caja is not None else 0.0
-                obs = str(observaciones) if 'observaciones' in locals() and observaciones is not None else "Sin novedad"
+            # Tomamos los nombres exactos de las variables calculadas arriba en el resumen del día
+            t_detal = float(total_detal) if 'total_detal' in locals() and total_detal is not None else 0.0
+            t_mayor = float(total_mayor_contado) if 'total_mayor_contado' in locals() and total_mayor_contado is not None else 0.0
+            t_abonos = float(effective_abonos) if 'effective_abonos' in locals() and effective_abonos is not None else 0.0
+            t_liquido = float(total_liquido_caja) if 'total_liquido_caja' in locals() and total_liquido_caja is not None else 0.0
+            obs = str(observaciones) if 'observaciones' in locals() and observaciones is not None else "Sin novedad"
 
-                # Payload blindado para Supabase
-                payload_cierre = {
-                    "FECHA": fecha_hoy,
-                    "VENTAS DETAL": t_detal,
-                    "VENTAS MAYOR": t_mayor,
-                    "ABONOS RECIBIDOS": t_abonos,
-                    "TOTAL CAJA": t_liquido,
-                    "ESTADO": "Completada"
-                }
+            # Payload con las variables correctas y los nombres exactos de las columnas en Supabase
+            payload_cierre = {
+                "FECHA": fecha_hoy,
+                "VENTAS DETAL": t_detal,
+                "VENTAS MAYOR": t_mayor,
+                "ABONOS RECIBIDOS": t_abonos,
+                "TOTAL CAJA": t_liquido,
+                "ESTADO": "Completada"
+            }
+
 
                 try:
                     # Guardar el registro del cierre en Supabase (ejemplo en la tabla 'cierres' o 'ventas')
