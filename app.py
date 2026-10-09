@@ -1080,15 +1080,22 @@ def formulario_cierre_de_caja():
                 boton_cierre = st.form_submit_button("🔒 CONSOLIDAR Y CERRAR CAJA")
 
             if boton_cierre:
-                # Payload para Supabase (se puede guardar en una tabla 'cierres' o 'ventas' según tu diseño)
+                # Aseguramos de forma segura que las variables existan y tengan un valor numérico válido
+                t_detal = float(total_detal) if 'total_detal' in locals() and total_detal is not None else 0.0
+                t_mayor = float(total_mayor) if 'total_mayor' in locals() and total_mayor is not None else 0.0
+                t_abonos = float(efectivo_abonos) if 'efectivo_abonos' in locals() and efectivo_abonos is not None else 0.0
+                t_liquido = float(total_liquid_caja) if 'total_liquid_caja' in locals() and total_liquid_caja is not None else 0.0
+                obs = str(observaciones) if 'observaciones' in locals() and observaciones is not None else "Sin novedad"
+
+                # Payload blindado para Supabase
                 payload_cierre = {
                     "fecha": fecha_hoy,
-                    "tipo": "CierreCaja",
+                    "tipo": "Cierre de Caja",
                     "cliente": "CIERRE DE CAJA",
-                    "monto_mismo": float(total_liquido_caja),
-                    "monto($)": float(total_liquido_caja),
-                    "descripcion": f"Cierre Caja | Detal: ${total_detal:.2f} | Mayor: ${total_mayor:.2f} | Abonos: ${efectivo_abonos:.2f} | Notas: {observaciones}"
-                }
+                    "monto_mismo": t_liquido,
+                    "monto(s)": t_liquido,
+                    "descripcion": f"Cierre Caja | Detal: ${t_detal:.2f} | Mayor: ${t_mayor:.2f} | Abonos: ${t_abonos:.2f} | Notas: {obs}"
+               }
 
                 try:
                     # Guardar el registro del cierre en Supabase (ejemplo en la tabla 'cierres' o 'ventas')
