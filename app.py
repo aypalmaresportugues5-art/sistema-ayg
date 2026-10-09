@@ -1099,7 +1099,7 @@ def formulario_cierre_de_caja():
 
                 try:
                     # Guardar el registro del cierre en Supabase (ejemplo en la tabla 'cierres' o 'ventas')
-                    res_insert = supabase.table("cierres").insert(payload_cierre).execute()
+                    res_insert = supabase.table("cierre").insert(payload_cierre).execute()
                     
                     if res_insert.data:
                         st.success("🏁 ¡Cierre de caja guardado con éxito en Supabase!")
