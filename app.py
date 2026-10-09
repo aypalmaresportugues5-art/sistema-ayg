@@ -1080,18 +1080,18 @@ def formulario_cierre_de_caja():
                 boton_cierre = st.form_submit_button("🔒 CONSOLIDAR Y CERRAR CAJA")
 
             if boton_cierre:
-                # Tomamos los nombres exactos de las variables calculadas arriba en el resumen del día
-                t_detal = float(total_detal) if 'total_detal' in locals() and total_detal is not None else 0.0
-                t_mayor = float(total_mayor_contado) if 'total_mayor_contado' in locals() and total_mayor_contado is not None else 0.0
+                # Tomamos los valores exactos que se muestran en los contadores de la interfaz
+                t_contado = float(total_contado_general) if 'total_contado_general' in locals() and total_contado_general is not None else 0.0
+                t_credito = float(total_mayor_credito) if 'total_mayor_credito' in locals() and total_mayor_credito is not None else 0.0
                 t_abonos = float(effective_abonos) if 'effective_abonos' in locals() and effective_abonos is not None else 0.0
-                t_liquido = float(total_liquido_caja) if 'total_liquido_caja' in locals() and total_liquido_caja is not None else 0.0
+                t_liquido = float(total_liquid_caja) if 'total_liquid_caja' in locals() and total_liquid_caja is not None else 0.0
                 obs = str(observaciones) if 'observaciones' in locals() and observaciones is not None else "Sin novedad"
 
-                # Payload con las variables correctas y los nombres exactos de las columnas en Supabase
+                # Payload adaptado con los nuevos nombres de columnas en Supabase
                 payload_cierre = {
                     "FECHA": fecha_hoy,
-                    "VENTAS DETAL": t_detal,
-                    "VENTAS MAYOR": t_mayor,
+                    "VENTA CONTADO": t_contado,
+                    "CRÉDITOS OTORGADOS": t_credito,
                     "ABONOS RECIBIDOS": t_abonos,
                     "TOTAL CAJA": t_liquido,
                     "ESTADO": "Completada"
