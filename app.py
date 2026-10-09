@@ -1087,15 +1087,15 @@ def formulario_cierre_de_caja():
                 t_liquido = float(total_liquido_caja) if 'total_liquido_caja' in locals() and total_liquido_caja is not None else 0.0
                 obs = str(observaciones) if 'observaciones' in locals() and observaciones is not None else "Sin novedad"
 
-            # Payload con las variables correctas y los nombres exactos de las columnas en Supabase
-            payload_cierre = {
-                "FECHA": fecha_hoy,
-                "VENTAS DETAL": t_detal,
-                "VENTAS MAYOR": t_mayor,
-                "ABONOS RECIBIDOS": t_abonos,
-                "TOTAL CAJA": t_liquido,
-                "ESTADO": "Completada"
-            }
+                # Payload con las variables correctas y los nombres exactos de las columnas en Supabase
+                payload_cierre = {
+                    "FECHA": fecha_hoy,
+                    "VENTAS DETAL": t_detal,
+                    "VENTAS MAYOR": t_mayor,
+                    "ABONOS RECIBIDOS": t_abonos,
+                    "TOTAL CAJA": t_liquido,
+                    "ESTADO": "Completada"
+                }
 
 
                 try:
