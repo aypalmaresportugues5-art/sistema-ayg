@@ -1089,13 +1089,13 @@ def formulario_cierre_de_caja():
 
                 # Payload blindado para Supabase
                 payload_cierre = {
-                    "fecha": fecha_hoy,
-                    "tipo": "Cierre de Caja",
-                    "cliente": "CIERRE DE CAJA",
-                    "monto_mismo": t_liquido,
-                    "monto(s)": t_liquido,
-                    "descripcion": f"Cierre Caja | Detal: ${t_detal:.2f} | Mayor: ${t_mayor:.2f} | Abonos: ${t_abonos:.2f} | Notas: {obs}"
-               }
+                    "FECHA": fecha_hoy,
+                    "VENTAS DETAL": t_detal,
+                    "VENTAS MAYOR": t_mayor,
+                    "ABONOS RECIBIDOS": t_abonos,
+                    "TOTAL CAJA": t_liquido,
+                    "ESTADO": "Completada"
+                }
 
                 try:
                     # Guardar el registro del cierre en Supabase (ejemplo en la tabla 'cierres' o 'ventas')
