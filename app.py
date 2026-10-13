@@ -1007,7 +1007,7 @@ def formulario_cierre_de_caja():
 
     st.subheader("🏁 Control y Cierre de Caja Diario")
 
-        # 1. Consulta directa a la tabla 'ventas' y 'Egresos' en Supabase
+    # 1. Consulta directa a la tabla 'ventas' y 'Egresos' en Supabase
     try:
         res = supabase.table("ventas").select("*").order("id", desc=True).limit(500).execute()
         datos_recibidos = res.data if res.data else []
@@ -1029,16 +1029,25 @@ def formulario_cierre_de_caja():
     fecha_hoy = datetime.now(zona_ve).strftime('%d/%m/%Y') 
     fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
 
-    # Filtrar egresos del día actual de forma segura
+    # Filtrar egresos del día actual de forma flexible y segura
     total_egresos_dia = 0.0
     if not df_egresos.empty and 'FECHA' in df_egresos.columns and 'MONTO' in df_egresos.columns:
-        df_egresos_hoy = df_egresos[df_egresos['FECHA'].astype(str).str.contains(fecha_hoy, na=False)]
+        df_egresos['FECHA_CLEAN'] = df_egresos['FECHA'].astype(str).str.strip()
+        df_egresos['MONTO_NUM'] = pd.to_numeric(df_egresos['MONTO'], errors='coerce').fillna(0.0)
+        
+        df_egresos_hoy = df_egresos[df_egresos['FECHA_CLEAN'].str.contains(fecha_hoy, na=False)]
         if not df_egresos_hoy.empty:
-            total_egresos_dia = float(df_egresos_hoy['MONTO'].sum())
+            total_egresos_dia = float(df_egresos_hoy['MONTO_NUM'].sum())
 
     st.write(f"🔍 Resumen de Operaciones: **{fecha_ve}**")
     st.write(f"🔍 Fecha buscada: **[{fecha_hoy}]**")
     st.write(f"🔍 Últimas fechas en BD: **{df_v['FECHA'].tail(3).tolist() if not df_v.empty else 'DataFrame vacio'}**")
+
+    # Inicializamos variables en 0 por seguridad
+    total_detal = 0.0
+    total_mayor_contado = 0.0
+    total_mayor_credito = 0.0
+    effective_abonos = 0.0
 
     if not df_v.empty:
         # Limpiamos y normalizamos las columnas clave
@@ -1047,10 +1056,9 @@ def formulario_cierre_de_caja():
         df_v['CLIENTE_NORM'] = df_v['CLIENTE'].astype(str).str.lower().str.strip()
         df_v['MONTO($)'] = pd.to_numeric(df_v['MONTO($)'], errors='coerce').fillna(0.0)
 
-        # Filtramos la jornada de hoy buscando el texto de la fecha (ej. 12/10/2026)
+        # Filtramos la jornada de hoy
         df_hoy = df_v[df_v['FECHA_STR'].str.contains(fecha_hoy, na=False)].copy()
         if not df_hoy.empty:
-            # 1. Clasificación flexible de ventas del día
             df_detal_contado = df_hoy[(df_hoy['TIPO_NORM'] == 'contado') & (df_hoy['CLIENTE_NORM'].str.contains('detal'))]
             total_detal = df_detal_contado['MONTO($)'].sum()
 
@@ -1060,15 +1068,14 @@ def formulario_cierre_de_caja():
             df_mayor_credito = df_hoy[df_hoy['TIPO_NORM'].str.contains('cred|credito|crédito|fiad', na=False)]
             total_mayor_credito = df_mayor_credito['MONTO($)'].sum()
 
-            # Abonos recibidos
             df_abonos = df_hoy[df_hoy['TIPO_NORM'] == 'abono']
             total_abonos = df_abonos['MONTO($)'].sum()
             effective_abonos = abs(total_abonos)
 
-            # 2. Totales contables y de caja (restando los egresos del día)
-            total_contado_general = total_detal + total_mayor_contado
-            venta_total_dia = total_contado_general + total_mayor_credito
-            total_liquido_caja = (total_contado_general + effective_abonos) - total_egresos_dia
+    # 2. Totales contables y de caja (restando los egresos del día de forma exacta)
+    total_contado_general = total_detal + total_mayor_contado
+    venta_total_dia = total_contado_general + total_mayor_credito
+    total_liquido_caja = (total_contado_general + effective_abonos) - total_egresos_dia
 
 
 
