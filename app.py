@@ -1068,7 +1068,8 @@ def formulario_cierre_de_caja():
             # 2. Totales contables y de caja (restando los egresos del día)
             total_contado_general = total_detal + total_mayor_contado
             venta_total_dia = total_contado_general + total_mayor_credito
-            total_liquid_caja = (total_contado_general + effective_abonos) - total_egresos_dia
+            total_liquido_caja = (total_contado_general + effective_abonos) - total_egresos_dia
+
 
 
 
