@@ -1007,7 +1007,7 @@ def formulario_cierre_de_caja():
 
     st.subheader("🏁 Control y Cierre de Caja Diario")
 
-    # 1. Consulta directa a la tabla 'ventas' en Supabase
+        # 1. Consulta directa a la tabla 'ventas' y 'Egresos' en Supabase
     try:
         res = supabase.table("ventas").select("*").order("id", desc=True).limit(500).execute()
         datos_recibidos = res.data if res.data else []
@@ -1015,21 +1015,30 @@ def formulario_cierre_de_caja():
     except Exception as e:
         st.error(f"❌ Error al cargar datos de Supabase: {e}")
         df_v = pd.DataFrame()
-    # --- CONSULTA Y SUMA DE EGRESOS DEL DÍA ---
+
+    # Consulta de Egresos de forma segura
     try:
         res_egresos = supabase.table("Egresos").select("*").execute()
         datos_egresos = res_egresos.data if res_egresos.data else []
         df_egresos = pd.DataFrame(datos_egresos)
     except Exception:
         df_egresos = pd.DataFrame()
+
     # --- AJUSTE DE FECHA LOCAL ---
     zona_ve = pytz.timezone('America/Caracas')
-    fecha_hoy = datetime.now(zona_ve).strftime('%d/%m/%Y')  # Formato DD/MM/YYYY igual a tu BD
+    fecha_hoy = datetime.now(zona_ve).strftime('%d/%m/%Y') 
     fecha_ve = datetime.now(zona_ve).strftime('%d/%m/%Y')
 
-    st.write(f"**Resumen de Operaciones:** {fecha_ve}")
-    st.write(f"🔍 **Fecha buscada:** [{fecha_hoy}]")
-    st.write(f"🔍 **Últimas fechas en BD:** {df_v['FECHA'].tail(3).tolist() if not df_v.empty else 'DataFrame vacío'}")
+    # Filtrar egresos del día actual de forma segura
+    total_egresos_dia = 0.0
+    if not df_egresos.empty and 'FECHA' in df_egresos.columns and 'MONTO' in df_egresos.columns:
+        df_egresos_hoy = df_egresos[df_egresos['FECHA'].astype(str).str.contains(fecha_hoy, na=False)]
+        if not df_egresos_hoy.empty:
+            total_egresos_dia = float(df_egresos_hoy['MONTO'].sum())
+
+    st.write(f"🔍 Resumen de Operaciones: **{fecha_ve}**")
+    st.write(f"🔍 Fecha buscada: **[{fecha_hoy}]**")
+    st.write(f"🔍 Últimas fechas en BD: **{df_v['FECHA'].tail(3).tolist() if not df_v.empty else 'DataFrame vacio'}**")
 
     if not df_v.empty:
         # Limpiamos y normalizamos las columnas clave
@@ -1038,19 +1047,16 @@ def formulario_cierre_de_caja():
         df_v['CLIENTE_NORM'] = df_v['CLIENTE'].astype(str).str.lower().str.strip()
         df_v['MONTO($)'] = pd.to_numeric(df_v['MONTO($)'], errors='coerce').fillna(0.0)
 
-        # Filtramos la jornada de hoy buscando el texto de la fecha (ej. 08/10/2026)
+        # Filtramos la jornada de hoy buscando el texto de la fecha (ej. 12/10/2026)
         df_hoy = df_v[df_v['FECHA_STR'].str.contains(fecha_hoy, na=False)].copy()
         if not df_hoy.empty:
             # 1. Clasificación flexible de ventas del día
-            # Ventas al Detal a Contado (Contado y cliente detal)
             df_detal_contado = df_hoy[(df_hoy['TIPO_NORM'] == 'contado') & (df_hoy['CLIENTE_NORM'].str.contains('detal'))]
             total_detal = df_detal_contado['MONTO($)'].sum()
 
-            # Ventas al Mayor a Contado (Contado pero cliente distinto a detal)
             df_mayor_contado = df_hoy[(df_hoy['TIPO_NORM'] == 'contado') & (~df_hoy['CLIENTE_NORM'].str.contains('detal'))]
             total_mayor_contado = df_mayor_contado['MONTO($)'].sum()
 
-            # Ventas a Crédito (¡Cualquier crédito, sea al detal o al mayor!)
             df_mayor_credito = df_hoy[df_hoy['TIPO_NORM'].str.contains('cred|credito|crédito|fiad', na=False)]
             total_mayor_credito = df_mayor_credito['MONTO($)'].sum()
 
@@ -1059,10 +1065,10 @@ def formulario_cierre_de_caja():
             total_abonos = df_abonos['MONTO($)'].sum()
             effective_abonos = abs(total_abonos)
 
-            # 2. Totales contables y de caja
+            # 2. Totales contables y de caja (restando los egresos del día)
             total_contado_general = total_detal + total_mayor_contado
             venta_total_dia = total_contado_general + total_mayor_credito
-            total_liquido_caja = (total_contado_general + effective_abonos) - total_egresos_dia
+            total_liquid_caja = (total_contado_general + effective_abonos) - total_egresos_dia
 
 
 
