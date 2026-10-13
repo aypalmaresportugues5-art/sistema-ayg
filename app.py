@@ -1015,6 +1015,13 @@ def formulario_cierre_de_caja():
     except Exception as e:
         st.error(f"❌ Error al cargar datos de Supabase: {e}")
         df_v = pd.DataFrame()
+    # --- CONSULTA Y SUMA DE EGRESOS DEL DÍA ---
+    try:
+        res_egresos = supabase.table("Egresos").select("*").execute()
+        datos_egresos = res_egresos.data if res_egresos.data else []
+        df_egresos = pd.DataFrame(datos_egresos)
+    except Exception:
+        df_egresos = pd.DataFrame()
     # --- AJUSTE DE FECHA LOCAL ---
     zona_ve = pytz.timezone('America/Caracas')
     fecha_hoy = datetime.now(zona_ve).strftime('%d/%m/%Y')  # Formato DD/MM/YYYY igual a tu BD
@@ -1055,7 +1062,8 @@ def formulario_cierre_de_caja():
             # 2. Totales contables y de caja
             total_contado_general = total_detal + total_mayor_contado
             venta_total_dia = total_contado_general + total_mayor_credito
-            total_liquido_caja = total_contado_general + effective_abonos
+            total_liquido_caja = (total_contado_general + effective_abonos) - total_egresos_dia
+
 
 
             # 3. VISUALIZACIÓN EN PANTALLA
