@@ -1073,10 +1073,10 @@ def formulario_cierre_de_caja():
             total_abonos = df_abonos['MONTO($)'].sum()
             effective_abonos = abs(total_abonos)
 
-    # 2. Totales contables y de caja (restando los egresos del día de forma exacta)
-    total_contado_general = total_detal + total_mayor_contado
-    venta_total_dia = total_contado_general + total_mayor_credito
-    total_liquido_caja = (total_contado_general + effective_abonos) - total_egresos_dia
+            # 2. Totales contables y de caja (restando los egresos del día de forma exacta)
+            total_contado_general = total_detal + total_mayor_contado
+            venta_total_dia = total_contado_general + total_mayor_credito
+            total_liquido_caja = (total_contado_general + effective_abonos) - total_egresos_dia
             # 3. VISUALIZACIÓN EN PANTALLA
             st.markdown("### 📊 Resumen Financiero del Día")
             c1, c2, c3 = st.columns(3)
