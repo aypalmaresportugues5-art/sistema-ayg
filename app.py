@@ -1048,6 +1048,7 @@ def formulario_cierre_de_caja():
     total_mayor_contado = 0.0
     total_mayor_credito = 0.0
     effective_abonos = 0.0
+    df_hoy = pd.DataFrame()
 
     if not df_v.empty:
         # Limpiamos y normalizamos las columnas clave
