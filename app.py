@@ -262,8 +262,12 @@ def formulario_venta_detal(clientes_lista):
             st.rerun()
 
 @st.dialog("📦 Registro de Venta al Mayor")
-def formulario_venta_mayor(clientes_lista, productos_dict):
+def formulario_venta_mayor(clientes_lista, productos_dict=None):
     st.subheader("📦 Gestión de Ventas al Mayor y Facturación")
+    
+    # Si no se pasa el diccionario por argumento, lo cargamos de forma segura aquí mismo
+    if productos_dict is None:
+        productos_dict = cargar_productos_dict()
     
     # Pestañas dentro del modal flotante
     tab_carrito, tab_fiscal = st.tabs(["🛒 Pedido al Mayor (Carrito)", "🧾 Factura Fiscal Oficial"])
@@ -446,6 +450,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict):
                         st.error(f"❌ Error al guardar en la base de datos: {e}")
                 else:
                     st.warning("⚠️ Por favor completa la Razón Social, el N° de Factura y un monto mayor a 0.")
+
 
           
 @st.dialog("💵 Registrar Abono")
