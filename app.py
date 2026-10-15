@@ -1527,58 +1527,83 @@ def formulario_modulo_contable():
             st.info("ℹ️ No hay registros de egresos para este mes y año.")
         
     with tab_egresos:
-        st.subheader("💸 Registro de Gastos, Delivery y Egresos")
-    
-        # Formulario para registrar un nuevo egreso
+        st.subheader("💸 Registro de Gastos, Delivery y Egresos Fiscales")
+
+        # Formulario expandido para egresos operativos y fiscales
         with st.form("form_registrar_egreso", clear_on_submit=True):
             col_eg1, col_eg2 = st.columns(2)
+            
             with col_eg1:
-                concepto_egreso = st.text_input("Concepto (Ej: Delivery, Gasolina, Personal):")
+                concepto_egreso = st.text_input("Concepto (Ej: Delivery, Gasolina, Materia Prima):")
+                rif_proveedor = st.text_input("RIF del Proveedor (Opcional, ej: J-12345678-0):")
+                tipo_comprobante = st.selectbox(
+                    "Tipo de Comprobante:",
+                    ["Nota de Entrega / Gasto", "Factura Fiscal", "Recibo Operativo"]
+                )
+
             with col_eg2:
                 monto_egreso = st.number_input("Monto ($):", min_value=0.01, step=1.0, format="%.2f")
-        
+                num_factura = st.text_input("N° de Factura (si aplica):")
+                num_control = st.text_input("N° de Control (si aplica):")
+
+            st.divider()
+            tipo_tributario = st.selectbox(
+                "Tipo Tributario (SENIAT):",
+                ["Gasto Operativo Sin Factura Fiscal", "Compra Interna Afectada solo al Alícuota General", "Compra Exenta / Sin Crédito Fiscal"]
+            )
+
+            import pytz
             from datetime import datetime
-            fecha_hoy_str = datetime.now().strftime("%d/%m/%Y")
-        
+            zona_ve = pytz.timezone('America/Caracas')
+            fecha_hoy_str = datetime.now(zona_ve).strftime("%d/%m/%Y")
+
             btn_guardar_egreso = st.form_submit_button("Guardar Gasto / Egreso", use_container_width=True)
-        
+
             if btn_guardar_egreso:
                 if concepto_egreso and monto_egreso > 0:
                     try:
                         payload_egreso = {
                             "CONCEPTO": concepto_egreso,
                             "MONTO": float(monto_egreso),
-                            "FECHA": fecha_hoy_str
+                            "FECHA": fecha_hoy_str,
+                            "RIF PROVEEDOR": rif_proveedor if rif_proveedor else "N/A",
+                            "TIPO DE COMPROBANTE": tipo_comprobante,
+                            "NUM FACTURA": num_factura if num_factura else "N/A",
+                            "NUM CONTROL": num_control if num_control else "N/A",
+                            "TIPO TRIBUTARIO": tipo_tributario
                         }
+
                         supabase.table("Egresos").insert(payload_egreso).execute()
-                        st.success(f"✅ Gasto '{concepto_egreso}' de ${monto_egreso:.2f} registrado con éxito!")
+                        st.success(f"✅ Gasto '{concepto_egreso}' de ${monto_egreso:.2f} registrado exitosamente.")
                         st.cache_data.clear()
                         st.rerun()
                     except Exception as e:
                         st.error(f"❌ Error al guardar el egreso: {e}")
                 else:
-                    st.warning("⚠️ Por favor, completa el concepto y asegúrate de que el monto sea mayor a cero.")
+                    st.warning("⚠️ Por favor, completa el concepto y asegúrate de que el monto sea mayor a 0.")
 
         st.divider()
         st.markdown("### 📋 Historial de Egresos Registrados")
-    
-        # Mostrar la tabla con los egresos que ya vas guardando
+
+        # Mostrar la tabla con todos los datos registrados
         try:
             res_egresos = supabase.table("Egresos").select("*").execute()
             df_egresos = pd.DataFrame(res_egresos.data if res_egresos.data else [])
-        
+
             if not df_egresos.empty:
-                # Ordenamos o filtramos si es necesario para visualizarlo limpio
-                st.dataframe(df_egresos[['FECHA', 'CONCEPTO', 'MONTO']], use_container_width=True)
+                # Ordenamos o seleccionamos columnas clave para la vista limpia
+                cols_mostrar = [c for c in ['FECHA', 'CONCEPTO', 'MONTO', 'RIF PROVEEDOR', 'TIPO DE COMPROBANTE', 'NUM FACTURA', 'NUM CONTROL', 'TIPO TRIBUTARIO'] if c in df_egresos.columns]
+                st.dataframe(df_egresos[cols_mostrar], use_container_width=True)
             else:
                 st.info("ℹ️ Todavía no hay egresos registrados en Supabase.")
         except Exception as e:
             st.error(f"Error al cargar los egresos: {e}")
 
-    st.divider()
-    if st.button("❌ Cerrar Módulo Contable", use_container_width=True, type="primary"):
-        st.session_state.formulario_modulo_contable = False
-        st.rerun()
+        st.divider()
+        if st.button("❌ Cerrar Módulo Contable", use_container_width=True, type="primary"):
+            st.session_state.formulario_modulo_contable = False
+            st.rerun()
+
 
 
 
