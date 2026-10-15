@@ -1661,74 +1661,74 @@ def formulario_modulo_contable():
              st.info("No hay registros de ventas para mostrar en el libro todavía.")
 
 
-# =========================================================
-# 2. LIBRO DE COMPRAS OFICIAL (CORREGIDO PARA SUPABASE)
-# =========================================================
- with tab_libro_c:
-     st.subheader("📘 Libro de Compras y Crédito Fiscal - J410643986")
+   # =========================================================
+   # 2. LIBRO DE COMPRAS OFICIAL (CORREGIDO PARA SUPABASE)
+   # =========================================================
+    with tab_libro_c:
+        st.subheader("📘 Libro de Compras y Crédito Fiscal - J410643986")
     
-     try:
-         res_e = supabase.table("Egresos").select("*").execute()
-         datos_e = res_e.data if res_e.data else []
-         df_e = pd.DataFrame(datos_e)
-     except Exception as e:
-         st.error(f"Error al conectar con Supabase: {e}")
-         df_e = pd.DataFrame()
+        try:
+            res_e = supabase.table("Egresos").select("*").execute()
+            datos_e = res_e.data if res_e.data else []
+            df_e = pd.DataFrame(datos_e)
+        except Exception as e:
+            st.error(f"Error al conectar con Supabase: {e}")
+            df_e = pd.DataFrame()
 
-     if not df_e.empty and 'MONTO' in df_e.columns:
-         df_e['MONTO'] = pd.to_numeric(df_e['MONTO'], errors='coerce').fillna(0.0)
+        if not df_e.empty and 'MONTO' in df_e.columns:
+            df_e['MONTO'] = pd.to_numeric(df_e['MONTO'], errors='coerce').fillna(0.0)
         
-         libro_c = pd.DataFrame()
-         libro_c['N° Op.'] = range(1, len(df_e) + 1)
-         libro_c['Fecha Factura'] = df_e.get('FECHA', '')
-         libro_c['RIF Proveedor'] = df_e.get('RIF PROVEEDOR', 'N/A')
-         libro_c['Nombre / Razón Social'] = df_e.get('CONCEPTO', 'Gasto General')
+            libro_c = pd.DataFrame()
+            libro_c['N° Op.'] = range(1, len(df_e) + 1)
+            libro_c['Fecha Factura'] = df_e.get('FECHA', '')
+            libro_c['RIF Proveedor'] = df_e.get('RIF PROVEEDOR', 'N/A')
+            libro_c['Nombre / Razón Social'] = df_e.get('CONCEPTO', 'Gasto General')
         
-         # Ajuste exacto de columnas según Supabase (NUM FACTURA en lugar de NUM DE FACTURA)
-         num_fac_col = df_e.get('NUM FACTURA', df_e.get('NUM DE FACTURA', 'N/A'))
-         libro_c['N° Factura'] = num_fac_col
-         libro_c['N° Control'] = df_e.get('NUM CONTROL', 'N/A')
-         libro_c['Total Compras ($)'] = df_e['MONTO']
+            # Ajuste exacto de columnas según Supabase (NUM FACTURA en lugar de NUM DE FACTURA)
+            num_fac_col = df_e.get('NUM FACTURA', df_e.get('NUM DE FACTURA', 'N/A'))
+            libro_c['N° Factura'] = num_fac_col
+            libro_c['N° Control'] = df_e.get('NUM CONTROL', 'N/A')
+            libro_c['Total Compras ($)'] = df_e['MONTO']
         
-         # Detección flexible de comprobantes fiscales
-         tipo_comp = df_e.get('TIPO DE COMPROBANTE', '').astype(str)
-         tipo_trib = df_e.get('TIPO TRIBUTARIO', '').astype(str)
+            # Detección flexible de comprobantes fiscales
+            tipo_comp = df_e.get('TIPO DE COMPROBANTE', '').astype(str)
+            tipo_trib = df_e.get('TIPO TRIBUTARIO', '').astype(str)
 
-         es_factura = tipo_comp.str.contains('Factura Fiscal', case=False, na=False)
-         es_gravada = ~tipo_trib.str.contains('Exenta|Sin Factura', case=False, na=False)
+            es_factura = tipo_comp.str.contains('Factura Fiscal', case=False, na=False)
+            es_gravada = ~tipo_trib.str.contains('Exenta|Sin Factura', case=False, na=False)
         
-         # Separación entre compras exentas y gravadas
-         es_fiscal_real = es_factura & es_gravada
+            # Separación entre compras exentas y gravadas
+            es_fiscal_real = es_factura & es_gravada
         
-         libro_c['Compras Sin Crédito / Exentas ($)'] = libro_c['Total Compras ($)'].where(~es_fiscal_real, 0.0)
+            libro_c['Compras Sin Crédito / Exentas ($)'] = libro_c['Total Compras ($)'].where(~es_fiscal_real, 0.0)
         
-         monto_gravado = libro_c['Total Compras ($)'].where(es_fiscal_real, 0.0)
-         libro_c['Base Imponible ($)'] = (monto_gravado / 1.16).round(2)
-         libro_c['% Alícuota'] = '16%'
-         libro_c['IVA Crédito Fiscal ($)'] = (monto_gravado - libro_c['Base Imponible ($)']).round(2)
+            monto_gravado = libro_c['Total Compras ($)'].where(es_fiscal_real, 0.0)
+            libro_c['Base Imponible ($)'] = (monto_gravado / 1.16).round(2)
+            libro_c['% Alícuota'] = '16%'
+            libro_c['IVA Crédito Fiscal ($)'] = (monto_gravado - libro_c['Base Imponible ($)']).round(2)
 
-         st.dataframe(libro_c, use_container_width=True)
+            st.dataframe(libro_c, use_container_width=True)
 
-         tot_compras_exentas = libro_c['Compras Sin Crédito / Exentas ($)'].sum()
-         tot_base_c = libro_c['Base Imponible ($)'].sum()
-         tot_credito_c = libro_c['IVA Crédito Fiscal ($)'].sum()
+            tot_compras_exentas = libro_c['Compras Sin Crédito / Exentas ($)'].sum()
+            tot_base_c = libro_c['Base Imponible ($)'].sum()
+            tot_credito_c = libro_c['IVA Crédito Fiscal ($)'].sum()
 
-         st.markdown("### 📊 Totales para la Declaración de IVA")
-         cc1, cc2, cc3 = st.columns(3)
-         cc1.metric("Compras Exentas / Sin Crédito", f"${tot_compras_exentas:.2f}")
-         cc2.metric("Base Imponible Compras", f"${tot_base_c:.2f}")
-         cc3.metric("🟢 CRÉDITO FISCAL REAL (A FAVOR)", f"${tot_credito_c:.2f}")
+            st.markdown("### 📊 Totales para la Declaración de IVA")
+            cc1, cc2, cc3 = st.columns(3)
+            cc1.metric("Compras Exentas / Sin Crédito", f"${tot_compras_exentas:.2f}")
+            cc2.metric("Base Imponible Compras", f"${tot_base_c:.2f}")
+            cc3.metric("🟢 CRÉDITO FISCAL REAL (A FAVOR)", f"${tot_credito_c:.2f}")
 
-         csv_c = libro_c.to_csv(index=False).encode('utf-8')
-         st.download_button(
-             label="📥 Descargar Libro de Compras (.CSV para Excel)",
-             data=csv_c,
-             file_name="Libro_de_Compras_AYG_2017.csv",
-             mime="text/csv",
-             use_container_width=True
-        )
-    else:
-        st.info("No hay registros de compras o egresos en la base de datos.")
+            csv_c = libro_c.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Descargar Libro de Compras (.CSV para Excel)",
+                data=csv_c,
+                file_name="Libro_de_Compras_AYG_2017.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+        else:
+            st.info("No hay registros de compras o egresos en la base de datos.")
 
 
 
