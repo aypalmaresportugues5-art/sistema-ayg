@@ -1656,8 +1656,8 @@ def formulario_modulo_contable():
                 file_name="Libro_de_Ventas_AYG_2017.csv",
                 mime="text/csv",
                 use_container_width=True
-             )
-         else:
+            )
+        else:
              st.info("No hay registros de ventas para mostrar en el libro todavía.")
 
 
