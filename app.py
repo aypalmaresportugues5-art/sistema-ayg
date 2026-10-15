@@ -1384,7 +1384,7 @@ def formulario_modulo_contable():
         "📅 Libro Mensual", 
         "💸 Egresos", 
         "🧾 Libro de Ventas", 
-        "📘 Libro de Compras
+        "📘 Libro de Compras"
     ])
 
     with tab_balance:
