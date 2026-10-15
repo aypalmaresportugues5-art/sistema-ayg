@@ -390,11 +390,30 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
             st.write("El carrito está vacío. Agrega productos para comenzar.")
 
     # -------------------------------------------------------------
-    # PESTAÑA 2: EMISIÓN DE FACTURA FISCAL (SENIAT)
+    # PESTAÑA 2: EMISIÓN DE FACTURA FISCAL (SENIAT CON AUTONUMERACIÓN)
     # -------------------------------------------------------------
     with tab_fiscal:
         st.subheader("🧾 Emisión de Factura Fiscal Oficial")
-        st.markdown("Genera facturas legales con RIF y número de control para tus libros del SENIAT.")
+        st.markdown("Genera facturas legales con RIF y numeración correlativa automática para el SENIAT.")
+
+        # --- LÓGICA DE CORRELATIVO AUTOMÁTICO DESDE SUPABASE ---
+        siguiente_factura = "00000001"
+        siguiente_control = "00-000001"
+        try:
+            res_ult = supabase.table("ventas").select("NUM DE FACTURA, NUM CONTROL").not_.is_("NUM DE FACTURA", "null").order("id", desc=True).limit(1).execute()
+            if res_ult.data and len(res_ult.data) > 0:
+                ultima_fac = res_ult.data[0].get("NUM DE FACTURA")
+                ultimo_ctrl = res_ult.data[0].get("NUM CONTROL")
+                
+                if ultima_fac and ultima_fac.isdigit():
+                    siguiente_factura = str(int(ultima_fac) + 1).zfill(8)
+                
+                if ultimo_ctrl and "-" in ultimo_ctrl:
+                    partes = ultimo_ctrl.split("-")
+                    if partes[1].isdigit():
+                        siguiente_control = f"{partes[0]}-{str(int(partes[1]) + 1).zfill(6)}"
+        except Exception:
+            pass
 
         with st.form("form_emision_factura_fiscal_mayor", clear_on_submit=True):
             col_f1, col_f2 = st.columns(2)
@@ -404,8 +423,8 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
                 rif_fiscal = st.text_input("RIF o Cédula (ej. J-40123456-7)")
                 
             with col_f2:
-                n_factura = st.text_input("N° de Factura (ej. 00001245)")
-                n_control = st.text_input("N° de Control (ej. 00-001234)")
+                n_factura = st.text_input("N° de Factura Correlativo", value=siguiente_factura)
+                n_control = st.text_input("N° de Control Correlativo", value=siguiente_control)
 
             st.divider()
             
@@ -449,7 +468,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
                     except Exception as e:
                         st.error(f"❌ Error al guardar en la base de datos: {e}")
                 else:
-                    st.warning("⚠️ Por favor completa la Razón Social, el N° de Factura y un monto mayor a 0.")
+                    st.warning("⚠️ Por favor completa la Razón Social y un monto mayor a 0.")
 
 
           
