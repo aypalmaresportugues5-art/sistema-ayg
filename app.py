@@ -655,44 +655,60 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
             else:
                 st.warning("No hay productos registrados en el sistema.")
 
-    # === PESTAÑA 5: IMPRIMIR LISTA DE PRECIOS ===
+        # === PESTAÑA 6: IMPRIMIR LISTA DE PRECIOS (EXCLUYE MATERIA PRIMA) ===
     with tab_imprimir:
-        st.subheader("📄 Generar Catálogo en PDF")
-        st.write("Presiona el botón para descargar la lista de precios vigente.")
-        
-        if st.button("📄 Generar PDF de Precios", use_container_width=True):
+        st.subheader("🖨️ Generar Catálogo / Lista de Precios en PDF")
+        st.write("Genera el PDF comercial para clientes y bodegas (oculta automáticamente la materia prima e insumos).")
+
+        if st.button("📄 Generar PDF de Lista de Precios Comercial", use_container_width=True, type="primary"):
             try:
-                from fpdf import FPDF
-                pdf = FPDF()
-                pdf.add_page()
-                pdf.set_font("Arial", "B", 16)
-                pdf.cell(0, 10, "LISTA DE PRECIOS VIGENTE", ln=True, align="C")
-                pdf.ln(10)
+                res_p = supabase.table("productos").select("*").execute()
+                df_pdf = pd.DataFrame(res_p.data if res_p.data else [])
 
-                pdf.set_font("Arial", "B", 12)
-                pdf.cell(100, 10, "PRODUCTO", 1)
-                pdf.cell(40, 10, "PRECIO", 1, align="C")
-                pdf.cell(40, 10, "STOCK", 1, ln=True, align="C")
+                if not df_pdf.empty:
+                    # Filtramos: Solo mostramos lo que NO sea materia prima
+                    if 'CATEGORIA' in df_pdf.columns:
+                        df_comercial = df_pdf[~df_pdf['CATEGORIA'].str.contains('Materia|Insumo', case=False, na=False)]
+                    else:
+                        df_comercial = df_pdf
 
-                pdf.set_font("Arial", "", 12)
-                for prod, datos in productos_dict.items():
-                    precio_val = datos.get('precio', 0.0) if isinstance(datos, dict) else datos
-                    stock_val = datos.get('stock', 0) if isinstance(datos, dict) else 0
-                    
-                    pdf.cell(100, 10, str(prod), 1)
-                    pdf.cell(40, 10, f"${precio_val:.2f}", 1, align="C")
-                    pdf.cell(40, 10, str(stock_val), 1, ln=True, align="C")
+                    from fpdf import FPDF
+                    pdf = FPDF()
+                    pdf.add_page()
+                    pdf.set_font("Arial", "B", 16)
+                    pdf.cell(0, 10, "INVERSIONES AYG 2017 C.A. - LISTA DE PRECIOS", ln=True, align="C")
+                    pdf.set_font("Arial", "", 10)
+                    pdf.cell(0, 8, f"Fecha de emision: {datetime.now(pytz.timezone('America/Caracas')).strftime('%d/%m/%Y')}", ln=True, align="C")
+                    pdf.ln(5)
 
-                pdf_bytes = pdf.output(dest="S").encode("latin-1")
-                st.download_button(
-                    label="📥 Descargar PDF",
-                    data=pdf_bytes,
-                    file_name="lista_precios.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
+                    # Encabezados de tabla PDF
+                    pdf.set_font("Arial", "B", 12)
+                    pdf.cell(110, 10, "PRODUCTO", 1)
+                    pdf.cell(40, 10, "PRECIO ($)", 1, align="C")
+                    pdf.cell(40, 10, "DISPONIBLE", 1, ln=True, align="C")
+
+                    pdf.set_font("Arial", "", 11)
+                    for _, row in df_comercial.iterrows():
+                        nombre_p = str(row.get('NOMBRE', ''))
+                        precio_p = float(row.get('PRECIO', 0))
+                        stock_p = float(row.get('ENTRADA', 0)) - float(row.get('SALIDA', 0))
+
+                        pdf.cell(110, 9, nombre_p, 1)
+                        pdf.cell(40, 9, f"${precio_p:.2f}", 1, align="C")
+                        pdf.cell(40, 9, str(int(stock_p)), 1, ln=True, align="C")
+
+                    pdf_bytes = pdf.output(dest="S").encode("latin-1")
+                    import base64
+                    b64_pdf = base64.b64encode(pdf_bytes).decode()
+
+                    st.success("✅ ¡Lista de precios comercial generada con éxito!")
+                    href_pdf = f'<a href="data:application/octet-stream;base64,{b64_pdf}" download="Lista_de_Precios_AYG2017.pdf">📥 Descargar Lista de Precios en PDF</a>'
+                    st.markdown(href_pdf, unsafe_allow_html=True)
+                else:
+                    st.warning("⚠️ No hay productos en la base de datos para generar la lista.")
             except Exception as e:
-                st.error(f"🚨 Error al generar PDF: {e}")
+                st.error(f"❌ Error al generar PDF de precios: {e}")
+
 
     
 
