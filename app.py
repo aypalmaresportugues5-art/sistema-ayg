@@ -484,61 +484,58 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
             "📄 Imprimir Lista"
         ])
 
-    # === PESTAÑA 1: ESTADO DEL ALMACÉN ===
+        # === PESTAÑA 1: ESTADO DEL ALMACÉN Y VALORIZACIÓN ===
     with tab_almacen:
-            st.subheader("📦 Estado del Almacén y Stock Disponible")
-            
-            try:
-                res_inv = supabase.table("productos").select("*").execute()
-                df_inv = pd.DataFrame(res_inv.data if res_inv.data else [])
-            except Exception as e:
-                df_inv = pd.DataFrame()
-                st.error(f"Error al cargar el inventario: {e}")
+        st.subheader("📦 Estado del Almacén y Valorización Financiera")
 
-            if not df_inv.empty:
-                # Nos aseguramos de limpiar y formatear las columnas numéricas
-                df_inv['ENTRADA'] = pd.to_numeric(df_inv.get('ENTRADA', 0), errors='coerce').fillna(0)
-                df_inv['SALIDA'] = pd.to_numeric(df_inv.get('SALIDA', 0), errors='coerce').fillna(0)
-                df_inv['PRECIO'] = pd.to_numeric(df_inv.get('PRECIO', 0), errors='coerce').fillna(0)
-                
-                # CÁLCULO DEL STOCK REAL: Entradas menos Salidas
-                df_inv['STOCK_DISPONIBLE'] = df_inv['ENTRADA'] - df_inv['SALIDA']
-                
-                # Preparamos la tabla para mostrar
-                df_mostrar = df_inv[['NOMBRE', 'PRECIO', 'ENTRADA', 'SALIDA', 'STOCK_DISPONIBLE']].copy()
-                df_mostrar.columns = ['Producto', 'Precio ($)', 'Total Entradas', 'Total Salidas', 'Stock Disponible']
-                
-                st.dataframe(df_mostrar, use_container_width=True)
-                
-                # --- SECCIÓN PARA EDITAR PRECIOS ---
-                st.divider()
-                st.subheader("✏️ Modificar Precio de Producto")
-                
-                col_edit1, col_edit2 = st.columns(2)
-                
-                lista_nombres_prods = df_inv['NOMBRE'].dropna().tolist()
-                
-                with col_edit1:
-                    prod_a_editar = st.selectbox("Selecciona producto:", lista_nombres_prods, key="select_prod_edit_inv")
-                
-                with col_edit2:
-                    # Obtenemos el precio actual del producto seleccionado
-                    prod_fila = df_inv[df_inv['NOMBRE'] == prod_a_editar].iloc[0]
-                    precio_actual_num = float(prod_fila['PRECIO'])
-                    
-                    nuevo_precio = st.number_input("Nuevo precio ($):", value=precio_actual_num, format="%.2f", key="input_nuevo_precio_inv")
-                
-                if st.button("💾 Guardar Cambios de Precio", type="primary", key="btn_guardar_precio_inv"):
-                    try:
-                        prod_id = prod_fila['id']
-                        supabase.table("productos").update({"PRECIO": float(nuevo_precio)}).eq("id", prod_id).execute()
-                        st.success(f"✅ Precio de '{prod_a_editar}' actualizado a ${nuevo_precio:.2f} con éxito!")
-                        st.cache_data.clear()
-                        st.rerun()
-                    except Exception as e:
-                        st.error(f"❌ Error al actualizar el precio: {e}")
+        try:
+            res_inv = supabase.table("productos").select("*").execute()
+            df_inv = pd.DataFrame(res_inv.data if res_inv.data else [])
+        except Exception as e:
+            df_inv = pd.DataFrame()
+            st.error(f"Error al cargar el inventario: {e}")
+
+        if not df_inv.empty:
+            df_inv['ENTRADA'] = pd.to_numeric(df_inv.get('ENTRADA', 0), errors='coerce').fillna(0)
+            df_inv['SALIDA'] = pd.to_numeric(df_inv.get('SALIDA', 0), errors='coerce').fillna(0)
+            df_inv['PRECIO'] = pd.to_numeric(df_inv.get('PRECIO', 0), errors='coerce').fillna(0)
+            
+            # Stock Real y Valor Total por ítem
+            df_inv['STOCK_DISPONIBLE'] = df_inv['ENTRADA'] - df_inv['SALIDA']
+            df_inv['VALOR_TOTAL'] = (df_inv['STOCK_DISPONIBLE'] * df_inv['PRECIO']).round(2)
+            
+            # Manejo de la categoría (Materia Prima vs Producto Terminado)
+            if 'CATEGORIA' in df_inv.columns:
+                df_inv['TIPO_INV'] = df_inv['CATEGORIA'].fillna("Producto Terminado")
             else:
-                st.warning("⚠️ No se encontraron productos en la base de datos de Supabase.")
+                df_inv['TIPO_INV'] = "Producto Terminado"
+
+            # --- MÉTRICAS DE CAPITAL EN INVENTARIO ---
+            val_total_general = df_inv['VALOR_TOTAL'].sum()
+            
+            # Filtros por categoría
+            mp_df = df_inv[df_inv['TIPO_INV'].str.contains('Materia|Insumo', case=False, na=False)]
+            pt_df = df_inv[~df_inv.index.isin(mp_df.index)]
+            
+            val_mp = mp_df['VALOR_TOTAL'].sum()
+            val_pt = pt_df['VALOR_TOTAL'].sum()
+
+            st.markdown("### 📊 Resumen de Capital en Inventario")
+            mc1, mc2, mc3 = st.columns(3)
+            mc1.metric("💰 Valor Total Inventario", f"${val_total_general:.2f}")
+            mc2.metric("🌾 Total en Materia Prima", f"${val_mp:.2f}")
+            mc3.metric("🍞 Total en Prod. Terminados", f"${val_pt:.2f}")
+
+            st.divider()
+
+            # Tabla visual completa
+            df_mostrar = df_inv[['NOMBRE', 'PRECIO', 'ENTRADA', 'SALIDA', 'STOCK_DISPONIBLE', 'VALOR_TOTAL', 'TIPO_INV']].copy()
+            df_mostrar.columns = ['Producto', 'Precio ($)', 'Entradas', 'Salidas', 'Stock Real', 'Valor Total ($)', 'Categoría']
+            st.dataframe(df_mostrar, use_container_width=True)
+
+        else:
+            st.info("ℹ️ No hay productos registrados en Supabase.")
+
             
     # ... (el resto del código de tus otras pestañas sigue igual) ...
     # === PESTAÑA 2: REGISTRO DE MATERIA PRIMA (COSTOS) ===
