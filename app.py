@@ -261,142 +261,46 @@ def formulario_venta_detal(clientes_lista):
             time.sleep(1)
             st.rerun()
 
+
+                    
 @st.dialog("📦 Registro de Venta al Mayor")
 def formulario_venta_mayor(clientes_lista, productos_dict=None):
-    st.subheader("📦 Gestión de Ventas al Mayor y Facturación")
+    st.subheader("📦 Pedido al Mayor y Facturación Fiscal")
     
-    # Si no se pasa el diccionario por argumento, lo cargamos de forma segura aquí mismo
     if productos_dict is None:
         productos_dict = cargar_productos_dict()
-    
-    # Pestañas dentro del modal flotante
-    tab_carrito, tab_fiscal = st.tabs(["🛒 Pedido al Mayor (Carrito)", "🧾 Factura Fiscal Oficial"])
-    
-    # -------------------------------------------------------------
-    # PESTAÑA 1: TU SISTEMA DE CARRITO HABITUAL
-    # -------------------------------------------------------------
-    with tab_carrito:
-        if 'carro_mayor' not in st.session_state:
-            st.session_state.carro_mayor = []
-            
-        if clientes_lista:
-            cli_m = st.selectbox("Seleccione el Cliente o Bodega:", clientes_lista, key="select_cliente_mayor")
-        else:
-            st.warning("⚠️ No hay clientes registrados en el sistema.")
-            cli_m = None
 
-        if not productos_dict:
-            st.warning("⚠️ No se pudo cargar el inventario. Verifica la conexión a Supabase.")
-            return
-
-        tasa_bcv = st.number_input("💵 Especificar Tasa Oficial BCV (Bs./$):", min_value=1.0, value=45.0, step=0.01, key="mayo_tasa_bcv")
-        condicion_pago = st.selectbox("📋 Condición de Pago:", ["Crédito", "Contado"], key="mayor_condicion_pago")
+    if 'carro_mayor' not in st.session_state:
+        st.session_state.carro_mayor = []
         
-        # 1. AGREGAR PRODUCTOS
-        c1, c2 = st.columns(2)
-        prod_nom = c1.selectbox("Producto:", list(productos_dict.keys()), key="mayor_prod_sel")
-        
-        precio_u = productos_dict[prod_nom] if isinstance(productos_dict[prod_nom], (int, float)) else float(productos_dict[prod_nom].get('precio', 0.0))
-        
-        st.info(f"🏷️ Precio: ${precio_u:.2f}")
-        cant = c2.number_input("Cantidad:", min_value=1.0, step=1.0, key="mayor_cant")
+    if clientes_lista:
+        cli_m = st.selectbox("Seleccione el Cliente / Bodega:", clientes_lista, key="select_cliente_mayor")
+    else:
+        cli_m = "Cliente General"
 
-        if st.button("➕ Agregar al Carrito", use_container_width=True):
-            subtotal = cant * precio_u
-            st.session_state.carro_mayor.append({
-                "Producto": prod_nom,
-                "Cant": cant,
-                "Precio": precio_u,
-                "Subtotal": subtotal
-            })
-            st.toast(f"✅ {prod_nom} agregado!")
+    if not productos_dict:
+        st.warning("⚠️ No se pudo cargar el inventario.")
+        return
 
-        # 2. MOSTRAR EL CARRITO ACTUAL
-        if st.session_state.carro_mayor:
-            st.write("---")
-            st.markdown("### 🛒 Contenido del Carrito:")
-            import pandas as pd
-            st.table(pd.DataFrame(st.session_state.carro_mayor))
+    # --- DATOS GENERALES DE LA VENTA ---
+    col_v1, col_v2 = st.columns(2)
+    with col_v1:
+        tasa_bcv = st.number_input("💵 Tasa BCV (Bs./$):", min_value=1.0, value=45.0, step=0.01, key="mayo_tasa_bcv")
+    with col_v2:
+        condicion_pago = st.selectbox("📋 Condición de Pago:", ["Contado", "Crédito"], key="mayor_condicion_pago")
 
-            t_final = sum(item['Subtotal'] for item in st.session_state.carro_mayor)
-            st.markdown(f"### 💰 Total a Facturar: **${t_final:.2f}**")
+    # --- OPCIÓN DE FACTURACIÓN FISCAL FISICA/SENIAT ---
+    st.divider()
+    es_factura_fiscal = st.checkbox("🧾 ¿Requiere Factura Fiscal Oficial (SENIAT / RIF)?", key="chk_es_fiscal_mayor")
 
-            # ELIMINAR UN PRODUCTO ESPECÍFICO
-            st.write("---")
-            st.markdown("### ✏️ Modificar Contenido del Carrito:")
-            productos_en_carro = [item["Producto"] for item in st.session_state.carro_mayor]
+    rz_fiscal = cli_m
+    rif_fiscal = "V-00000000-0"
+    n_factura = "N/A"
+    n_control = "N/A"
+    es_especial = False
 
-            col_borrar1, col_borrar2 = st.columns([2, 1])
-            prod_a_eliminar = col_borrar1.selectbox("Selecciona el producto que deseas sacar del pedido:", productos_en_carro, key="sel_eliminar_prod")
-
-            if col_borrar2.button("🗑️ Eliminar Producto", use_container_width=True):
-                for item in st.session_state.carro_mayor:
-                    if item["Producto"] == prod_a_eliminar:
-                        st.session_state.carro_mayor.remove(item)
-                        st.toast(f"🗑️ {prod_a_eliminar} eliminado del carrito")
-                        st.rerun()
-
-            st.write("---")
-            c_btn1, c_btn2 = st.columns(2)
-
-            if c_btn1.button("🧹 Vaciar Carrito", use_container_width=True):
-                st.session_state.carro_mayor = []
-                st.rerun()
-
-            # 3. PROCESAR Y ENVIAR LA VENTA
-            if c_btn2.button("💾 CONSOLIDAR Y CREAR PDF", type="primary", use_container_width=True):
-                try:
-                    import pytz
-                    import base64
-                    from datetime import datetime
-                    
-                    zona_ve = pytz.timezone('America/Caracas')
-                    ahora_ve = datetime.now(zona_ve)
-                    fecha_ve = ahora_ve.strftime('%d/%m/%Y')
-                    ts_actual = ahora_ve.timestamp()
-
-                    if condicion_pago == "Contado":
-                        fecha_vencimiento = fecha_ve
-                    else:
-                        ts_vencimiento = ts_actual + (5 * 24 * 3600)
-                        vencimiento_dt = datetime.fromtimestamp(ts_vencimiento, zona_ve)
-                        fecha_vencimiento = vencimiento_dt.strftime('%d/%m/%Y')
-
-                    # Guardado en Supabase (Tabla ventas)
-                    payload = {
-                        "FECHA": fecha_ve,
-                        "TIPO": condicion_pago,
-                        "CLIENTE": cli_m if cli_m else "Cliente General",
-                        "MONTO($)": float(t_final)
-                    }
-                    
-                    supabase.table("ventas").insert(payload).execute()
-                    st.cache_data.clear()
-
-                    # Generación de PDF
-                    pdf_b = crear_pdf(cli_m, st.session_state.carro_mayor, t_final, fecha_vencimiento=fecha_vencimiento, tasa_bcv=tasa_bcv)
-                    b64 = base64.b64encode(pdf_b.encode() if isinstance(pdf_b, str) else pdf_b).decode()
-
-                    st.success("✅ Venta registrada con éxito en Supabase!")
-
-                    # Botón para descargar factura
-                    href = f'<a href="data:application/octet-stream;base64,{b64}" download="Factura_{cli_m}.pdf">📥 Descargar Factura en PDF</a>'
-                    st.markdown(href, unsafe_allow_html=True)
-
-                    st.session_state.carro_mayor = []
-                except Exception as e:
-                    st.error(f"❌ Error al procesar la venta: {e}")
-        else:
-            st.write("El carrito está vacío. Agrega productos para comenzar.")
-
-    # -------------------------------------------------------------
-    # PESTAÑA 2: EMISIÓN DE FACTURA FISCAL (SENIAT CON AUTONUMERACIÓN)
-    # -------------------------------------------------------------
-    with tab_fiscal:
-        st.subheader("🧾 Emisión de Factura Fiscal Oficial")
-        st.markdown("Genera facturas legales con RIF y numeración correlativa automática para el SENIAT.")
-
-        # --- LÓGICA DE CORRELATIVO AUTOMÁTICO DESDE SUPABASE ---
+    if es_factura_fiscal:
+        # Lógica para correlativo automático
         siguiente_factura = "00000001"
         siguiente_control = "00-000001"
         try:
@@ -404,10 +308,8 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
             if res_ult.data and len(res_ult.data) > 0:
                 ultima_fac = res_ult.data[0].get("NUM DE FACTURA")
                 ultimo_ctrl = res_ult.data[0].get("NUM CONTROL")
-                
                 if ultima_fac and ultima_fac.isdigit():
                     siguiente_factura = str(int(ultima_fac) + 1).zfill(8)
-                
                 if ultimo_ctrl and "-" in ultimo_ctrl:
                     partes = ultimo_ctrl.split("-")
                     if partes[1].isdigit():
@@ -415,60 +317,104 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
         except Exception:
             pass
 
-        with st.form("form_emision_factura_fiscal_mayor", clear_on_submit=True):
-            col_f1, col_f2 = st.columns(2)
-            
-            with col_f1:
-                rz_fiscal = st.text_input("Razón Social de la Empresa / Cliente")
-                rif_fiscal = st.text_input("RIF o Cédula (ej. J-40123456-7)")
+        col_f1, col_f2 = st.columns(2)
+        with col_f1:
+            rz_fiscal = st.text_input("Razón Social (Cliente):", value=cli_m)
+            rif_fiscal = st.text_input("RIF o Cédula (ej. J-410643986):", value="J-")
+        with col_f2:
+            n_factura = st.text_input("N° de Factura Correlativo:", value=siguiente_factura)
+            n_control = st.text_input("N° de Control Correlativo:", value=siguiente_control)
+        
+        es_especial = st.checkbox("¿Cliente Contribuyente Especial (Retiene 75% IVA)?", key="chk_especial_ret")
+
+    # --- AGREGAR PRODUCTOS AL CARRITO ---
+    st.divider()
+    st.markdown("### 🛒 Agregar Productos al Pedido")
+    c1, c2 = st.columns(2)
+    prod_nom = c1.selectbox("Producto:", list(productos_dict.keys()), key="mayor_prod_sel")
+    
+    precio_u = productos_dict[prod_nom] if isinstance(productos_dict[prod_nom], (int, float)) else float(productos_dict[prod_nom].get('precio', 0.0))
+    st.info(f"🏷️ Precio: ${precio_u:.2f}")
+    cant = c2.number_input("Cantidad:", min_value=1.0, step=1.0, key="mayor_cant")
+
+    if st.button("➕ Agregar al Carrito", use_container_width=True):
+        subtotal = cant * precio_u
+        st.session_state.carro_mayor.append({
+            "Producto": prod_nom,
+            "Cant": cant,
+            "Precio": precio_u,
+            "Subtotal": subtotal
+        })
+        st.toast(f"✅ {prod_nom} agregado!")
+
+    # --- VISTA Y CONSOLIDACIÓN DEL CARRITO ---
+    if st.session_state.carro_mayor:
+        st.write("---")
+        import pandas as pd
+        st.table(pd.DataFrame(st.session_state.carro_mayor))
+
+        t_final = sum(item['Subtotal'] for item in st.session_state.carro_mayor)
+        st.markdown(f"### 💰 Total a Pagar: **${t_final:.2f}**")
+
+        st.write("---")
+        c_btn1, c_btn2 = st.columns(2)
+
+        if c_btn1.button("🧹 Vaciar Carrito", use_container_width=True):
+            st.session_state.carro_mayor = []
+            st.rerun()
+
+        if c_btn2.button("💾 CONSOLIDAR Y CREAR PDF", type="primary", use_container_width=True):
+            try:
+                import pytz
+                import base64
+                from datetime import datetime
                 
-            with col_f2:
-                n_factura = st.text_input("N° de Factura Correlativo", value=siguiente_factura)
-                n_control = st.text_input("N° de Control Correlativo", value=siguiente_control)
+                zona_ve = pytz.timezone('America/Caracas')
+                ahora_ve = datetime.now(zona_ve)
+                fecha_ve = ahora_ve.strftime('%d/%m/%Y')
 
-            st.divider()
-            
-            col_f3, col_f4, col_f5 = st.columns(3)
-            with col_f3:
-                desc_factura = st.text_input("Concepto / Detalle (ej. Suministro de Pan)")
-            with col_f4:
-                monto_bruto_factura = st.number_input("Monto Total con IVA ($)", min_value=0.0, step=1.0, format="%.2f", key="monto_fac_may")
-            with col_f5:
-                es_especial = st.checkbox("¿Cliente Contribuyente Especial (Retiene 75% IVA)?", key="chk_esp_may")
-
-            btn_emitir_fiscal = st.form_submit_button("💾 GUARDAR FACTURA FISCAL EN VENTAS")
-
-            if btn_emitir_fiscal:
-                if rz_fiscal and n_factura and monto_bruto_factura > 0:
-                    base_calculada = round(monto_bruto_factura / 1.16, 2)
-                    iva_calculado = round(monto_bruto_factura - base_calculada, 2)
-                    iva_retenido_calculado = round(iva_calculado * 0.75, 2) if es_especial else 0.0
-
-                    import pytz
-                    from datetime import datetime
-                    zona_ve = pytz.timezone('America/Caracas')
-                    fecha_hoy = datetime.now(zona_ve).strftime('%d/%m/%Y')
-
-                    payload_factura_oficial = {
-                        "FECHA": fecha_hoy,
-                        "CLIENTE": rz_fiscal,
-                        "RIF CLIENTE": rif_fiscal if rif_fiscal else "V-00000000-0",
-                        "TIPO": "Factura Fiscal",
-                        "MONTO($)": monto_bruto_factura,
-                        "NUM DE FACTURA": n_factura,
-                        "NUM CONTROL": n_control if n_control else "N/A",
-                        "IVA RETENIDO": iva_retenido_calculado
-                    }
-
-                    try:
-                        supabase.table("ventas").insert(payload_factura_oficial).execute()
-                        st.success(f"✅ ¡Factura #{n_factura} emitida y guardada en el sistema!")
-                        st.info(f"📊 **Desglose Fiscal:** Base: ${base_calculada:.2f} | IVA (16%): ${iva_calculado:.2f}" + 
-                                (f" | Retención 75%: ${iva_retenido_calculado:.2f}" if es_especial else ""))
-                    except Exception as e:
-                        st.error(f"❌ Error al guardar en la base de datos: {e}")
+                if condicion_pago == "Contado":
+                    fecha_vencimiento = fecha_ve
                 else:
-                    st.warning("⚠️ Por favor completa la Razón Social y un monto mayor a 0.")
+                    ts_vencimiento = ahora_ve.timestamp() + (5 * 24 * 3600)
+                    vencimiento_dt = datetime.fromtimestamp(ts_vencimiento, zona_ve)
+                    fecha_vencimiento = vencimiento_dt.strftime('%d/%m/%Y')
+
+                # Cálculo de retención si es factura fiscal
+                iva_retenido_calc = 0.0
+                if es_factura_fiscal:
+                    base_calc = round(t_final / 1.16, 2)
+                    iva_tot = round(t_final - base_calc, 2)
+                    if es_especial:
+                        iva_retenido_calc = round(iva_tot * 0.75, 2)
+
+                # Payload completo para Supabase (Libro de Ventas)
+                payload = {
+                    "FECHA": fecha_ve,
+                    "TIPO": "Factura Fiscal" if es_factura_fiscal else condicion_pago,
+                    "CLIENTE": rz_fiscal if es_factura_fiscal else cli_m,
+                    "RIF CLIENTE": rif_fiscal if es_factura_fiscal else "V-00000000-0",
+                    "MONTO($)": float(t_final),
+                    "NUM DE FACTURA": n_factura,
+                    "NUM CONTROL": n_control,
+                    "IVA RETENIDO": iva_retenido_calc
+                }
+                
+                supabase.table("ventas").insert(payload).execute()
+                st.cache_data.clear()
+
+                # Generar PDF con los datos
+                pdf_b = crear_pdf(rz_fiscal, st.session_state.carro_mayor, t_final, fecha_vencimiento=fecha_vencimiento, tasa_bcv=tasa_bcv)
+                b64 = base64.b64encode(pdf_b.encode() if isinstance(pdf_b, str) else pdf_b).decode()
+
+                st.success("✅ Venta y Factura registradas con éxito en Supabase!")
+
+                href = f'<a href="data:application/octet-stream;base64,{b64}" download="Factura_{rz_fiscal}.pdf">📥 Descargar PDF de Factura</a>'
+                st.markdown(href, unsafe_allow_html=True)
+
+                st.session_state.carro_mayor = []
+            except Exception as e:
+                st.error(f"❌ Error al procesar la venta: {e}")
 
 
           
