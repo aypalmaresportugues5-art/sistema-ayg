@@ -123,26 +123,24 @@ def cargar_clientes():
 @st.cache_data
 def cargar_productos_dict():
     try:
-        res = supabase.table("productos").select("NOMBRE, PRECIO, ENTRADA, SALIDA").execute()
-        if not res or not res.data:
-            return {}
-        
-        diccionario = {}
-        for p in res.data:
-            nombre = str(p.get("NOMBRE", "")).strip()
+        res = supabase.table("productos").select("*").execute()
+        datos = res.data if res.data else []
+        prod_dict = {}
+        for item in datos:
+            nombre = item.get("NOMBRE")
             if nombre:
-                precio = float(p.get("PRECIO") or 0.0)
-                entrada = float(p.get("ENTRADA") or 0.0)
-                salida = float(p.get("SALIDA") or 0.0)
-                
-                diccionario[nombre] = {
+                precio = float(item.get("PRECIO", 0.0))
+                # Leemos la columna TIPO IVA que creaste en Supabase (si está vacía, asumimos 'E' por defecto para panes)
+                tipo_iva = str(item.get("TIPO IVA", "E")).strip().upper() if item.get("TIPO IVA") else "E"
+                prod_dict[nombre] = {
                     "precio": precio,
-                    "stock": entrada - salida
+                    "tipo_iva": tipo_iva if tipo_iva in ["E", "G"] else "E"
                 }
-        return diccionario
+        return prod_dict
     except Exception as e:
-        st.error(f"Error al cargar productos: {e}")
+        st.error(f"Error al cargar productos de Supabase: {e}")
         return {}
+
 def actualizar_precio_producto(nombre_producto, nuevo_precio):
     try:
         supabase.table("productos").update({"PRECIO": nuevo_precio}).eq("NOMBRE", nombre_producto).execute()
