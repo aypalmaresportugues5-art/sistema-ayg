@@ -154,82 +154,113 @@ def actualizar_precio_producto(nombre_producto, nuevo_precio):
 clientes_lista = cargar_clientes()
 productos_dict = cargar_productos_dict()
 
-# --- FUNCIÓN GENERADORA DE PDF SEGURO ---
+
+# === FUNCIÓN GENERADORA DE PDF SEGURO CON SENIAT (E/G) ===
 def crear_pdf(cliente, pedido, total, *args, **kwargs):
     # Rescatamos las variables que vienen del botón de abajo
     fecha_vencimiento = kwargs.get('fecha_vencimiento', 'A consultar')
     tasa_bcv = kwargs.get('tasa_bcv', 45.0)
-    
+
     pdf = FPDF()
     pdf.add_page()
-    
+
     # Membrete principal de la empresa
     pdf.set_font("Arial", 'B', 16)
     pdf.cell(0, 10, "INVERSIONES AYG 2017 C.A.", ln=True, align='C')
     pdf.set_font("Arial", '', 10)
-    pdf.cell(0, 7, "RIF: J-40982649-7 | Barquisimeto, Edo. Lara", ln=True, align='C')
-    pdf.ln(10)
-    
+    pdf.cell(0, 7, "RIF: J-410643986 | Barquisimeto, Edo. Lara", ln=True, align='C')
+    pdf.ln(5)
+
     # Sección de Encabezados con Vencimiento
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 8, f"FACTURA DE VENTA - {datetime.now().strftime('%d/%m/%Y')}", ln=True)
     
-    # 📆 IMPRIMIMOS EL VENCIMIENTO EN EL PDF
     pdf.set_font("Arial", 'B', 11)
     pdf.cell(55, 8, "FECHA DE VENCIMIENTO: ")
     pdf.set_text_color(255, 0, 0) # Color Rojo para alertar
     pdf.cell(0, 8, f"{fecha_vencimiento}", ln=True)
     pdf.set_text_color(0, 0, 0) # Regresamos el texto a color negro
-    
+
     pdf.set_font("Arial", 'B', 12)
     pdf.cell(0, 8, f"CLIENTE: {cliente}", ln=True)
-    pdf.ln(5)
-    
+    pdf.ln(3)
+
     # Encabezados de la Tabla de Productos
     pdf.set_fill_color(230, 230, 230)
+    pdf.set_font("Arial", 'B', 11)
     pdf.cell(80, 10, "PRODUCTO", 1, 0, 'C', True)
     pdf.cell(30, 10, "CANT", 1, 0, 'C', True)
     pdf.cell(40, 10, "PRECIO U.", 1, 0, 'C', True)
     pdf.cell(40, 10, "SUBTOTAL", 1, 1, 'C', True)
-    
-    # Listado de productos comprados
+
+    # Listado de productos comprados y clasificación tributaria (E / G)
     pdf.set_font("Arial", '', 11)
+    monto_exento = 0.0
+    monto_gravado_bruto = 0.0
+
     for item in pedido:
-        pdf.cell(80, 10, item['Producto'], 1)
-        pdf.cell(30, 10, str(item['Cant']), 1, 0, 'C')
-        pdf.cell(40, 10, f"{item['Precio']:.2f}$", 1, 0, 'C')
-        pdf.cell(40, 10, f"{item['Subtotal']:.2f}$", 1, 1, 'C')
+        nom_prod = str(item['Producto'])
+        cant = item['Cant']
+        precio = item['Precio']
+        subst = item['Subtotal']
+        tipo_iva = item.get('Tipo_IVA', 'E')
+
+        if tipo_iva == 'G':
+            monto_gravado_bruto += subst
+        else:
+            monto_exento += subst
+
+        pdf.cell(80, 10, nom_prod, 1)
+        pdf.cell(30, 10, str(cant), 1, 0, 'C')
+        pdf.cell(40, 10, f"${precio:.2f}", 1, 0, 'C')
+        pdf.cell(40, 10, f"${subst:.2f}", 1, 1, 'C')
+
     pdf.ln(5)
-    
+
+    # --- CÁLCULOS FISCALES AL PIE ---
+    base_imponible = round(monto_gravado_bruto / 1.16, 2)
+    iva_16 = round(monto_gravado_bruto - base_imponible, 2)
+
+    pdf.set_font("Arial", 'B', 10)
+    pdf.cell(150, 7, "SUBTOTAL EXENTO (E):", 0, 0, 'R')
+    pdf.cell(40, 7, f"${monto_exento:.2f}", 1, 1, 'C')
+
+    pdf.cell(150, 7, "BASE IMPONIBLE (G):", 0, 0, 'R')
+    pdf.cell(40, 7, f"${base_imponible:.2f}", 1, 1, 'C')
+
+    pdf.cell(150, 7, "IVA (16%):", 0, 0, 'R')
+    pdf.cell(40, 7, f"${iva_16:.2f}", 1, 1, 'C')
+
     # Totales en Dólares
     pdf.set_font("Arial", 'B', 13)
-    pdf.cell(150, 10, "TOTAL A PAGAR:", 0, 0, 'R')
-    pdf.cell(40, 10, f"{total:.2f}$", 1, 1, 'C')
+    pdf.cell(150, 9, "TOTAL A PAGAR:", 0, 0, 'R')
+    pdf.cell(40, 9, f"${total:.2f}", 1, 1, 'C')
     pdf.ln(5)
-    
-    # 📊 CÁLCULO EN BS. Y MENSAJE DE CONCIENTIZACIÓN (FPDF NUEVO)
+
+    # CÁLCULO EN BS. Y MENSAJE DE CONCIENTIZACIÓN
     total_en_bs = total * tasa_bcv
-    
+
     pdf.set_font("Arial", 'B', 11)
     pdf.cell(0, 7, f"Tasa de Cambio Oficial aplicada (BCV): {tasa_bcv:.2f} Bs./$", ln=True)
-    
+
     pdf.set_font("Arial", 'B', 12)
     pdf.set_text_color(0, 128, 0) # Color Verde para los Bolívares
-    pdf.cell(0, 8, f"TOTAL NETO A PAGAR EN BOLIVARES: {total_en_bs:.2f} Bs.", ln=True)
+    pdf.cell(0, 8, f"TOTAL NETO A PAGAR EN BOLÍVARES: {total_en_bs:,.2f} Bs.", ln=True)
     pdf.set_text_color(0, 0, 0) # Volvemos a negro
     pdf.ln(5)
-    
+
     # Párrafo legal del horario (MultiCell maneja saltos de línea automáticos)
-    pdf.set_font("Arial", '', 9)
+    pdf.set_font("Arial", '', 8)
     nota_bcv = (
-        "NOTA DE PAGO: Los pagos en bolivares se reciben estrictamente a la tasa oficial "
-        "BCV vigente al momento de la transaccion. Todo pago realizado despues de las 5:00 pm "
-        "(o fines de semana) se calculara obligatoriamente a la tasa actualizada emitida por "
-        "el BCV para el dia habil siguiente. Evite recargos pagando antes de su vencimiento."
+        "NOTA DE PAGO: Los pagos en bolívares se reciben estrictamente a la tasa oficial "
+        "BCV vigente al momento de la transacción. Todo pago realizado después de las 5:00 pm "
+        "(o fines de semana) se calculará obligatoriamente a la tasa actualizada emitida por "
+        "el BCV para el día hábil siguiente. Evite recargos pagando antes de su vencimiento."
     )
     pdf.multi_cell(0, 5, nota_bcv, 1) # El 1 le hace un recuadro de advertencia
-    
+
     return pdf.output(dest='S').encode('latin-1')
+
 
 
 
@@ -324,25 +355,35 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
         
         es_especial = st.checkbox("¿Cliente Contribuyente Especial (Retiene 75% IVA)?", key="chk_especial_ret")
 
-    # --- AGREGAR PRODUCTOS AL CARRITO ---
-    st.divider()
-    st.markdown("### 🛒 Agregar Productos al Pedido")
+    # 1. AGREGAR PRODUCTOS CON ETIQUETA FISCAL (E / G)
     c1, c2 = st.columns(2)
     prod_nom = c1.selectbox("Producto:", list(productos_dict.keys()), key="mayor_prod_sel")
-    
-    precio_u = productos_dict[prod_nom] if isinstance(productos_dict[prod_nom], (int, float)) else float(productos_dict[prod_nom].get('precio', 0.0))
-    st.info(f"🏷️ Precio: ${precio_u:.2f}")
+
+    # Manejo seguro para extraer el precio y el tipo de IVA (E o G)
+    prod_info = productos_dict[prod_nom]
+    if isinstance(prod_info, dict):
+        precio_u = float(prod_info.get('precio', 0.0))
+        tipo_iva = prod_info.get('tipo_iva', 'E')
+    else:
+        precio_u = float(prod_info)
+        tipo_iva = 'E'
+
+    st.info(f"💵 Precio: ${precio_u:.2f} | Condición: **({tipo_iva})** {'Exento' if tipo_iva == 'E' else 'Gravado 16%'}")
+
     cant = c2.number_input("Cantidad:", min_value=1.0, step=1.0, key="mayor_cant")
 
     if st.button("➕ Agregar al Carrito", use_container_width=True):
         subtotal = cant * precio_u
+        # Guardamos el producto incluyendo su etiqueta (E) o (G) en el nombre para que se refleje
         st.session_state.carro_mayor.append({
-            "Producto": prod_nom,
+            "Producto": f"{prod_nom} ({tipo_iva})",
             "Cant": cant,
             "Precio": precio_u,
-            "Subtotal": subtotal
+            "Subtotal": subtotal,
+            "Tipo_IVA": tipo_iva
         })
-        st.toast(f"✅ {prod_nom} agregado!")
+        st.toast(f"✅ {prod_nom} ({tipo_iva}) agregado al carrito!")
+
 
     # --- VISTA Y GESTIÓN DEL CARRITO ---
     if st.session_state.carro_mayor:
