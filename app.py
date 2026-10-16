@@ -609,31 +609,42 @@ def formulario_inventario(clientes_lista): # Ya no necesita productos_dict
 
     # === PESTAÑA 3: REGISTRO DE NUEVOS PRODUCTOS ===
     with tab_productos:
-        st.subheader("📦 Agregar Nuevo Producto al Sistema")
+        st.subheader("➕ Agregar Nuevo Producto al Sistema")
         with st.form("form_productos", clear_on_submit=True):
             nuevo_prod = st.text_input("Nombre del Producto:", placeholder="Ej: Pan Camilla, Pan de Tunja")
             p_mayor = st.number_input("Precio de Venta Mayor ($):", min_value=0.0, step=0.01, format="%.2f")
             cant_inicial = st.number_input("Cantidad o Inventario Inicial:", min_value=0, step=1, value=20)
             
+            # Selector de Condición Fiscal para el SENIAT
+            tipo_iva_sel = st.selectbox(
+                "Tratamiento Fiscal (IVA SENIAT):",
+                ["E - Exento (0% IVA)", "G - Gravado (16% IVA)"],
+                help="Elige 'E' para panes e insumos exentos, o 'G' para refrescos, maltas y charcutería."
+            )
+
             btn_guardar_prod = st.form_submit_button("Registrar Producto")
 
         if btn_guardar_prod:
             if nuevo_prod and p_mayor > 0:
+                codigo_iva = "E" if tipo_iva_sel.startswith("E") else "G"
                 try:
                     payload = {
                         "NOMBRE": nuevo_prod,
                         "PRECIO": float(p_mayor),
                         "ENTRADA": int(cant_inicial),
-                        "SALIDA": 0.0
+                        "SALIDA": 0.0,
+                        "CATEGORIA": "Producto Terminado",
+                        "TIPO IVA": codigo_iva  # Guarda la letra E o G en Supabase
                     }
                     supabase.table("productos").insert(payload).execute()
                     st.cache_data.clear()
-                    st.success(f"✅ ¡Producto '{nuevo_prod}' registrado con éxito!")
-                    st.info("🔄 Refresca la app para que aparezca en tus listas.")
+                    st.success(f"🟢 ¡Producto '{nuevo_prod}' registrado con éxito como ({codigo_iva})!")
+                    st.info("💡 Refresca la app para que aparezca en tus listas.")
                 except Exception as e:
                     st.error(f"🚨 Error al registrar producto: {e}")
             else:
-                st.warning("⚠️ Ingresa el nombre del producto y precios válidos.")
+                st.warning("⚠️ Ingresa un nombre de producto y precio válidos.")
+
 
     # === PESTAÑA 4: REGISTRO DE NUEVOS CLIENTES ===
     with tab_clientes:
