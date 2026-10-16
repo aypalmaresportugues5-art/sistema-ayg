@@ -289,7 +289,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
     with col_v2:
         condicion_pago = st.selectbox("📋 Condición de Pago:", ["Contado", "Crédito"], key="mayor_condicion_pago")
 
-    # --- OPCIÓN DE FACTURACIÓN FISCAL FISICA/SENIAT ---
+    # --- OPCIÓN DE FACTURACIÓN FISCAL / SENIAT ---
     st.divider()
     es_factura_fiscal = st.checkbox("🧾 ¿Requiere Factura Fiscal Oficial (SENIAT / RIF)?", key="chk_es_fiscal_mayor")
 
@@ -300,7 +300,6 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
     es_especial = False
 
     if es_factura_fiscal:
-        # Lógica para correlativo automático
         siguiente_factura = "00000001"
         siguiente_control = "00-000001"
         try:
@@ -347,14 +346,30 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
         })
         st.toast(f"✅ {prod_nom} agregado!")
 
-    # --- VISTA Y CONSOLIDACIÓN DEL CARRITO ---
+    # --- VISTA Y GESTIÓN DEL CARRITO ---
     if st.session_state.carro_mayor:
         st.write("---")
         import pandas as pd
+        st.markdown("### 📋 Contenido del Carrito:")
         st.table(pd.DataFrame(st.session_state.carro_mayor))
 
         t_final = sum(item['Subtotal'] for item in st.session_state.carro_mayor)
         st.markdown(f"### 💰 Total a Pagar: **${t_final:.2f}**")
+
+        # --- ELIMINAR UN PRODUCTO ESPECÍFICO DEL CARRITO ---
+        st.write("---")
+        st.markdown("### ✏️ Modificar Contenido del Carrito:")
+        productos_en_carro = [item["Producto"] for item in st.session_state.carro_mayor]
+
+        col_borrar1, col_borrar2 = st.columns([2, 1])
+        prod_a_eliminar = col_borrar1.selectbox("Selecciona el producto que deseas sacar:", productos_en_carro, key="sel_eliminar_prod")
+
+        if col_borrar2.button("🗑️ Eliminar Producto", use_container_width=True):
+            for item in st.session_state.carro_mayor:
+                if item["Producto"] == prod_a_eliminar:
+                    st.session_state.carro_mayor.remove(item)
+                    st.toast(f"🗑️ {prod_a_eliminar} eliminado del carrito")
+                    st.rerun()
 
         st.write("---")
         c_btn1, c_btn2 = st.columns(2)
@@ -380,7 +395,6 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
                     vencimiento_dt = datetime.fromtimestamp(ts_vencimiento, zona_ve)
                     fecha_vencimiento = vencimiento_dt.strftime('%d/%m/%Y')
 
-                # Cálculo de retención si es factura fiscal
                 iva_retenido_calc = 0.0
                 if es_factura_fiscal:
                     base_calc = round(t_final / 1.16, 2)
@@ -388,7 +402,6 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
                     if es_especial:
                         iva_retenido_calc = round(iva_tot * 0.75, 2)
 
-                # Payload completo para Supabase (Libro de Ventas)
                 payload = {
                     "FECHA": fecha_ve,
                     "TIPO": "Factura Fiscal" if es_factura_fiscal else condicion_pago,
@@ -403,7 +416,6 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
                 supabase.table("ventas").insert(payload).execute()
                 st.cache_data.clear()
 
-                # Generar PDF con los datos
                 pdf_b = crear_pdf(rz_fiscal, st.session_state.carro_mayor, t_final, fecha_vencimiento=fecha_vencimiento, tasa_bcv=tasa_bcv)
                 b64 = base64.b64encode(pdf_b.encode() if isinstance(pdf_b, str) else pdf_b).decode()
 
@@ -415,6 +427,7 @@ def formulario_venta_mayor(clientes_lista, productos_dict=None):
                 st.session_state.carro_mayor = []
             except Exception as e:
                 st.error(f"❌ Error al procesar la venta: {e}")
+
 
 
           
