@@ -120,8 +120,9 @@ def cargar_clientes():
     except Exception:
         return ["CLIENTE DETAL"]
 
-@st.cache_data
+@st.cache_data(ttl=1)  # Se refresca cada 1 segundo
 def cargar_productos_dict():
+
     try:
         res = supabase.table("productos").select("*").execute()
         datos = res.data if res.data else []
