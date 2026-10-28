@@ -144,10 +144,15 @@ def cargar_productos_dict():
 def actualizar_precio_producto(nombre_producto, nuevo_precio):
     try:
         supabase.table("productos").update({"PRECIO": nuevo_precio}).eq("NOMBRE", nombre_producto).execute()
+        
+        # 💡 AGREGA ESTA LÍNEA AQUÍ PARA BORRAR LA MEMORIA CACHÉ:
+        st.cache_data.clear()
+        
         return True
     except Exception as e:
         st.error(f"Error al actualizar el precio: {e}")
         return False
+
 
    
 # Obtener las variables para los selectores del sistema
